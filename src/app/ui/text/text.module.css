@@ -1,0 +1,52 @@
+.body\/base {
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.heading\/large {
+  font-size: 28px;
+  line-height: 40px;
+}
+
+.heading\/medium {
+  font-size: 20px;
+  line-height: 28px;
+}
+
+.heading\/small {
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.heading\/xsmall {
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.font-width-bold {
+  font-weight: 600;
+}
+
+.font-width-semibold {
+  font-weight: 500;
+}
+
+.font-width-regular {
+  font-weight: 400;
+}
+
+.color-black {
+  color: var(--text-100);
+}
+
+.color-grey {
+  color: var(--text-70);
+}
+
+.centered {
+  text-align: center;
+}
+
+.bold {
+  font-weight: 600;
+}

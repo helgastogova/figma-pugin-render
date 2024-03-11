@@ -1,0 +1,21 @@
+.container {
+  padding: 16px;
+}
+
+.buttonContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.title {
+  margin-bottom: 16px;
+}
+
+.layout {
+  max-width: 960px;
+  min-height: 400px;
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+}

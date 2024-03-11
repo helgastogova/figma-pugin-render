@@ -1,0 +1,25 @@
+.base {
+  border-radius: 24px;
+  padding: 12px 20px;
+  font-size: 18;
+  outline: none;
+  cursor: pointer;
+}
+
+.primary {
+  background-color: var(--color-primary10);
+  color: white;
+
+  &:hover {
+    background-color: var(--color-primary8);
+  }
+}
+
+.secondary {
+  background-color: white;
+  color: var(--color-primary10);
+
+  &:hover {
+    border-color: var(--color-primary8);
+  }
+}
