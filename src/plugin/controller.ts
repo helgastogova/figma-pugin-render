@@ -50,11 +50,12 @@ figma.ui.onmessage = async (msg: CreateUIMessage) => {
       }
       figma.currentPage = demoPage
 
-      componentSets.forEach((componentSet) => {
-        renderDemo({ componentSet, name: componentSet.name, minWidth: 200 })
+      componentSets.forEach((componentSet, index) => {
+        // if (index === 9)
+        renderDemo({ componentSet, name: componentSet.name, maxWidth: 200 })
       })
 
-      //   figma.closePlugin()
+      figma.closePlugin()
     } catch (err) {
       figma.ui.postMessage({ type: 'error', message: 'Failed to load fonts' })
       console.error(err)

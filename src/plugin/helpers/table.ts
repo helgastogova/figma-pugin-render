@@ -4,7 +4,7 @@ export const createTableHead = (headings: string[], minWidth?: number) => {
   const tr = createFrame({
     name: 'tr',
     direction: 'HORIZONTAL',
-    itemSpacing: 0,
+    itemSpacing: 10,
   })
 
   headings.forEach((items) => {
