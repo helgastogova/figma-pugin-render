@@ -156,7 +156,7 @@ export const renderTableWithPropsPerRow = (
         verticalPadding: 24,
         horizontalPadding: 24,
       })
-      variantCell.appendChild(createText({ characters: variant, fontSize: 24 }))
+      variantCell.appendChild(createText({ characters: variant, fontSize: 48 }))
 
       propHeaderFrame.appendChild(variantCell)
     })
@@ -186,7 +186,7 @@ export const renderTableWithPropsPerRow = (
       demoPage,
     )
 
-    titleCellFrame.appendChild(createText({ characters: propName, fontSize: 24 }))
+    titleCellFrame.appendChild(createText({ characters: propName, fontSize: 48 }))
 
     rowFrame.appendChild(titleCellFrame)
 

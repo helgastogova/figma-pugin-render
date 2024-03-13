@@ -11,7 +11,7 @@ export const createFrame = (props: LayoutsProps, page?: PageNode): FrameNode => 
     .filter((node): node is FrameNode => node.type === 'FRAME')
     .reduce((max, current) => Math.max(max, current.y + current.height), 0)
 
-  frame.y = maxY + 60
+  frame.y = maxY + 100
   currentPage.appendChild(frame)
 
   return frame
