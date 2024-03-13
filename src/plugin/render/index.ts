@@ -1,5 +1,4 @@
-import { createFrame, createText, getDemoTitle, findPageByName } from '../helpers'
-import { hexToRgb } from '../helpers/colors'
+import { createFrame, createText, findPageByName } from '../helpers'
 
 interface ComponentSetNode {
   children: ComponentNode[]
@@ -18,7 +17,43 @@ interface RenderDemoProps {
   minWidth: number
 }
 
-// Собирает все варианты свойств из набора компонентов
+function generateNestedPropCombinations(variants: Record<string, Set<string>>): any {
+  const keys = Object.keys(variants)
+  const nestedResults: any = {}
+
+  function helper(path: (string | number)[], index: number) {
+    if (index === keys.length) {
+      let currentLevel = nestedResults
+
+      for (let i = 0; i < path.length - 1; i += 2) {
+        const propName = path[i]
+        const propValue = path[i + 1]
+
+        if (!currentLevel[propName]) {
+          currentLevel[propName] = {}
+        }
+
+        if (!currentLevel[propName][propValue]) {
+          currentLevel[propName][propValue] = {}
+        }
+
+        currentLevel = currentLevel[propName][propValue]
+      }
+
+      currentLevel['node'] = path[path.length - 1]
+      return
+    }
+
+    const currentKey = keys[index]
+    variants[currentKey].forEach((variant) => {
+      helper([...path, currentKey, variant], index + 1)
+    })
+  }
+
+  helper([], 0)
+  return nestedResults
+}
+
 interface VariantsResult {
   singleVariants: Record<string, string>
   multipleVariants: Record<string, Set<string>>
@@ -27,7 +62,6 @@ interface VariantsResult {
 function collectPropsVariants(componentSet: ComponentSetNode): VariantsResult {
   const allPropsVariants: Record<string, Set<string>> = {}
 
-  // Сбор всех вариантов свойств
   componentSet.children.forEach((component) => {
     const props = parseComponentProps(component.name)
     Object.entries(props).forEach(([key, value]) => {
@@ -38,16 +72,13 @@ function collectPropsVariants(componentSet: ComponentSetNode): VariantsResult {
     })
   })
 
-  // Разделение на одиночные и множественные варианты
   const singleVariants: Record<string, string> = {}
   const multipleVariants: Record<string, Set<string>> = {}
 
   Object.entries(allPropsVariants).forEach(([key, values]) => {
     if (values.size === 1) {
-      // Для свойств с одним значением преобразуем Set в строку
       singleVariants[key] = Array.from(values)[0]
     } else {
-      // Для свойств с несколькими значениями сохраняем Set
       multipleVariants[key] = values
     }
   })
@@ -58,182 +89,85 @@ function collectPropsVariants(componentSet: ComponentSetNode): VariantsResult {
   }
 }
 
-// Анализирует название компонента и извлекает свойства
 function parseComponentProps(name: string): Record<string, string> {
   const props: Record<string, string> = {}
   name.split(', ').forEach((part) => {
     const [key, value] = part.split('=')
-    props[key.trim()] = value.trim()
+    if (key && value) {
+      props[key.trim()] = value.trim()
+    }
   })
   return props
 }
 
-// Тип для хранения вариантов свойств
+function findComponentByProps({
+  componentSet,
+  properties,
+}: {
+  componentSet: ComponentSetNode
+  properties: Record<string, string> // Объект с полным набором свойств
+}): ComponentNode | undefined {
+  return componentSet.children.find((component) => {
+    const componentProps = parseComponentProps(component.name)
+    return Object.entries(properties).every(([key, value]) => componentProps[key] === value)
+  })
+}
 
-export const renderTableWithPropsPerRow = (
+function renderTest(
   componentSet: ComponentSetNode,
-  demoPage: PageNode,
-  name: string,
-  minWidth: number,
-) => {
-  // Собираем варианты свойств для компонентов
-  const { multipleVariants, singleVariants } = collectPropsVariants(componentSet)
-
-  // find the widest component number
-  let widestComponent = 0
-  componentSet.children.forEach((component) => {
-    if (component.width && component.width > widestComponent) {
-      widestComponent = component.width > minWidth ? component.width : minWidth
-    }
-  })
-
-  let heighestComponent = 0
-  componentSet.children.forEach((component) => {
-    if (component.height && component.height > heighestComponent) {
-      heighestComponent = component.height > 100 ? component.height : 100
-    }
-  })
-
-  // Создаём фрейм таблицы
-  const tableFrame = createFrame(
-    {
-      name: `Table / ${name}`,
-      direction: 'VERTICAL',
-      verticalAlign: 'MIN',
-      horizontalAlign: 'MIN',
-      borderRadius: 12,
-      verticalPadding: 24,
-      horizontalPadding: 24,
-      autoWidth: true,
-      layoutAlign: 'STRETCH',
-      strokes: [{ type: 'SOLID', color: hexToRgb('#EFEFEF') }],
-      itemSpacing: 12,
-      borderRadius: 30,
-    },
-    demoPage,
+  nestedCombinations: { [key: string]: any },
+  parentFrame: FrameNode,
+  currentPath: string[] = [],
+) {
+  const depthLevel = currentPath.length / 2
+  const isLastLevel = Object.keys(nestedCombinations).some(
+    (key) => nestedCombinations[key] === 'node' || typeof nestedCombinations[key] === 'string',
   )
+  const isFirstLevelWithSingleNesting = depthLevel === 0 && Object.keys(nestedCombinations).length === 1
 
-  tableFrame.appendChild(getDemoTitle(name))
+  Object.entries(nestedCombinations).forEach(([propName, propValues]) => {
+    const newPath = [...currentPath, propName]
+    if (propName === 'node') {
+      const properties = currentPath.reduce((acc, val, index, array) => {
+        if (index % 2 === 0 && array[index + 1] !== undefined) {
+          acc[val] = array[index + 1]
+        }
+        return acc
+      }, {})
 
-  // Для каждого свойства создаём строку
-  Object.entries(multipleVariants).forEach(([propName, variants]) => {
-    // Создание шапки для текущего свойства
-    const propHeaderFrame = createFrame(
-      {
-        name: 'Headers',
-        direction: 'HORIZONTAL',
-        borderRadius: 12,
-        verticalAlign: 'CENTER',
-        layoutAlign: 'STRETCH',
-        itemSpacing: 10,
-      },
-      demoPage,
-    )
-
-    propHeaderFrame.strokes = [{ type: 'SOLID', color: hexToRgb('#EFEFEF') }]
-
-    const propHeader = createFrame({
-      name: propName,
-      horizontalPadding: 24,
-      itemSpacing: 0,
-      direction: 'HORIZONTAL',
-      horizontalAlign: 'CENTER',
-      verticalAlign: 'MIN',
-      minWidth,
-    })
-    // propHeader.appendChild(createText({ characters: propName }))
-    propHeaderFrame.appendChild(propHeader)
-
-    // Создание ячеек для вариантов свойства
-    variants.forEach((variant) => {
-      const variantCell = createFrame({
-        name: propName,
-        itemSpacing: 0,
-        direction: 'HORIZONTAL',
-        horizontalAlign: 'CENTER',
-        verticalAlign: 'MIN',
-        minWidth: widestComponent,
-        verticalPadding: 24,
-        horizontalPadding: 24,
-      })
-      variantCell.appendChild(createText({ characters: variant, fontSize: 48 }))
-
-      propHeaderFrame.appendChild(variantCell)
-    })
-
-    tableFrame.appendChild(propHeaderFrame)
-
-    const rowFrame = createFrame(
-      {
-        name: `row / ${propName}`,
-        direction: 'HORIZONTAL',
-        horizontalAlign: 'CENTER',
-        verticalAlign: 'MIN',
-        itemSpacing: 10,
-      },
-      demoPage,
-    )
-
-    const titleCellFrame = createFrame(
-      {
-        direction: 'HORIZONTAL',
-        horizontalAlign: 'CENTER',
-        verticalAlign: 'CENTER',
-        minWidth,
-        minHeight: 100,
-        layoutAlign: 'STRETCH',
-      },
-      demoPage,
-    )
-
-    titleCellFrame.appendChild(createText({ characters: propName, fontSize: 48 }))
-
-    rowFrame.appendChild(titleCellFrame)
-
-    variants.forEach((variant) => {
-      const cellFrame = createFrame(
-        {
-          name: `cell / ${propName}`,
-          direction: 'HORIZONTAL',
-          horizontalAlign: 'CENTER',
-          verticalAlign: 'MIN',
-          minWidth: widestComponent,
-          minHeight: 100,
-          verticalPadding: 24,
-          horizontalPadding: 24,
-          layoutAlign: 'STRETCH',
-        },
-        demoPage,
-      )
-
-      cellFrame.strokes = [{ type: 'SOLID', color: hexToRgb('#444444') }]
-      // Ищем компонент с текущим свойством и вариантом
-      const component = componentSet.children.find(
-        (child) => child.type === 'COMPONENT' && parseComponentProps(child.name)[propName] === variant,
-      )
-      console.log(component.width)
+      const component = findComponentByProps({ componentSet, properties })
 
       if (component) {
         const instance = component.createInstance()
-        // Добавляем инстанс в ячейку строки
-        cellFrame.appendChild(instance)
-      } else {
-        // Если инстанс не найден, добавляем плейсхолдер
-        const placeholder = createText({
-          characters: 'N/A',
-        })
-        cellFrame.appendChild(placeholder)
+        // get name from properties
+        const name = Object.entries(properties)
+          .map(([key, value]) => `${key}=${value}`)
+          .join(', ')
+        instance.name = name
+        parentFrame.appendChild(instance)
       }
-      rowFrame.appendChild(cellFrame)
+      return
+    }
+
+    const frame = createFrame(
+      {
+        name: `${propName} / ${depthLevel}`,
+        direction: isLastLevel || isFirstLevelWithSingleNesting ? 'HORIZONTAL' : 'VERTICAL',
+        horizontalAlign: 'MIN',
+        verticalAlign: 'MIN',
+        itemSpacing: 50,
+      },
+      parentFrame,
+    )
+    parentFrame.appendChild(frame)
+
+    Object.entries(propValues).forEach(([propValue, nestedVariants]) => {
+      renderTest(componentSet, nestedVariants, frame, [...newPath, propValue])
     })
-
-    tableFrame.appendChild(rowFrame)
   })
-
-  demoPage.appendChild(tableFrame)
 }
 
-export const renderDemo = ({ componentSet, name, minWidth }: RenderDemoProps): void => {
+export const renderDemo = ({ componentSet, name }: RenderDemoProps): void => {
   if (!componentSet) {
     console.error('Component Set not found')
     return
@@ -245,5 +179,21 @@ export const renderDemo = ({ componentSet, name, minWidth }: RenderDemoProps): v
     return
   }
 
-  renderTableWithPropsPerRow(componentSet, demoPage, name, minWidth)
+  const { multipleVariants } = collectPropsVariants(componentSet)
+
+  const rootFrame = createFrame(
+    {
+      name: `Demo for ${name}`,
+      direction: 'VERTICAL',
+      horizontalAlign: 'CENTER',
+      verticalAlign: 'MIN',
+      itemSpacing: 50,
+      verticalPadding: 50,
+      horizontalPadding: 50,
+    },
+    demoPage,
+  )
+
+  const nestedCombinations = generateNestedPropCombinations(multipleVariants)
+  renderTest(componentSet, nestedCombinations, rootFrame, [])
 }
