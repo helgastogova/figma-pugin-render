@@ -1,6 +1,5 @@
 import { createFrame, createText, getDemoTitle, findPageByName } from '../helpers'
 import { hexToRgb } from '../helpers/colors'
-import { createTableHead } from '../helpers/table'
 
 interface ComponentSetNode {
   children: ComponentNode[]
@@ -9,41 +8,78 @@ interface ComponentSetNode {
 interface ComponentNode {
   name: string
   type: string
-  createInstance(): any // Assuming the return type of createInstance is any
-  width?: number // Adding optional width property to the ComponentNode interface
+  createInstance: () => InstanceNode
+  width?: number
 }
 
 interface RenderDemoProps {
   componentSet: ComponentSetNode
   name: string
+  minWidth: number
 }
 
-export const renderDemo = ({ componentSet, name }: RenderDemoProps) => {
-  const demoPage = findPageByName('Component Sets [Demo]')
+// Собирает все варианты свойств из набора компонентов
+interface VariantsResult {
+  singleVariants: Record<string, string>
+  multipleVariants: Record<string, Set<string>>
+}
 
-  if (!demoPage || demoPage.type !== 'PAGE') {
-    console.error('Component Sets [Demo] page not found or not a page')
-    return
-  }
+function collectPropsVariants(componentSet: ComponentSetNode): VariantsResult {
+  const allPropsVariants: Record<string, Set<string>> = {}
 
-  const propVariants: { [key: string]: string[] } = {}
-
-  // Extracting prop variants from component names
+  // Сбор всех вариантов свойств
   componentSet.children.forEach((component) => {
-    extractPropVariants(component.name, propVariants)
+    const props = parseComponentProps(component.name)
+    Object.entries(props).forEach(([key, value]) => {
+      if (!allPropsVariants[key]) {
+        allPropsVariants[key] = new Set()
+      }
+      allPropsVariants[key].add(value)
+    })
   })
 
-  console.log(propVariants)
+  // Разделение на одиночные и множественные варианты
+  const singleVariants: Record<string, string> = {}
+  const multipleVariants: Record<string, Set<string>> = {}
 
-  // Determine the maximum width among components
-  let minWidth = 0
-  componentSet.children.forEach((component) => {
-    const componentWidth = component.width || 0
-    if (componentWidth > minWidth) {
-      minWidth = componentWidth
+  Object.entries(allPropsVariants).forEach(([key, values]) => {
+    if (values.size === 1) {
+      // Для свойств с одним значением преобразуем Set в строку
+      singleVariants[key] = Array.from(values)[0]
+    } else {
+      // Для свойств с несколькими значениями сохраняем Set
+      multipleVariants[key] = values
     }
   })
 
+  return {
+    singleVariants,
+    multipleVariants,
+  }
+}
+
+// Анализирует название компонента и извлекает свойства
+function parseComponentProps(name: string): Record<string, string> {
+  const props: Record<string, string> = {}
+  name.split(', ').forEach((part) => {
+    const [key, value] = part.split('=')
+    props[key.trim()] = value.trim()
+  })
+  return props
+}
+
+// Тип для хранения вариантов свойств
+
+export const renderTableWithPropsPerRow = (
+  componentSet: ComponentSetNode,
+  demoPage: PageNode,
+  name: string,
+  minWidth: number,
+) => {
+  // Собираем варианты свойств для компонентов
+  const { multipleVariants, singleVariants } = collectPropsVariants(componentSet)
+
+  // Создаём фрейм таблицы
   const tableFrame = createFrame(
     {
       name: `Table / ${name}`,
@@ -55,148 +91,128 @@ export const renderDemo = ({ componentSet, name }: RenderDemoProps) => {
       horizontalPadding: 16,
       autoWidth: true,
       layoutAlign: 'STRETCH',
+      strokes: [{ type: 'SOLID', color: hexToRgb('#EFEFEF') }],
     },
     demoPage,
   )
 
-  tableFrame.appendChild(getDemoTitle(name))
-
-  const tableInsideFrame = createFrame(
-    {
-      name: `Table / inside`,
-      direction: 'VERTICAL',
-      verticalAlign: 'MIN',
-      verticalPadding: 8,
-      horizontalPadding: 8,
-      borderRadius: 12,
-      autoWidth: true,
-    },
-    demoPage,
-  )
-
-  const headersFrame = createFrame(
-    {
-      name: 'Headers',
-      direction: 'HORIZONTAL',
-      borderRadius: 12,
-      verticalAlign: 'MIN',
-      layoutAlign: 'STRETCH',
-    },
-    demoPage,
-  )
-
-  headersFrame.strokes = [{ type: 'SOLID', color: hexToRgb('#EFEFEF') }]
-
-  // Creating table headers dynamically based on prop variants
-  Object.keys(propVariants).forEach((propName) => {
-    const propValues = propVariants[propName]
-    const header = createTableHead([propName, ...propValues], minWidth)
-    headersFrame.appendChild(header)
-  })
-
-  tableInsideFrame.appendChild(headersFrame)
-
-  const tableBody = createFrame(
-    {
-      name: `TableBody`,
-      direction: 'HORIZONTAL',
-      verticalAlign: 'MIN',
-      horizontalAlign: 'MIN',
-      borderRadius: 12,
-      verticalPadding: 16,
-      horizontalPadding: 16,
-      autoWidth: true,
-      layoutAlign: 'STRETCH',
-      itemSpacing: 10,
-    },
-    demoPage,
-  )
-
-  // Creating service cell with prop name
-  Object.keys(propVariants).forEach((propName) => {
-    const serviceCell = createFrame(
+  // Для каждого свойства создаём строку
+  Object.entries(multipleVariants).forEach(([propName, variants]) => {
+    // Создание шапки для текущего свойства
+    const propHeaderFrame = createFrame(
       {
-        name: `ServiceCell / ${propName}`,
-        minWidth,
-        direction: 'VERTICAL',
-        verticalAlign: 'MIN',
-        horizontalAlign: 'CENTER',
+        name: 'Headers',
+        direction: 'HORIZONTAL',
+        borderRadius: 12,
+        verticalAlign: 'CENTER',
         layoutAlign: 'STRETCH',
+        itemSpacing: 10,
       },
       demoPage,
     )
-    serviceCell.appendChild(
-      createText({
-        characters: propName,
-        fontSize: 12,
-      }),
-    )
-    tableBody.appendChild(serviceCell)
-  })
 
-  // Creating table rows dynamically for each component
-  componentSet.children.forEach((component) => {
+    const propHeader = createFrame({
+      name: propName,
+      verticalPadding: 8,
+      itemSpacing: 0,
+      direction: 'HORIZONTAL',
+      horizontalAlign: 'CENTER',
+      verticalAlign: 'MIN',
+      minWidth,
+    })
+    propHeader.appendChild(createText({ characters: propName }))
+    propHeaderFrame.appendChild(propHeader)
+
+    // Создание ячеек для вариантов свойства
+    variants.forEach((variant) => {
+      const variantCell = createFrame({
+        name: propName,
+        verticalPadding: 8,
+        itemSpacing: 0,
+        direction: 'HORIZONTAL',
+        horizontalAlign: 'CENTER',
+        verticalAlign: 'MIN',
+        minWidth,
+      })
+      variantCell.appendChild(createText({ characters: variant }))
+
+      propHeaderFrame.appendChild(variantCell)
+    })
+
+    tableFrame.appendChild(propHeaderFrame)
+
     const rowFrame = createFrame(
       {
-        name: `Row / ${component.name}`,
+        name: `row / ${propName}`,
         direction: 'HORIZONTAL',
-        horizontalAlign: 'MIN',
-        layoutAlign: 'STRETCH',
-        minWidth: component.width || minWidth,
-        minHeight: 200,
+        horizontalAlign: 'CENTER',
+        verticalAlign: 'MIN',
+        itemSpacing: 10,
       },
       demoPage,
     )
 
-    Object.entries(propVariants).forEach(([propName, propValues]) => {
+    rowFrame.appendChild(
+      createFrame(
+        {
+          direction: 'HORIZONTAL',
+          horizontalAlign: 'CENTER',
+          verticalAlign: 'MIN',
+          minWidth,
+          minHeight: 100,
+        },
+        demoPage,
+      ),
+    )
+
+    variants.forEach((variant) => {
       const cellFrame = createFrame(
         {
-          name: `Cell / ${propName}`,
-          direction: 'VERTICAL',
-          verticalAlign: 'MIN',
+          name: `cell / ${propName}`,
+          direction: 'HORIZONTAL',
           horizontalAlign: 'CENTER',
-          layoutAlign: 'STRETCH',
+          verticalAlign: 'MIN',
+          minWidth,
+          minHeight: 100,
         },
         demoPage,
       )
+      // Ищем компонент с текущим свойством и вариантом
+      const component = componentSet.children.find(
+        (child) => child.type === 'COMPONENT' && parseComponentProps(child.name)[propName] === variant,
+      )
 
-      const matchingPropValue = parseComponentName(component.name)[propName]
-
-      const instance = component.createInstance()
-      instance.name = `${component.name} / ${propName}: ${matchingPropValue}`
-      cellFrame.appendChild(instance)
-
+      if (component) {
+        const instance = component.createInstance()
+        // Добавляем инстанс в ячейку строки
+        cellFrame.appendChild(instance)
+      } else {
+        // Если инстанс не найден, добавляем плейсхолдер
+        const placeholder = createText({
+          characters: 'N/A',
+        })
+        cellFrame.appendChild(placeholder)
+      }
       rowFrame.appendChild(cellFrame)
     })
 
-    tableBody.appendChild(rowFrame)
+    tableFrame.appendChild(rowFrame)
   })
 
-  tableInsideFrame.appendChild(tableBody)
-  tableFrame.appendChild(tableInsideFrame)
   demoPage.appendChild(tableFrame)
 }
 
-// Helper function to extract prop variants recursively
-const extractPropVariants = (name: string, propVariants: { [key: string]: string[] }) => {
-  const props = name.split(', ').map((prop) => prop.split('='))
-  props.forEach(([key, value]) => {
-    if (!propVariants[key]) {
-      propVariants[key] = []
-    }
-    if (!propVariants[key].includes(value)) {
-      propVariants[key].push(value)
-    }
-  })
-}
+export const renderDemo = ({ componentSet, name, minWidth }: RenderDemoProps): void => {
+  if (!componentSet) {
+    console.error('Component Set not found')
+    return
+  }
+  const demoPage = findPageByName('Component Sets [Demo]')
 
-// Helper function to parse component name and return an object of props and values
-const parseComponentName = (name: string) => {
-  const props: { [key: string]: string } = {}
-  const propPairs = name.split(', ')
-  propPairs.forEach((pair) => {
-    const [key, value] = pair.split('=')
-    props[key] = value
-  })
-  return props
+  if (!demoPage || demoPage.type !== 'PAGE') {
+    console.error('Component Sets [Demo] page not found or not a page')
+    return
+  }
+
+  renderTableWithPropsPerRow(componentSet, demoPage, name, minWidth)
 }

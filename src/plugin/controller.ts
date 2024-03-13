@@ -51,8 +51,8 @@ figma.ui.onmessage = async (msg: CreateUIMessage) => {
       figma.currentPage = demoPage
 
       componentSets.forEach((componentSet, index) => {
-        // if (index === 9)
-        renderDemo({ componentSet, name: componentSet.name, maxWidth: 200 })
+        // if (index === 7)
+        renderDemo({ componentSet, name: componentSet.name, minWidth: 300 })
       })
 
       figma.closePlugin()
