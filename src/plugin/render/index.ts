@@ -79,6 +79,21 @@ export const renderTableWithPropsPerRow = (
   // Собираем варианты свойств для компонентов
   const { multipleVariants, singleVariants } = collectPropsVariants(componentSet)
 
+  // find the widest component number
+  let widestComponent = 0
+  componentSet.children.forEach((component) => {
+    if (component.width && component.width > widestComponent) {
+      widestComponent = component.width > minWidth ? component.width : minWidth
+    }
+  })
+
+  let heighestComponent = 0
+  componentSet.children.forEach((component) => {
+    if (component.height && component.height > heighestComponent) {
+      heighestComponent = component.height > 100 ? component.height : 100
+    }
+  })
+
   // Создаём фрейм таблицы
   const tableFrame = createFrame(
     {
@@ -87,14 +102,18 @@ export const renderTableWithPropsPerRow = (
       verticalAlign: 'MIN',
       horizontalAlign: 'MIN',
       borderRadius: 12,
-      verticalPadding: 16,
-      horizontalPadding: 16,
+      verticalPadding: 24,
+      horizontalPadding: 24,
       autoWidth: true,
       layoutAlign: 'STRETCH',
       strokes: [{ type: 'SOLID', color: hexToRgb('#EFEFEF') }],
+      itemSpacing: 12,
+      borderRadius: 30,
     },
     demoPage,
   )
+
+  tableFrame.appendChild(getDemoTitle(name))
 
   // Для каждого свойства создаём строку
   Object.entries(multipleVariants).forEach(([propName, variants]) => {
@@ -111,30 +130,33 @@ export const renderTableWithPropsPerRow = (
       demoPage,
     )
 
+    propHeaderFrame.strokes = [{ type: 'SOLID', color: hexToRgb('#EFEFEF') }]
+
     const propHeader = createFrame({
       name: propName,
-      verticalPadding: 8,
+      horizontalPadding: 24,
       itemSpacing: 0,
       direction: 'HORIZONTAL',
       horizontalAlign: 'CENTER',
       verticalAlign: 'MIN',
       minWidth,
     })
-    propHeader.appendChild(createText({ characters: propName }))
+    // propHeader.appendChild(createText({ characters: propName }))
     propHeaderFrame.appendChild(propHeader)
 
     // Создание ячеек для вариантов свойства
     variants.forEach((variant) => {
       const variantCell = createFrame({
         name: propName,
-        verticalPadding: 8,
         itemSpacing: 0,
         direction: 'HORIZONTAL',
         horizontalAlign: 'CENTER',
         verticalAlign: 'MIN',
-        minWidth,
+        minWidth: widestComponent,
+        verticalPadding: 24,
+        horizontalPadding: 24,
       })
-      variantCell.appendChild(createText({ characters: variant }))
+      variantCell.appendChild(createText({ characters: variant, fontSize: 24 }))
 
       propHeaderFrame.appendChild(variantCell)
     })
@@ -152,18 +174,21 @@ export const renderTableWithPropsPerRow = (
       demoPage,
     )
 
-    rowFrame.appendChild(
-      createFrame(
-        {
-          direction: 'HORIZONTAL',
-          horizontalAlign: 'CENTER',
-          verticalAlign: 'MIN',
-          minWidth,
-          minHeight: 100,
-        },
-        demoPage,
-      ),
+    const titleCellFrame = createFrame(
+      {
+        direction: 'HORIZONTAL',
+        horizontalAlign: 'CENTER',
+        verticalAlign: 'CENTER',
+        minWidth,
+        minHeight: 100,
+        layoutAlign: 'STRETCH',
+      },
+      demoPage,
     )
+
+    titleCellFrame.appendChild(createText({ characters: propName, fontSize: 24 }))
+
+    rowFrame.appendChild(titleCellFrame)
 
     variants.forEach((variant) => {
       const cellFrame = createFrame(
@@ -172,15 +197,21 @@ export const renderTableWithPropsPerRow = (
           direction: 'HORIZONTAL',
           horizontalAlign: 'CENTER',
           verticalAlign: 'MIN',
-          minWidth,
+          minWidth: widestComponent,
           minHeight: 100,
+          verticalPadding: 24,
+          horizontalPadding: 24,
+          layoutAlign: 'STRETCH',
         },
         demoPage,
       )
+
+      cellFrame.strokes = [{ type: 'SOLID', color: hexToRgb('#444444') }]
       // Ищем компонент с текущим свойством и вариантом
       const component = componentSet.children.find(
         (child) => child.type === 'COMPONENT' && parseComponentProps(child.name)[propName] === variant,
       )
+      console.log(component.width)
 
       if (component) {
         const instance = component.createInstance()

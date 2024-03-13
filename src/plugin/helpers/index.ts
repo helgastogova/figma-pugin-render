@@ -6,8 +6,7 @@ export const createFrame = (props: LayoutsProps, page?: PageNode): FrameNode => 
   const frame: FrameNode = figma.createFrame()
 
   Object.assign(frame, getLayoutProps(props))
-  findAndSetStyle(props.backgroundColor ?? '#ffffff', frame)
-
+  findAndSetStyle(props.backgroundColor ?? '#EFEFEF', frame)
   const maxY = currentPage.children
     .filter((node): node is FrameNode => node.type === 'FRAME')
     .reduce((max, current) => Math.max(max, current.y + current.height), 0)
