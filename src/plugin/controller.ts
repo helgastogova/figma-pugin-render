@@ -1,6 +1,6 @@
 import { renderDemo } from './render'
 
-figma.showUI(__html__, { width: 900, height: 800, title: 'Render Components Sets Demo', themeColors: false })
+figma.showUI(__html__, { width: 900, height: 450, title: 'Render Components Sets Demo', themeColors: false })
 
 interface CreateUIMessage {
   type: 'render-demo' | 'cancel' | 'request-user-info' | 'request-components'

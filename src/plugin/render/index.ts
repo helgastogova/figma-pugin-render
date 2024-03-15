@@ -17,7 +17,7 @@ interface RenderDemoProps {
   minWidth: number
 }
 
-function generateNestedPropCombinations(variants: Record<string, Set<string>>): any {
+export function generateNestedPropCombinations(variants: Record<string, Set<string>>): any {
   const keys = Object.keys(variants)
   const nestedResults: any = {}
 
@@ -59,7 +59,7 @@ interface VariantsResult {
   multipleVariants: Record<string, Set<string>>
 }
 
-function collectPropsVariants(componentSet: ComponentSetNode): VariantsResult {
+export function collectPropsVariants(componentSet: ComponentSetNode): VariantsResult {
   const allPropsVariants: Record<string, Set<string>> = {}
 
   componentSet.children.forEach((component) => {
@@ -120,6 +120,7 @@ function renderTest({
   currentPath = [],
   minWidth,
   minHeight,
+  frameName,
 }: {
   componentSet: ComponentSetNode
   nestedCombinations: { [key: string]: any }
@@ -127,6 +128,7 @@ function renderTest({
   currentPath: string[]
   minWidth: number
   minHeight: number
+  frameName?: string
 }) {
   const depthLevel = currentPath.length / 2
 
@@ -148,12 +150,13 @@ function renderTest({
 
   Object.entries(nestedCombinations).forEach(([propName, propValues]) => {
     const newPath = [...currentPath, propName]
+
     if (propName === 'node') {
       const cell = createFrame(
         {
           direction: 'VERTICAL',
           horizontalAlign: 'CENTER',
-          verticalAlign: 'CENTER',
+          verticalAlign: 'MIN',
           minWidth: minWidth + 20, // it's strange, but i need to plus paddings here
           minHeight: minHeight + 20,
           verticalPadding: 10,
@@ -170,7 +173,7 @@ function renderTest({
         // get name from properties
 
         instance.name = name
-        cell.name = `${name ?? componentSet.name} / ${depthLevel}`
+        cell.name = `${name ?? componentSet.name}`
         cell.appendChild(instance)
         parentFrame.appendChild(cell)
       }
@@ -179,7 +182,7 @@ function renderTest({
 
     const frame = createFrame(
       {
-        name: `${name ?? componentSet.name} / ${depthLevel}`,
+        name: frameName,
         direction:
           ((isLastLevel || isFirstLevelWithSingleNesting) && depthLevel % 2 === 0) || depthLevel === 1
             ? 'HORIZONTAL'
@@ -192,14 +195,21 @@ function renderTest({
     )
     parentFrame.appendChild(frame)
 
-    Object.entries(propValues).forEach(([propValue, nestedVariants]) => {
+    Object.entries(propValues).forEach(([propValue, nestedCombinations]) => {
+      //   if (depthLevel === 0) {
+      //     const framePlaceholder = createText({
+      //       characters: `${propName}: ${propValue}`,
+      //     })
+      //     frame.appendChild(framePlaceholder)
+      //   }
       renderTest({
         componentSet,
-        nestedCombinations: nestedVariants,
+        nestedCombinations,
         parentFrame: frame,
         currentPath: [...newPath, propValue],
         minWidth,
         minHeight,
+        frameName: `${propName}=${propValue}`,
       })
     })
   })
@@ -229,6 +239,7 @@ export const renderDemo = ({ componentSet }: RenderDemoProps): void => {
   )
 
   const { multipleVariants } = collectPropsVariants(componentSet)
+  const nestedCombinations = generateNestedPropCombinations(multipleVariants)
 
   const rootFrame = createFrame(
     {
@@ -245,6 +256,13 @@ export const renderDemo = ({ componentSet }: RenderDemoProps): void => {
 
   rootFrame.appendChild(getDemoTitle(componentSet.name))
 
-  const nestedCombinations = generateNestedPropCombinations(multipleVariants)
-  renderTest({ componentSet, nestedCombinations, parentFrame: rootFrame, currentPath: [], minWidth, minHeight })
+  renderTest({
+    componentSet,
+    nestedCombinations,
+    parentFrame: rootFrame,
+    currentPath: [],
+    minWidth,
+    minHeight,
+    frameName: componentSet.name,
+  })
 }
