@@ -1,7 +1,9 @@
 import { createFrame, createText, getDemoTitle, findPageByName } from '../helpers'
+//createText
 
 interface ComponentSetNode {
   children: ComponentNode[]
+  name: string
 }
 
 interface ComponentNode {
@@ -9,6 +11,7 @@ interface ComponentNode {
   type: string
   createInstance: () => InstanceNode
   width?: number
+  height?: number
 }
 
 interface RenderDemoProps {
@@ -105,7 +108,7 @@ function findComponentByProps({
   properties,
 }: {
   componentSet: ComponentSetNode
-  properties: Record<string, string> // Объект с полным набором свойств
+  properties: Record<string, string>
 }): ComponentNode | undefined {
   return componentSet.children.find((component) => {
     const componentProps = parseComponentProps(component.name)
@@ -131,6 +134,9 @@ function renderTest({
   frameName?: string
 }) {
   const depthLevel = currentPath.length / 2
+  const maxDepth = getMaxDepth(nestedCombinations)
+
+  const isLastOrPenultimateLevel = depthLevel >= maxDepth - 1
 
   const properties = currentPath.reduce((acc, val, index, array) => {
     if (index % 2 === 0 && array[index + 1] !== undefined) {
@@ -170,10 +176,9 @@ function renderTest({
 
       if (component) {
         const instance = component.createInstance()
-        // get name from properties
 
         instance.name = name
-        cell.name = `${name ?? componentSet.name}`
+        cell.name = `${name ?? componentSet.name} / ${isLastOrPenultimateLevel}`
         cell.appendChild(instance)
         parentFrame.appendChild(cell)
       }
@@ -182,30 +187,41 @@ function renderTest({
 
     const frame = createFrame(
       {
-        name: frameName,
-        direction:
-          ((isLastLevel || isFirstLevelWithSingleNesting) && depthLevel % 2 === 0) || depthLevel === 1
-            ? 'HORIZONTAL'
-            : 'VERTICAL',
+        name: `${frameName} / ${isLastOrPenultimateLevel} / ${maxDepth}`,
+        direction: isLastOrPenultimateLevel || maxDepth <= 2 ? 'HORIZONTAL' : 'VERTICAL',
         horizontalAlign: 'CENTER',
         verticalAlign: 'MIN',
         itemSpacing: 50,
       },
       parentFrame,
     )
-    parentFrame.appendChild(frame)
 
     Object.entries(propValues).forEach(([propValue, nestedCombinations]) => {
-      //   if (depthLevel === 0) {
-      //     const framePlaceholder = createText({
-      //       characters: `${propName}: ${propValue}`,
-      //     })
-      //     frame.appendChild(framePlaceholder)
-      //   }
+      let innerFrame
+      if (depthLevel === 0) {
+        innerFrame = createFrame(
+          {
+            name: `${frameName} / inside / ${isLastOrPenultimateLevel}`,
+            direction: isLastOrPenultimateLevel ? 'HORIZONTAL' : 'VERTICAL',
+            horizontalAlign: 'MIN',
+            verticalAlign: 'MIN',
+            minWidth,
+            itemSpacing: 30,
+          },
+          parentFrame,
+        )
+
+        const framePlaceholder = createText({
+          characters: `${propName}: ${propValue}`,
+          fontSize: 24,
+        })
+        innerFrame.appendChild(framePlaceholder)
+        frame.appendChild(innerFrame)
+      }
       renderTest({
         componentSet,
         nestedCombinations,
-        parentFrame: frame,
+        parentFrame: depthLevel === 0 ? innerFrame : frame,
         currentPath: [...newPath, propValue],
         minWidth,
         minHeight,
@@ -255,14 +271,46 @@ export const renderDemo = ({ componentSet }: RenderDemoProps): void => {
   )
 
   rootFrame.appendChild(getDemoTitle(componentSet.name))
-
+  const rootInsideFrame = createFrame(
+    {
+      name: `Demo for ${componentSet.name}`,
+      direction: 'HORIZONTAL',
+      horizontalAlign: 'CENTER',
+      verticalAlign: 'MIN',
+      itemSpacing: 50,
+      verticalPadding: 50,
+      horizontalPadding: 50,
+    },
+    demoPage,
+  )
+  rootFrame.appendChild(rootInsideFrame)
   renderTest({
     componentSet,
     nestedCombinations,
-    parentFrame: rootFrame,
+    parentFrame: rootInsideFrame,
     currentPath: [],
     minWidth,
     minHeight,
     frameName: componentSet.name,
   })
+}
+
+function getMaxDepth(nestedCombinations: any): number {
+  let maxDepth = 0
+
+  function explore(node: any, currentDepth: number) {
+    // Если текущий узел не объект или достигнут узел 'node', то останавливаемся
+    if (typeof node !== 'object' || node === null || node.hasOwnProperty('node')) {
+      maxDepth = Math.max(maxDepth, currentDepth)
+      return
+    }
+
+    // Продолжаем исследовать каждый вложенный объект
+    Object.values(node).forEach((child) => {
+      explore(child, currentDepth + 1)
+    })
+  }
+
+  explore(nestedCombinations, 0)
+  return maxDepth
 }

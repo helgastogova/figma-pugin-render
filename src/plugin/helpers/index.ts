@@ -1,17 +1,33 @@
 import { getLayoutProps, LayoutsProps } from '../layouts'
 import { findAndSetStyle } from './colors'
 
-export const createFrame = (props: LayoutsProps, page?: PageNode): FrameNode => {
+export const createFrame = (
+  props: LayoutsProps,
+  page?: PageNode | FrameNode,
+  direction: 'right' | 'bottom' = 'bottom',
+): FrameNode => {
   const currentPage = (page as PageNode) ?? (figma.currentPage as PageNode)
   const frame: FrameNode = figma.createFrame()
 
   Object.assign(frame, getLayoutProps(props))
-  findAndSetStyle(props.backgroundColor ?? '#EFEFEF', frame)
-  const maxY = currentPage.children
-    .filter((node): node is FrameNode => node.type === 'FRAME')
-    .reduce((max, current) => Math.max(max, current.y + current.height), 0)
+  findAndSetStyle(props.backgroundColor ?? undefined, frame)
 
-  frame.y = maxY + 100
+  if (direction === 'bottom') {
+    const maxY = currentPage.children
+      .filter((node): node is FrameNode => node.type === 'FRAME')
+      .reduce((max, current) => Math.max(max, current.y + current.height), 0)
+
+    frame.y = maxY + 100
+  }
+
+  if (direction === 'right') {
+    const maxX = currentPage.children
+      .filter((node): node is FrameNode => node.type === 'FRAME')
+      .reduce((max, current) => Math.max(max, current.x + current.width), 0)
+
+    frame.x = maxX + 100
+  }
+
   currentPage.appendChild(frame)
 
   return frame
