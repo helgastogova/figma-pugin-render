@@ -15,6 +15,7 @@ export type LayoutsProps = {
   layoutGrow: number
   layoutAlign: 'STRETCH' | 'INHERIT'
   layoutWrap: 'NO_WRAP' | 'WRAP'
+  clipsContent: boolean
 }
 
 export const DEFAULT_LAYOUT_SETTINGS: LayoutsProps = {
@@ -34,4 +35,5 @@ export const DEFAULT_LAYOUT_SETTINGS: LayoutsProps = {
   minHeight: null, //minHeight
   layoutGrow: 0, //layoutGrow
   layoutAlign: 'INHERIT', //layoutAlign
+  clipsContent: false, //clipsContent
 }

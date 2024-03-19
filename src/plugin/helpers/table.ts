@@ -17,7 +17,6 @@ export const createTableHead = (headings: string[], minWidth?: number) => {
       verticalPadding: 0,
       minWidth: minWidth + 40,
       maxWidth: minWidth + 40,
-      fobtSize: 18,
     })
 
     th.appendChild(createText({ characters: items, fontSize: 18 }))

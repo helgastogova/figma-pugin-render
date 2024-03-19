@@ -20,19 +20,16 @@ figma.ui.onmessage = async (msg: CreateUIMessage) => {
   const components = findAllComponentsOnPage()
   const componentSets = findAllComponentSetsOnPage()
 
-  const componentSetData = componentSets.map((componentSet) => {
+  const componentSetsDataPartial = componentSets.map((componentSet) => {
     return {
       id: componentSet.id,
       name: componentSet.name,
-      components: componentSet.children.map((component) => ({
-        id: component.id,
-        name: component.name,
-      })),
+      numberOfComponents: componentSet.children.length,
     }
   })
 
   if (msg.type === 'request-components') {
-    figma.ui.postMessage({ data: { type: 'components', components, componentSets: componentSetData } })
+    figma.ui.postMessage({ data: { type: 'components', componentSets: componentSetsDataPartial } })
   }
 
   if (msg.type === 'render-demo') {
@@ -50,9 +47,9 @@ figma.ui.onmessage = async (msg: CreateUIMessage) => {
       }
       figma.currentPage = demoPage
 
-      componentSets.forEach((componentSet, index) => {
-        // if (index === 6)
-        renderDemo({ componentSet, name: componentSet.name, minWidth: 300 })
+      componentSets.forEach((item) => {
+        const mutableChildren = item.children.map((child) => child as ComponentNode)
+        renderDemo({ componentSet: { ...item, children: mutableChildren } })
       })
 
       figma.closePlugin()

@@ -1,24 +1,8 @@
 import { createFrame, createText, getDemoTitle, findPageByName } from '../helpers'
 import { createTableHead } from '../helpers/table'
 //createText
-
-interface ComponentSetNode {
-  children: ComponentNode[]
-  name: string
-}
-
-interface ComponentNode {
-  name: string
-  type: string
-  createInstance: () => InstanceNode
-  width?: number
-  height?: number
-}
-
 interface RenderDemoProps {
-  componentSet: ComponentSetNode
-  name: string
-  minWidth: number
+  componentSet: any
 }
 
 function getMaxDepth(nestedCombinations: any): number {
@@ -158,12 +142,22 @@ function renderTest({
   const maxDepth = getMaxDepth(nestedCombinations)
 
   const isLastOrPenultimateLevel = depthLevel >= maxDepth - 1
-  const properties = currentPath.reduce((acc, val, index, array) => {
+  const properties = currentPath?.reduce((acc, val, index, array) => {
     if (index % 2 === 0 && array[index + 1] !== undefined) {
       acc[val] = array[index + 1]
     }
     return acc
   }, {})
+
+  if (!isLastOrPenultimateLevel && frameName && depthLevel > 0) {
+    parentFrame.appendChild(
+      createText({
+        characters: frameName,
+        fontSize: 18,
+        fontColor: '#777',
+      }),
+    )
+  }
 
   const name = Object.entries(properties)
     .map(([key, value]) => `${key}=${value}`)
@@ -173,6 +167,7 @@ function renderTest({
     const newPath = [...currentPath, propName]
 
     if (propName === 'node') {
+      const component = findComponentByProps({ componentSet, properties })
       const cell = createFrame(
         {
           direction: 'VERTICAL',
@@ -188,8 +183,6 @@ function renderTest({
         parentFrame,
       )
 
-      const component = findComponentByProps({ componentSet, properties })
-
       if (component) {
         const instance = component.createInstance()
 
@@ -197,6 +190,14 @@ function renderTest({
         cell.name = `${name ?? componentSet.name} / ${isLastOrPenultimateLevel}`
         cell.appendChild(instance)
         parentFrame.appendChild(cell)
+      } else {
+        cell.appendChild(
+          createText({
+            characters: 'N/A',
+            fontSize: 18,
+            fontColor: '#999',
+          }),
+        )
       }
       return
     }
@@ -255,16 +256,18 @@ export const renderDemo = ({ componentSet }: RenderDemoProps): void => {
     return
   }
 
-  const { minWidth, minHeight } = componentSet.children.reduce(
+  const { minWidth_, minHeight } = componentSet?.children?.reduce(
     (acc, component) => {
       const { width, height } = component
       return {
-        minWidth: Math.max(acc.minWidth, width ?? 0),
+        minWidth_: Math.max(acc.minWidth_, width ?? 0),
         minHeight: Math.max(acc.minHeight, height ?? 0),
       }
     },
-    { minWidth: 0, minHeight: 0 },
+    { minWidth_: 0, minHeight: 0 },
   )
+
+  const minWidth = minWidth_ < 100 ? 100 : minWidth_
 
   const { multipleVariants } = collectPropsVariants(componentSet)
   const nestedCombinations = generateNestedPropCombinations(multipleVariants)
@@ -274,7 +277,7 @@ export const renderDemo = ({ componentSet }: RenderDemoProps): void => {
   const tableHeaders =
     lastTwoSets.length > 1
       ? lastTwoSets.map(([key, set]) => [key, ...Array.from(set)])
-      : lastTwoSets.map(([key, set]) => Array.from(set))
+      : lastTwoSets.map(([, set]) => Array.from(set))
 
   const rootFrame = createFrame(
     {
@@ -297,8 +300,9 @@ export const renderDemo = ({ componentSet }: RenderDemoProps): void => {
       horizontalAlign: 'CENTER',
       verticalAlign: 'MIN',
       itemSpacing: 20,
-      verticalPadding: 50,
-      horizontalPadding: 50,
+      verticalPadding: 30,
+      horizontalPadding: 30,
+      borderRadius: 24,
     },
     demoPage,
   )

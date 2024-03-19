@@ -29,6 +29,7 @@ export type LayoutsProps = {
     },
   ]
   backgroundColor?: string
+  clipsContent?: boolean
 }
 
 export const getLayoutProps = ({
@@ -49,6 +50,7 @@ export const getLayoutProps = ({
   minHeight = DEFAULT_LAYOUT_SETTINGS.minHeight,
   layoutGrow = DEFAULT_LAYOUT_SETTINGS.layoutGrow,
   layoutAlign = DEFAULT_LAYOUT_SETTINGS.layoutAlign,
+  clipsContent = DEFAULT_LAYOUT_SETTINGS.clipsContent,
 }: LayoutsProps) => {
   return {
     name,
@@ -68,5 +70,6 @@ export const getLayoutProps = ({
     minHeight: minHeight !== undefined ? minHeight : null,
     layoutGrow,
     layoutAlign,
+    clipsContent,
   }
 }
