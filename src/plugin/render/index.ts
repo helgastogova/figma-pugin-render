@@ -25,6 +25,7 @@ function getMaxDepth(nestedCombinations: any): number {
 
 export function generateNestedPropCombinations(variants: Record<string, Set<string>>): any {
   const keys = Object.keys(variants)
+  console.log('keys', keys)
   const nestedResults: any = {}
 
   function helper(path: (string | number)[], index: number) {
@@ -207,7 +208,7 @@ function renderTest({
     const frame = createFrame(
       {
         name: frameName,
-        direction: isLastOrPenultimateLevel || maxDepth <= 2 ? 'HORIZONTAL' : 'VERTICAL',
+        direction: isLastOrPenultimateLevel || maxDepth <= 2 || currentPath.length > 3 ? 'HORIZONTAL' : 'VERTICAL', // подумать над этим условием там
         horizontalAlign: 'CENTER',
         verticalAlign: 'MIN',
         itemSpacing: 50,
