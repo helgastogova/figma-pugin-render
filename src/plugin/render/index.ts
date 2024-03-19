@@ -216,7 +216,7 @@ function renderTest({
       const labelFrame = createFrame(
         {
           name: frameName.split('=')[0],
-          horizontalAlign: 'MIN',
+          horizontalAlign: 'CENTER',
           verticalAlign: 'CENTER',
           minWidth: minWidth + 40,
           minHeight: minHeight + 40,

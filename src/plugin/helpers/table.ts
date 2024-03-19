@@ -14,8 +14,9 @@ export const createTableHead = (headings: string[], minWidth?: number) => {
       direction: 'HORIZONTAL',
       horizontalAlign: 'CENTER',
       verticalAlign: 'CENTER',
-      verticalPadding: 20,
+      verticalPadding: 0,
       minWidth: minWidth + 40,
+      maxWidth: minWidth + 40,
       fobtSize: 18,
     })
 
