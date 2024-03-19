@@ -4,21 +4,22 @@ export const createTableHead = (headings: string[], minWidth?: number) => {
   const tr = createFrame({
     name: 'tr',
     direction: 'HORIZONTAL',
-    itemSpacing: 10,
+    itemSpacing: 50,
   })
 
   headings.forEach((items) => {
     const th = createFrame({
       name: 'th',
-      verticalPadding: 8,
       itemSpacing: 0,
       direction: 'HORIZONTAL',
       horizontalAlign: 'CENTER',
-      verticalAlign: 'MIN',
-      minWidth,
+      verticalAlign: 'CENTER',
+      verticalPadding: 20,
+      minWidth: minWidth + 40,
+      fobtSize: 18,
     })
 
-    th.appendChild(createText({ characters: items }))
+    th.appendChild(createText({ characters: items, fontSize: 18 }))
     tr.appendChild(th)
   })
 
