@@ -190,7 +190,7 @@ function renderTest({
         const instance = component.createInstance()
 
         instance.name = name
-        cell.name = `${name ?? componentSet.name} / ${isLastOrPenultimateLevel}`
+        cell.name = `${name ?? componentSet.name}`
         cell.appendChild(instance)
         parentFrame.appendChild(cell)
       } else {
