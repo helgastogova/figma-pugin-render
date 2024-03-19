@@ -96,6 +96,7 @@ interface CreateTextProps {
   textAlignVertical?: 'TOP' | 'CENTER' | 'BOTTOM'
   textStyleId?: string
   textAutoResize?: 'NONE' | 'WIDTH_AND_HEIGHT' | 'HEIGHT'
+  layoutAlign?: 'STRETCH' | 'INHERIT'
 }
 
 export const createText = ({
@@ -107,6 +108,7 @@ export const createText = ({
   textAlignVertical = 'TOP',
   textStyleId = '',
   textAutoResize = 'WIDTH_AND_HEIGHT',
+  layoutAlign = 'INHERIT',
 }: CreateTextProps): TextNode => {
   const text = figma.createText()
 
@@ -117,6 +119,7 @@ export const createText = ({
     textAlignHorizontal,
     textAlignVertical,
     textStyleId,
+    layoutAlign,
   })
   text.textAutoResize = textAutoResize
 

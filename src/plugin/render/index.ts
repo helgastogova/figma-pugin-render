@@ -155,6 +155,8 @@ function renderTest({
         characters: frameName,
         fontSize: 18,
         fontColor: '#777',
+        textAlignHorizontal: 'CENTER',
+        layoutAlign: 'STRETCH',
       }),
     )
   }

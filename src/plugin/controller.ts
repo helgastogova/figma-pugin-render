@@ -47,9 +47,8 @@ figma.ui.onmessage = async (msg: CreateUIMessage) => {
       }
       figma.currentPage = demoPage
 
-      componentSets.forEach((item) => {
-        const mutableChildren = item.children.map((child) => child as ComponentNode)
-        renderDemo({ componentSet: { ...item, children: mutableChildren } })
+      componentSets.forEach((componentSet) => {
+        renderDemo({ componentSet })
       })
 
       figma.closePlugin()
