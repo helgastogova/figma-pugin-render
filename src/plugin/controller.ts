@@ -1,4 +1,6 @@
 import { renderDemo } from './render'
+import { createFrame } from './helpers'
+import { rgbToHex } from './helpers/colors'
 
 figma.showUI(__html__, { width: 900, height: 450, title: 'Render Components Sets Demo', themeColors: false })
 
@@ -12,12 +14,12 @@ const findAllComponentSetsOnPage = (): ComponentSetNode[] => {
   return figma.root.findAll((node) => node.type === 'COMPONENT_SET') as ComponentSetNode[]
 }
 
-const findAllComponentsOnPage = (): ComponentNode[] => {
-  return figma.root.findAll((node) => node.type === 'COMPONENT') as ComponentNode[]
-}
+// const findAllComponentsOnPage = (): ComponentNode[] => {
+//   return figma.root.findAll((node) => node.type === 'COMPONENT') as ComponentNode[]
+// }
 
 figma.ui.onmessage = async (msg: CreateUIMessage) => {
-  const components = findAllComponentsOnPage()
+  // const components = findAllComponentsOnPage()
   const componentSets = findAllComponentSetsOnPage()
 
   const componentSetsDataPartial = componentSets.map((componentSet) => {
@@ -47,9 +49,41 @@ figma.ui.onmessage = async (msg: CreateUIMessage) => {
       }
       figma.currentPage = demoPage
 
-      componentSets.forEach((componentSet) => {
-        renderDemo({ componentSet })
-      })
+      const componentTokensCollection = figma.variables
+        .getLocalVariableCollections()
+        .find((collection) => collection.name === 'Tokens' && !collection.hiddenFromPublishing)
+
+      const modes = componentTokensCollection?.modes
+
+      if (modes?.length > 0) {
+        modes.map(({ name, modeId }) => {
+          const frame = createFrame(
+            {
+              name: `${name} Theme`,
+              direction: 'VERTICAL',
+              horizontalAlign: 'CENTER',
+              verticalAlign: 'MIN',
+              itemSpacing: 50,
+              verticalPadding: 30,
+              horizontalPadding: 30,
+              borderRadius: 24,
+              backgroundColor: '#000',
+            },
+            demoPage,
+            'right',
+          )
+
+          frame.setExplicitVariableModeForCollection(componentTokensCollection, modeId)
+
+          componentSets.forEach((componentSet) => {
+            renderDemo({ componentSet, parentFrame: frame })
+          })
+        })
+      } else {
+        componentSets.forEach((componentSet) => {
+          renderDemo({ componentSet })
+        })
+      }
 
       figma.closePlugin()
     } catch (err) {

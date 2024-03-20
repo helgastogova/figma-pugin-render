@@ -3,6 +3,7 @@ import { createTableHead } from '../helpers/table'
 //createText
 interface RenderDemoProps {
   componentSet: any
+  parentFrame?: FrameNode
 }
 
 function getMaxDepth(nestedCombinations: any): number {
@@ -25,7 +26,6 @@ function getMaxDepth(nestedCombinations: any): number {
 
 export function generateNestedPropCombinations(variants: Record<string, Set<string>>): any {
   const keys = Object.keys(variants)
-  console.log('keys', keys)
   const nestedResults: any = {}
 
   function helper(path: (string | number)[], index: number) {
@@ -247,7 +247,7 @@ function renderTest({
   })
 }
 
-export const renderDemo = ({ componentSet }: RenderDemoProps): void => {
+export const renderDemo = ({ componentSet, parentFrame }: RenderDemoProps): void => {
   if (!componentSet) {
     console.error('Component Set not found')
     return
@@ -292,7 +292,7 @@ export const renderDemo = ({ componentSet }: RenderDemoProps): void => {
       verticalPadding: 50,
       horizontalPadding: 50,
     },
-    demoPage,
+    parentFrame ?? demoPage,
   )
 
   rootFrame.appendChild(getDemoTitle(componentSet.name))
