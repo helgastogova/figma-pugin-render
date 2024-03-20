@@ -4,6 +4,7 @@ import { createTableHead } from '../helpers/table'
 interface RenderDemoProps {
   componentSet: any
   parentFrame?: FrameNode
+  bg?: string
 }
 
 function getMaxDepth(nestedCombinations: any): number {
@@ -129,6 +130,7 @@ function renderTest({
   minHeight,
   frameName,
   tableRows,
+  backgroundColor,
 }: {
   componentSet: ComponentSetNode
   nestedCombinations: { [key: string]: any }
@@ -138,6 +140,7 @@ function renderTest({
   minHeight: number
   frameName?: string
   tableRows: string[]
+  backgroundColor?: string
 }) {
   const depthLevel = currentPath.length / 2
   const maxDepth = getMaxDepth(nestedCombinations)
@@ -181,7 +184,7 @@ function renderTest({
           verticalPadding: 20,
           horizontalPadding: 20,
           layoutAlign: 'STRETCH',
-          backgroundColor: '#f0f0f0',
+          backgroundColor,
         },
         parentFrame,
       )
@@ -242,12 +245,13 @@ function renderTest({
         minHeight,
         frameName: `${propName}=${propValue}`,
         tableRows,
+        backgroundColor,
       })
     })
   })
 }
 
-export const renderDemo = ({ componentSet, parentFrame }: RenderDemoProps): void => {
+export const renderDemo = ({ componentSet, parentFrame, backgroundColor }: RenderDemoProps): void => {
   if (!componentSet) {
     console.error('Component Set not found')
     return
@@ -324,5 +328,6 @@ export const renderDemo = ({ componentSet, parentFrame }: RenderDemoProps): void
     minHeight,
     frameName: componentSet.name,
     tableRows: tableHeaders[0] ?? [],
+    backgroundColor,
   })
 }

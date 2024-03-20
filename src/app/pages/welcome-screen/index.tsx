@@ -6,7 +6,9 @@ import s from './welcome-screen.module.css'
 
 const WelcomeScreen = () => {
   const [componentSetsArray, setComponentSets] = useState([])
+  const [currentRender, setCurrentRender] = useState('')
   const [loading, setLoading] = useState(true)
+  const [creating, setCreating] = useState(false)
 
   const onCancel = () => {
     parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
@@ -21,13 +23,17 @@ const WelcomeScreen = () => {
       },
       '*',
     )
+    setCreating(true)
   }
 
   React.useEffect(() => {
     function handleMessage(event) {
-      const { componentSets, type } = event.data.pluginMessage.data
+      const {
+        data,
+        data: { type },
+      } = event.data.pluginMessage
       if (type === 'components') {
-        setComponentSets(componentSets)
+        setComponentSets(data.componentSets)
         setLoading(false)
       }
     }
@@ -37,36 +43,61 @@ const WelcomeScreen = () => {
     return () => window.removeEventListener('message', handleMessage)
   }, [])
 
+  React.useEffect(() => {
+    function handleMessage(event) {
+      const {
+        data,
+        data: { type },
+      } = event.data.pluginMessage
+      console.log('type', type)
+      if (type === 'currentRender') {
+        setCurrentRender(data.name)
+      }
+    }
+
+    window.addEventListener('message', handleMessage)
+    // return () => window.removeEventListener('message', handleMessage)
+  }, [])
+
   return (
     <Layout centered className={s.layout}>
       <div>
-        <Text className={s.title} centered as="h1" variant="heading/large">
-          Hi 👋
-        </Text>
-        {loading ? (
+        {creating ? (
           <Text centered as="h1" variant="heading/large">
-            Loading...
+            Creating...
           </Text>
         ) : (
-          <div>
-            {componentSetsArray?.map((item, i) => {
-              return (
-                <div key={item.id}>
-                  {i + 1}) {item.name}
-                </div>
-              )
-            })}
-          </div>
+          <>
+            {loading ? (
+              <Text centered as="h1" variant="heading/large">
+                Loading...
+              </Text>
+            ) : (
+              <div>
+                {currentRender
+                  ? currentRender
+                  : componentSetsArray?.map((item, i) => {
+                      return (
+                        <div key={item.id}>
+                          {i + 1}) {item.name}
+                        </div>
+                      )
+                    })}
+              </div>
+            )}
+          </>
         )}
       </div>
-      <div className={s.buttonContainer}>
-        <Button onClick={onCancel} type="secondary">
-          Cancel
-        </Button>
-        <Button onClick={onCreate} type="primary">
-          Create
-        </Button>
-      </div>
+      {!loading && !creating && (
+        <div className={s.buttonContainer}>
+          <Button onClick={onCancel} type="secondary">
+            Cancel
+          </Button>
+          <Button onClick={onCreate} type="primary">
+            Create
+          </Button>
+        </div>
+      )}
     </Layout>
   )
 }

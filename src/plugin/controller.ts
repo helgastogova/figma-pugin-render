@@ -1,25 +1,18 @@
 import { renderDemo } from './render'
 import { createFrame } from './helpers'
-import { rgbToHex } from './helpers/colors'
 
 figma.showUI(__html__, { width: 900, height: 450, title: 'Render Components Sets Demo', themeColors: false })
 
 interface CreateUIMessage {
   type: 'render-demo' | 'cancel' | 'request-user-info' | 'request-components'
   message: string
-  //   data: ComponentsConfigType
 }
 
 const findAllComponentSetsOnPage = (): ComponentSetNode[] => {
   return figma.root.findAll((node) => node.type === 'COMPONENT_SET') as ComponentSetNode[]
 }
 
-// const findAllComponentsOnPage = (): ComponentNode[] => {
-//   return figma.root.findAll((node) => node.type === 'COMPONENT') as ComponentNode[]
-// }
-
 figma.ui.onmessage = async (msg: CreateUIMessage) => {
-  // const components = findAllComponentsOnPage()
   const componentSets = findAllComponentSetsOnPage()
 
   const componentSetsDataPartial = componentSets.map((componentSet) => {
@@ -76,11 +69,14 @@ figma.ui.onmessage = async (msg: CreateUIMessage) => {
           frame.setExplicitVariableModeForCollection(componentTokensCollection, modeId)
 
           componentSets.forEach((componentSet) => {
-            renderDemo({ componentSet, parentFrame: frame })
+            figma.ui.postMessage({ data: { type: 'currentRender', name: componentSet.name } })
+            renderDemo({ componentSet, parentFrame: frame, backgroundColor: name === 'Dark' ? '#000' : '#f0f0f0' })
           })
         })
       } else {
         componentSets.forEach((componentSet) => {
+          console.log('===', componentSet.name)
+          figma.ui.postMessage({ data: { type: 'currentRender', name: componentSet.name } })
           renderDemo({ componentSet })
         })
       }
