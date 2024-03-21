@@ -4,7 +4,7 @@ import { createTableHead } from '../helpers/table'
 interface RenderDemoProps {
   componentSet: any
   parentFrame?: FrameNode
-  bg?: string
+  backgroundColor?: string
 }
 
 function getMaxDepth(nestedCombinations: any): number {
@@ -251,7 +251,7 @@ function renderTest({
   })
 }
 
-export const renderDemo = ({ componentSet, parentFrame, backgroundColor }: RenderDemoProps): void => {
+export const renderDemo = async ({ componentSet, parentFrame, backgroundColor }: RenderDemoProps): void => {
   if (!componentSet) {
     console.error('Component Set not found')
     return
@@ -280,6 +280,7 @@ export const renderDemo = ({ componentSet, parentFrame, backgroundColor }: Rende
   const nestedCombinations = generateNestedPropCombinations(multipleVariants)
 
   const entries = Object.entries(multipleVariants)
+
   const lastTwoSets = entries.slice(-2)
   const tableHeaders =
     lastTwoSets.length > 1

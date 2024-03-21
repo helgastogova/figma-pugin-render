@@ -1,6 +1,15 @@
 import { renderDemo } from './render'
 import { createFrame } from './helpers'
 
+/*
+TODO: 
+1. vars for bgs 
+2. show typo
+3. show local vars
+4. show takens
+6. show components (Icons?)
+*/
+
 figma.showUI(__html__, { width: 900, height: 450, title: 'Render Components Sets Demo', themeColors: false })
 
 interface CreateUIMessage {
@@ -35,24 +44,36 @@ figma.ui.onmessage = async (msg: CreateUIMessage) => {
         figma.loadFontAsync({ family: 'Inter', style: 'Regular' }),
       ])
 
-      let demoPage = figma.root.findOne((node) => node.name === 'Component Sets [Demo]') as PageNode
-      if (!demoPage) {
-        demoPage = figma.createPage()
-        demoPage.name = 'Component Sets [Demo]'
-      }
+      const demoPage =
+        (figma.root.findOne((node) => node.name === 'Component Sets [Demo]') as PageNode) ?? figma.createPage()
+      demoPage.name = 'Component Sets [Demo]'
       figma.currentPage = demoPage
 
-      const componentTokensCollection = figma.variables
-        .getLocalVariableCollections()
-        .find((collection) => collection.name === 'Tokens' && !collection.hiddenFromPublishing)
+      const localCollections = await figma.variables.getLocalVariableCollectionsAsync()
+      const tokensCollection = localCollections.find(
+        (collection) => collection.name === 'Tokens' && !collection.hiddenFromPublishing,
+      )
 
-      const modes = componentTokensCollection?.modes
+      const renderComponentSetsInBatches = async (
+        componentSets: ComponentSetNode[],
+        frame: FrameNode,
+        modeName: string,
+      ) => {
+        for (let i = 0; i < componentSets.length; i++) {
+          await renderDemo({
+            componentSet: componentSets[i],
+            parentFrame: frame,
+            backgroundColor: modeName === 'Dark' ? '#000' : '#fff',
+          })
+          await new Promise((resolve) => setTimeout(resolve, 100))
+        }
+      }
 
-      if (modes?.length > 0) {
-        modes.map(({ name, modeId }) => {
+      if (tokensCollection && tokensCollection.modes.length > 0) {
+        for (const mode of tokensCollection.modes) {
           const frame = createFrame(
             {
-              name: `${name} Theme`,
+              name: `${mode.name} Theme`,
               direction: 'VERTICAL',
               horizontalAlign: 'CENTER',
               verticalAlign: 'MIN',
@@ -60,29 +81,20 @@ figma.ui.onmessage = async (msg: CreateUIMessage) => {
               verticalPadding: 30,
               horizontalPadding: 30,
               borderRadius: 24,
-              backgroundColor: '#000',
+              backgroundColor: mode.name === 'Dark' ? '#000' : '#fff', // Примерное применение переменной для фона
             },
             demoPage,
             'right',
           )
-
-          frame.setExplicitVariableModeForCollection(componentTokensCollection, modeId)
-
-          componentSets.forEach((componentSet) => {
-            figma.ui.postMessage({ data: { type: 'currentRender', name: componentSet.name } })
-            renderDemo({ componentSet, parentFrame: frame, backgroundColor: name === 'Dark' ? '#000' : '#f0f0f0' })
-          })
-        })
+          frame.setExplicitVariableModeForCollection(tokensCollection.id, mode.modeId)
+          await renderComponentSetsInBatches(componentSets, frame, mode.name)
+        }
       } else {
-        componentSets.forEach((componentSet) => {
-          console.log('===', componentSet.name)
-          figma.ui.postMessage({ data: { type: 'currentRender', name: componentSet.name } })
-          renderDemo({ componentSet })
-        })
+        await renderComponentSetsInBatches(componentSets, demoPage, 'Light')
       }
 
-      figma.closePlugin()
-    } catch (err) {
+      figma.closePlugin('Demo rendered successfully.')
+    } catch (error) {
       figma.ui.postMessage({ type: 'error', message: 'Failed to load fonts' })
       console.error(err)
     }
