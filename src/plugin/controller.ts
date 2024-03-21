@@ -1,6 +1,7 @@
 import { renderDemo } from './render'
 import { createFrame } from './helpers'
-
+import { createColorStyles } from './helpers/colors'
+import { colorStylesWithThemes, colorStylesWithoutThemes } from './helpers/palette'
 /*
 TODO: 
 1. vars for bgs 
@@ -63,13 +64,14 @@ figma.ui.onmessage = async (msg: CreateUIMessage) => {
           await renderDemo({
             componentSet: componentSets[i],
             parentFrame: frame,
-            backgroundColor: modeName === 'Dark' ? '#000' : '#fff',
+            backgroundColor: modeName === 'Dark' ? '#251F1F' : '#E9E8E8',
           })
           await new Promise((resolve) => setTimeout(resolve, 100))
         }
       }
 
       if (tokensCollection && tokensCollection.modes.length > 0) {
+        createColorStyles(colorStylesWithThemes)
         for (const mode of tokensCollection.modes) {
           const frame = createFrame(
             {
@@ -81,7 +83,6 @@ figma.ui.onmessage = async (msg: CreateUIMessage) => {
               verticalPadding: 30,
               horizontalPadding: 30,
               borderRadius: 24,
-              backgroundColor: mode.name === 'Dark' ? '#000' : '#fff', // Примерное применение переменной для фона
             },
             demoPage,
             'right',
@@ -90,6 +91,7 @@ figma.ui.onmessage = async (msg: CreateUIMessage) => {
           await renderComponentSetsInBatches(componentSets, frame, mode.name)
         }
       } else {
+        createColorStyles(colorStylesWithoutThemes)
         await renderComponentSetsInBatches(componentSets, demoPage, 'Light')
       }
 

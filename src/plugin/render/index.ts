@@ -187,6 +187,7 @@ function renderTest({
         horizontalAlign: 'CENTER',
         verticalAlign: 'MIN',
         itemSpacing: 50,
+        borderRadius: 24,
       },
       parentFrame,
     )
@@ -199,6 +200,7 @@ function renderTest({
           verticalAlign: 'CENTER',
           minWidth: minWidth + 40,
           minHeight: minHeight + 40,
+          borderRadius: 24,
         },
         frame,
       )
@@ -270,6 +272,7 @@ export const renderDemo = async ({ componentSet, parentFrame, backgroundColor }:
       itemSpacing: 50,
       verticalPadding: 50,
       horizontalPadding: 50,
+      borderRadius: 24,
     },
     parentFrame ?? demoPage,
   )
