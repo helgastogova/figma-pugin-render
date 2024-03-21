@@ -25,21 +25,19 @@ export function rgbToHex(rgb: RGB): string {
 export async function createColorStyles(styles) {
   const existingStyles = figma.getLocalPaintStyles()
 
-  for (const name in styles) {
-    if (styles.hasOwnProperty(name)) {
-      const color = styles[name]
+  styles.forEach(({ name, value, description }) => {
+    const existingStyle = existingStyles.find((style) => style.name === name)
 
-      const existingStyle = existingStyles.find((style) => style.name === name)
-
-      if (!existingStyle) {
-        const style = figma.createPaintStyle()
-        style.name = name
-        style.paints = createPaints(color)
-      } else {
-        existingStyle.paints = createPaints(color)
-      }
+    if (!existingStyle) {
+      const style = figma.createPaintStyle()
+      style.name = name
+      style.description = description
+      style.paints = createPaints(value)
+    } else {
+      existingStyle.description = description
+      existingStyle.paints = createPaints(value)
     }
-  }
+  })
 }
 
 export function createPaints(color: string): Paint[] {
