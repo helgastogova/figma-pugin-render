@@ -1,65 +1,39 @@
 import { createFrame, createText, getDemoTitle, findPageByName } from '../helpers'
 import { createTableHead } from '../helpers/table'
 //createText
-interface RenderDemoProps {
-  componentSet: any
-  parentFrame?: FrameNode
-  backgroundColor?: string
+
+interface NestedCombinations {
+  [key: string]: any
 }
 
-function getMaxDepth(nestedCombinations: any): number {
-  let maxDepth = 0
-
-  function explore(node: any, currentDepth: number) {
-    if (typeof node !== 'object' || node === null || node.hasOwnProperty('node')) {
-      maxDepth = Math.max(maxDepth, currentDepth)
-      return
-    }
-
-    Object.values(node).forEach((child) => {
-      explore(child, currentDepth + 1)
-    })
-  }
-
-  explore(nestedCombinations, 0)
-  return maxDepth
+function getMaxDepth(nestedCombinations: NestedCombinations): number {
+  return Object.values(nestedCombinations).reduce((max: number, child: NestedCombinations | string) => {
+    return typeof child === 'object' && child !== null && !child.hasOwnProperty('node')
+      ? Math.max(max, 1 + getMaxDepth(child))
+      : max
+  }, 0)
 }
 
-export function generateNestedPropCombinations(variants: Record<string, Set<string>>): any {
+const generateNestedPropCombinations = (variants: Record<string, Set<string>>): any => {
   const keys = Object.keys(variants)
-  const nestedResults: any = {}
 
-  function helper(path: (string | number)[], index: number) {
+  const recursiveGenerate = (index: number, path: string[]): any => {
     if (index === keys.length) {
-      let currentLevel = nestedResults
-
-      for (let i = 0; i < path.length - 1; i += 2) {
-        const propName = path[i]
-        const propValue = path[i + 1]
-
-        if (!currentLevel[propName]) {
-          currentLevel[propName] = {}
-        }
-
-        if (!currentLevel[propName][propValue]) {
-          currentLevel[propName][propValue] = {}
-        }
-
-        currentLevel = currentLevel[propName][propValue]
-      }
-
-      currentLevel['node'] = path[path.length - 1]
-      return
+      return { node: path[path.length - 1] } // Указываем конечный узел
     }
 
-    const currentKey = keys[index]
-    variants[currentKey].forEach((variant) => {
-      helper([...path, currentKey, variant], index + 1)
-    })
+    const propName = keys[index]
+    const result: Record<string, any> = {}
+
+    for (const propValue of variants[propName]) {
+      // Создаем или обновляем вложенный объект для каждого значения свойства
+      result[propValue] = recursiveGenerate(index + 1, [...path, propName, propValue])
+    }
+
+    return { [propName]: result }
   }
 
-  helper([], 0)
-  return nestedResults
+  return recursiveGenerate(0, [])
 }
 
 interface VariantsResult {
@@ -67,7 +41,7 @@ interface VariantsResult {
   multipleVariants: Record<string, Set<string>>
 }
 
-export function collectPropsVariants(componentSet: ComponentSetNode): VariantsResult {
+const collectPropsVariants = (componentSet: ComponentSetNode): VariantsResult => {
   const allPropsVariants: Record<string, Set<string>> = {}
 
   componentSet.children.forEach((component) => {
@@ -85,27 +59,24 @@ export function collectPropsVariants(componentSet: ComponentSetNode): VariantsRe
 
   Object.entries(allPropsVariants).forEach(([key, values]) => {
     if (values.size === 1) {
-      singleVariants[key] = Array.from(values)[0]
+      singleVariants[key] = values.values().next().value
     } else {
       multipleVariants[key] = values
     }
   })
 
-  return {
-    singleVariants,
-    multipleVariants,
-  }
+  return { singleVariants, multipleVariants }
 }
 
-function parseComponentProps(name: string): Record<string, string> {
-  const props: Record<string, string> = {}
-  name.split(', ').forEach((part) => {
+const parseComponentProps = (name: string): Record<string, string> =>
+  name.split(', ').reduce((acc, part) => {
     const [key, value] = part.split('=')
-    if (key && value) {
-      props[key.trim()] = value.trim()
-    }
-  })
-  return props
+    if (key && value) acc[key.trim()] = value.trim()
+    return acc
+  }, {})
+
+function isComponentNode(node: SceneNode): node is ComponentNode {
+  return node.type === 'COMPONENT'
 }
 
 function findComponentByProps({
@@ -115,8 +86,9 @@ function findComponentByProps({
   componentSet: ComponentSetNode
   properties: Record<string, string>
 }): ComponentNode | undefined {
-  return componentSet.children.find((component) => {
-    const componentProps = parseComponentProps(component.name)
+  return componentSet.children.find((node): node is ComponentNode => {
+    if (!isComponentNode(node)) return false
+    const componentProps = parseComponentProps(node.name)
     return Object.entries(properties).every(([key, value]) => componentProps[key] === value)
   })
 }
@@ -250,8 +222,13 @@ function renderTest({
     })
   })
 }
+interface RenderDemoProps {
+  componentSet: ComponentSetNode
+  parentFrame?: FrameNode | PageNode
+  backgroundColor?: string
+}
 
-export const renderDemo = async ({ componentSet, parentFrame, backgroundColor }: RenderDemoProps): void => {
+export const renderDemo = async ({ componentSet, parentFrame, backgroundColor }: RenderDemoProps): Promise<void> => {
   if (!componentSet) {
     console.error('Component Set not found')
     return
@@ -282,10 +259,7 @@ export const renderDemo = async ({ componentSet, parentFrame, backgroundColor }:
   const entries = Object.entries(multipleVariants)
 
   const lastTwoSets = entries.slice(-2)
-  const tableHeaders =
-    lastTwoSets.length > 1
-      ? lastTwoSets.map(([key, set]) => [key, ...Array.from(set)])
-      : lastTwoSets.map(([, set]) => Array.from(set))
+  const tableHeaders = lastTwoSets.map(([key, set]) => [key, ...Array.from(set)])
 
   const rootFrame = createFrame(
     {

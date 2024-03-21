@@ -56,7 +56,7 @@ figma.ui.onmessage = async (msg: CreateUIMessage) => {
 
       const renderComponentSetsInBatches = async (
         componentSets: ComponentSetNode[],
-        frame: FrameNode,
+        frame: FrameNode | PageNode,
         modeName: string,
       ) => {
         for (let i = 0; i < componentSets.length; i++) {
@@ -96,7 +96,7 @@ figma.ui.onmessage = async (msg: CreateUIMessage) => {
       figma.closePlugin('Demo rendered successfully.')
     } catch (error) {
       figma.ui.postMessage({ type: 'error', message: 'Failed to load fonts' })
-      console.error(err)
+      console.error(error)
     }
   }
   if (msg.type === 'cancel') {
