@@ -2,9 +2,10 @@ import { renderDemo } from './render'
 import { createFrame } from './helpers'
 import { createColorStyles } from './helpers/colors'
 import { colorStylesWithThemes, colorStylesWithoutThemes } from './helpers/palette'
+import { generateVariables } from './render/primitives'
+
 /*
 TODO: 
-1. vars for bgs 
 2. show typo
 3. show local vars
 4. show takens
@@ -44,12 +45,14 @@ figma.ui.onmessage = async (msg: CreateUIMessage) => {
         figma.loadFontAsync({ family: 'Roboto', style: 'Bold' }),
         figma.loadFontAsync({ family: 'Inter', style: 'Regular' }),
       ])
-
       const demoPage =
         (figma.root.findOne((node) => node.name === 'Component Sets [Demo]') as PageNode) ?? figma.createPage()
       demoPage.name = 'Component Sets [Demo]'
-      figma.currentPage = demoPage
+      ;(async () => {
+        await generateVariables(demoPage)
+      })()
 
+      figma.currentPage = demoPage
       const localCollections = await figma.variables.getLocalVariableCollectionsAsync()
       const tokensCollection = localCollections.find(
         (collection) => collection.name === 'Tokens' && !collection.hiddenFromPublishing,

@@ -91,3 +91,31 @@ export function adjustColorBrightness(hex: string, percent: number): string {
 
   return rgbToHex({ r: Math.round(r), g: Math.round(g), b: Math.round(b) })
 }
+
+export function parseColor(color: string): RGB | RGBA {
+  color = color.trim()
+  const hexRegex = /^#([A-Fa-f0-9]{6})([A-Fa-f0-9]{2}){0,1}$/
+  const hexShorthandRegex = /^#([A-Fa-f0-9]{3})([A-Fa-f0-9]){0,1}$/
+
+  if (hexRegex.test(color) || hexShorthandRegex.test(color)) {
+    const hexValue = color.substring(1)
+    const expandedHex =
+      hexValue.length === 3 || hexValue.length === 4
+        ? hexValue
+            .split('')
+            .map((char) => char + char)
+            .join('')
+        : hexValue
+
+    const alphaValue = expandedHex.length === 8 ? expandedHex.slice(6, 8) : undefined
+
+    return {
+      r: parseInt(expandedHex.slice(0, 2), 16) / 255,
+      g: parseInt(expandedHex.slice(2, 4), 16) / 255,
+      b: parseInt(expandedHex.slice(4, 6), 16) / 255,
+      ...(alphaValue ? { a: parseInt(alphaValue, 16) / 255 } : {}),
+    }
+  } else {
+    throw new Error('Invalid color format')
+  }
+}
