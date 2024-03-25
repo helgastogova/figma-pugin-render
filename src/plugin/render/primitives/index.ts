@@ -1,4 +1,4 @@
-import { getLocalStyles } from '../../helpers/scripts/getLocalStyles'
+import { getLocalStyles, ColorStyleData, TextStyleData } from '../../helpers/scripts/getLocalStyles'
 import { renderTextStyles } from './components/text'
 import { renderColorStyles } from './components/palette'
 
@@ -12,8 +12,8 @@ export const generateVariables = async (page: PageNode): Promise<void> => {
   await Promise.all([stylesPromises.colorStyles, stylesPromises.textStyles, stylesPromises.effectStyles]).then(
     ([colorStyles, textStyles, effectStyles]) => {
       console.log(colorStyles, textStyles, effectStyles)
-      renderColorStyles(colorStyles, page)
-      renderTextStyles(textStyles, page)
+      renderColorStyles(colorStyles as ColorStyleData, page)
+      renderTextStyles(textStyles as TextStyleData, page)
       // renderEffectStyles(effectStyles, page)
     },
   )

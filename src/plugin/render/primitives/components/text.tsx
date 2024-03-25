@@ -1,7 +1,7 @@
 import { createFrame, createText, getDemoTitle } from '../../../helpers'
-import { StyleData } from '../../../helpers/scripts/getLocalStyles'
+import { TextStyleData } from '../../../helpers/scripts/getLocalStyles'
 
-export const renderTextStyles = async (textStyles: StyleData, page: PageNode): Promise<void> => {
+export const renderTextStyles = async (textStyles: TextStyleData, page: PageNode): Promise<void> => {
   const demoFrame = createFrame(
     {
       name: 'Demo / Text Styles ',

@@ -1,9 +1,8 @@
 import { createFrame, createText, getDemoTitle } from '../../../helpers'
-import { StyleData } from '../../../helpers/scripts/getLocalStyles'
-import { findAndSetStyle } from '../../../helpers/colors'
+import { ColorStyleData } from '../../../helpers/scripts/getLocalStyles'
 
 interface CreatePaletteProps {
-  style: PaintStyle
+  style: PaintStyle // Используйте BaseStyle вместо PaintStyle
   frame: FrameNode | PageNode
 }
 
@@ -31,7 +30,6 @@ const createPalette = ({ style, frame }: CreatePaletteProps): void => {
       horizontalPadding: 8,
       backgroundColor: '#ffffff',
       minHeight: 140,
-      borderRadius: 8,
       minWidth: 260,
     },
     paletteWrapper,
@@ -69,22 +67,24 @@ const createPalette = ({ style, frame }: CreatePaletteProps): void => {
   // findAndSetStyle(style.paints, paletteWrapper) // fix that
 }
 
-export const renderColorStyles = async (colorStyles: StyleData, page: PageNode): Promise<void> => {
-  const styles = colorStyles.styles
+export const renderColorStyles = async (colorStyles: ColorStyleData, page: PageNode): Promise<void> => {
+  const paintStyles = colorStyles.styles
   figma.currentPage = page
 
-  const paletteFrame = createFrame({
-    name: 'Demo / Palette',
-    direction: 'VERTICAL',
-    horizontalAlign: 'MIN',
-    verticalAlign: 'MIN',
-    autoWidth: true,
-    autoHeight: true,
-    verticalPadding: 32,
-    horizontalPadding: 32,
-    borderRadius: 8,
+  const paletteFrame = createFrame(
+    {
+      name: 'Demo / Palette',
+      direction: 'VERTICAL',
+      horizontalAlign: 'MIN',
+      verticalAlign: 'MIN',
+      autoWidth: true,
+      autoHeight: true,
+      verticalPadding: 32,
+      horizontalPadding: 32,
+      borderRadius: 8,
+    },
     page,
-  })
+  )
 
   const caption = getDemoTitle('Palette')
   paletteFrame.appendChild(caption)
@@ -103,9 +103,8 @@ export const renderColorStyles = async (colorStyles: StyleData, page: PageNode):
     },
     paletteFrame,
   )
-
-  styles.map((item) => {
-    createPalette({ style: item, frame: paletteFrameColors })
+  paintStyles.forEach((style) => {
+    createPalette({ style, frame: paletteFrameColors })
   })
 
   page.appendChild(paletteFrame)
