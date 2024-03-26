@@ -1,5 +1,5 @@
 import { createFrame, createText, getDemoTitle } from '../../../helpers'
-import { ColorStyleData } from '../../../helpers/scripts/getLocalStyles'
+import { ColorStyleData } from '../getLocalStyles'
 
 interface CreatePaletteProps {
   style: PaintStyle // Используйте BaseStyle вместо PaintStyle
@@ -43,7 +43,7 @@ const createPalette = ({ style, frame }: CreatePaletteProps): void => {
 
   const textWrapper = createFrame(
     {
-      name: 'Color name',
+      name: `Color: ${style.name}`,
       direction: 'VERTICAL',
       horizontalAlign: 'MIN',
       verticalAlign: 'MIN',

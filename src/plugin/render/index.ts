@@ -1,6 +1,5 @@
 import { createFrame, createText, getDemoTitle, findPageByName } from '../helpers'
 import { createTableHead } from '../helpers/table'
-//createText
 
 interface NestedCombinations {
   [key: string]: any
@@ -26,7 +25,6 @@ const generateNestedPropCombinations = (variants: Record<string, Set<string>>): 
     const result: Record<string, any> = {}
 
     for (const propValue of variants[propName]) {
-      // Создаем или обновляем вложенный объект для каждого значения свойства
       result[propValue] = recursiveGenerate(index + 1, [...path, propName, propValue])
     }
 

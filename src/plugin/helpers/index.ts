@@ -162,3 +162,49 @@ export const findPageByName = (name: 'Component Sets [Demo]') => {
   if (!pageName) return figma.currentPage
   return figma.root.findOne((node) => node.name === pageName) ?? figma.currentPage
 }
+
+//
+export const hasChildren = (node: BaseNode): node is BaseNode & ChildrenMixin => Boolean(node['children'])
+
+interface MinimalEffectMixin {
+  effects: ReadonlyArray<Effect> | PluginAPI['mixed']
+  effectStyleId: string | PluginAPI['mixed']
+}
+
+export const hasEffects = (node: SceneNode): node is SceneNode & MinimalEffectMixin => Boolean(node['effectStyleId'])
+export const hasStrokes = (node: SceneNode): node is SceneNode & MinimalStrokesMixin => Boolean(node['strokes'])
+export const hasStrokeStyle = (node: SceneNode): node is SceneNode & MinimalStrokesMixin =>
+  Boolean(node['strokeStyleId'])
+
+export const hasFills = (node: SceneNode): node is SceneNode & MinimalFillsMixin => Boolean(node['fills'])
+
+export const hasFillStyles = (node: SceneNode): node is SceneNode & MinimalFillsMixin => Boolean(node['fillStyleId'])
+
+export async function isPublished(styles) {
+  const numOfStyles: number = styles.length
+  let numOfPublishedStyles: number = 0
+  let publishedStatus: string
+
+  //check to see if each style is published
+  for await (const item of styles) {
+    const style = figma.getStyleById(item.id)
+    const published = await style.getPublishStatusAsync()
+
+    //increase the count of published styles
+    if (published === 'CURRENT') {
+      numOfPublishedStyles++
+    }
+  }
+
+  //determine if all styles are published, some, or none
+  if (numOfPublishedStyles === numOfStyles) {
+    publishedStatus = 'all'
+  } else if (numOfPublishedStyles >= 1 && numOfPublishedStyles < numOfStyles) {
+    publishedStatus = 'some'
+  } else {
+    publishedStatus = 'none'
+  }
+
+  //return the results
+  return publishedStatus
+}

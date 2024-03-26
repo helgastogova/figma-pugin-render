@@ -1,5 +1,5 @@
 import { createFrame, createText, getDemoTitle } from '../../../helpers'
-import { EffectStyleData } from '../../../helpers/scripts/getLocalStyles'
+import { EffectStyleData } from '../getLocalStyles'
 
 interface CreateEffectProps {
   style: EffectStyle
@@ -23,6 +23,29 @@ const createEffect = ({ style, frame }: CreateEffectProps): void => {
   )
 
   effectWrapper.setEffectStyleIdAsync(style.id)
+
+  const textWrapper = createFrame(
+    {
+      name: `Effect: ${style.name}`,
+      direction: 'VERTICAL',
+      horizontalAlign: 'MIN',
+      verticalAlign: 'MIN',
+      borderRadius: 6,
+      verticalPadding: 8,
+      horizontalPadding: 16,
+      backgroundColor: '#ffffff',
+      itemSpacing: 8,
+    },
+    effectWrapper,
+  )
+
+  textWrapper.appendChild(
+    createText({
+      characters: style.name,
+      fontSize: 18,
+      fontName: { family: 'Roboto', style: 'Regular' },
+    }),
+  )
 }
 
 export const renderEffectStyles = async (effectStyles: EffectStyleData, page: PageNode): Promise<void> => {
@@ -67,40 +90,4 @@ export const renderEffectStyles = async (effectStyles: EffectStyleData, page: Pa
   })
 
   page.appendChild(effectsFrame)
-}
-
-function createEffectFromStyle(effectStyle: EffectStyle): Effect[] {
-  const effects: Effect[] = effectStyle.effects.map((effect) => {
-    console.log('effect', effect, effect.type)
-    switch (effect.type) {
-      case 'DROP_SHADOW':
-      case 'INNER_SHADOW':
-        return {
-          type: effect.type,
-          color: effect.color,
-          offset: effect.offset,
-          radius: effect.radius,
-          spread: effect.spread || 0,
-          visible: effect.visible,
-        }
-      case 'LAYER_BLUR':
-      case 'BACKGROUND_BLUR':
-        return {
-          type: effect.type,
-          radius: effect.radius,
-          visible: effect.visible,
-        }
-      default:
-        throw new Error(`Unsupported effect type: ${effect?.type}`)
-    }
-  })
-
-  return effects
-}
-
-function applyEffectToNode(node: SceneNode, effectStyle: EffectStyle): void {
-  if ('effects' in node) {
-    Object.assign(node.effects, createEffectFromStyle(effectStyle))
-  }
-  console.log('node', node.effects)
 }

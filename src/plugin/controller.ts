@@ -3,27 +3,12 @@ import { createFrame } from './helpers'
 import { createColorStyles } from './helpers/colors'
 import { colorStylesWithThemes, colorStylesWithoutThemes } from './helpers/palette'
 import { generateVariables } from './render/primitives'
-
-/*
-TODO: 
-2. show typo
-3. show local vars
-4. show takens
-6. show components (Icons?)
-*/
+import { CreateUIMessageType } from './types'
+import { findAllComponentSetsOnPage, getDemoPage } from './utils'
 
 figma.showUI(__html__, { width: 900, height: 450, title: 'Render Components Sets Demo', themeColors: false })
 
-interface CreateUIMessage {
-  type: 'render-demo' | 'cancel' | 'request-user-info' | 'request-components'
-  message: string
-}
-
-const findAllComponentSetsOnPage = (): ComponentSetNode[] => {
-  return figma.root.findAll((node) => node.type === 'COMPONENT_SET') as ComponentSetNode[]
-}
-
-figma.ui.onmessage = async (msg: CreateUIMessage) => {
+figma.ui.onmessage = async (msg: CreateUIMessageType) => {
   const componentSets = findAllComponentSetsOnPage()
 
   const componentSetsDataPartial = componentSets.map((componentSet) => {
@@ -44,15 +29,16 @@ figma.ui.onmessage = async (msg: CreateUIMessage) => {
         figma.loadFontAsync({ family: 'Roboto', style: 'Regular' }),
         figma.loadFontAsync({ family: 'Roboto', style: 'Bold' }),
         figma.loadFontAsync({ family: 'Inter', style: 'Regular' }),
+        // TODO: Load other fonts user has used in their design system
       ])
-      const demoPage =
-        (figma.root.findOne((node) => node.name === 'Component Sets [Demo]') as PageNode) ?? figma.createPage()
+
+      const demoPage = getDemoPage()
       demoPage.name = 'Component Sets [Demo]'
+      figma.currentPage = demoPage
       ;(async () => {
         await generateVariables(demoPage)
       })()
 
-      figma.currentPage = demoPage
       const localCollections = await figma.variables.getLocalVariableCollectionsAsync()
       const tokensCollection = localCollections.find(
         (collection) => collection.name === 'Tokens' && !collection.hiddenFromPublishing,
