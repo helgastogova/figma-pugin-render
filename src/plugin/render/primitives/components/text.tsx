@@ -1,7 +1,7 @@
 import { createFrame, createText, getDemoTitle } from '../../../helpers'
 import { TextStyleData } from '../getLocalStyles'
 
-export const renderTextStyles = async (textStyles: TextStyleData, page: PageNode): Promise<void> => {
+export const renderTextStyles = async (textStyles: TextStyleData, frame: FrameNode): Promise<void> => {
   const demoFrame = createFrame(
     {
       name: 'Demo / Text Styles ',
@@ -12,7 +12,7 @@ export const renderTextStyles = async (textStyles: TextStyleData, page: PageNode
       verticalPadding: 16,
       horizontalPadding: 16,
     },
-    page,
+    frame,
   )
   demoFrame.appendChild(getDemoTitle('Typography'))
 
@@ -24,6 +24,4 @@ export const renderTextStyles = async (textStyles: TextStyleData, page: PageNode
       }),
     )
   })
-
-  page.appendChild(demoFrame)
 }

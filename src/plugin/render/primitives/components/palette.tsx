@@ -67,9 +67,8 @@ const createPalette = ({ style, frame }: CreatePaletteProps): void => {
   // findAndSetStyle(style.paints, paletteWrapper) // fix that
 }
 
-export const renderColorStyles = async (colorStyles: ColorStyleData, page: PageNode): Promise<void> => {
+export const renderColorStyles = async (colorStyles: ColorStyleData, frame: FrameNode): Promise<void> => {
   const paintStyles = colorStyles.styles
-  figma.currentPage = page
 
   const paletteFrame = createFrame(
     {
@@ -83,7 +82,7 @@ export const renderColorStyles = async (colorStyles: ColorStyleData, page: PageN
       horizontalPadding: 32,
       borderRadius: 8,
     },
-    page,
+    frame,
   )
 
   const caption = getDemoTitle('Palette')
@@ -107,5 +106,5 @@ export const renderColorStyles = async (colorStyles: ColorStyleData, page: PageN
     createPalette({ style, frame: paletteFrameColors })
   })
 
-  page.appendChild(paletteFrame)
+  // page.appendChild(paletteFrame)
 }

@@ -3,7 +3,7 @@ import { EffectStyleData } from '../getLocalStyles'
 
 interface CreateEffectProps {
   style: EffectStyle
-  frame: FrameNode | PageNode
+  frame: FrameNode
 }
 
 const createEffect = ({ style, frame }: CreateEffectProps): void => {
@@ -48,9 +48,8 @@ const createEffect = ({ style, frame }: CreateEffectProps): void => {
   )
 }
 
-export const renderEffectStyles = async (effectStyles: EffectStyleData, page: PageNode): Promise<void> => {
+export const renderEffectStyles = async (effectStyles: EffectStyleData, frame: FrameNode): Promise<void> => {
   const styles = effectStyles.styles
-  figma.currentPage = page
 
   const effectsFrame = createFrame(
     {
@@ -64,7 +63,7 @@ export const renderEffectStyles = async (effectStyles: EffectStyleData, page: Pa
       horizontalPadding: 32,
       borderRadius: 8,
     },
-    page,
+    frame,
   )
 
   const caption = getDemoTitle('Effects')
@@ -88,6 +87,4 @@ export const renderEffectStyles = async (effectStyles: EffectStyleData, page: Pa
   styles.forEach((style) => {
     createEffect({ style, frame: showCase })
   })
-
-  page.appendChild(effectsFrame)
 }
