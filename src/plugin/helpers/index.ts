@@ -10,7 +10,10 @@ export const createFrame = (
   const frame: FrameNode = figma.createFrame()
 
   Object.assign(frame, getLayoutProps(props))
-  findAndSetStyle(props.backgroundColor ?? undefined, frame)
+
+  if (props.backgroundColor) {
+    findAndSetStyle(props.backgroundColor, frame)
+  }
 
   if (direction === 'bottom') {
     const maxY = currentPage.children

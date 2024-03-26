@@ -1,25 +1,31 @@
 type Paint = SolidPaint | GradientPaint | ImagePaint | VideoPaint
 
-export function hexToRgb(hex: string | undefined): { r: number; g: number; b: number } {
+export function hexToRgbA(hex: string): { r: number; g: number; b: number; a?: number } {
   if (!hex) return { r: 0, g: 0, b: 0 }
-  if (typeof hex === 'string') {
-    if (!/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) return { r: 0, g: 0, b: 0 }
-    return figma.util.rgb(hex)
-  } else if (typeof hex === 'object') {
-    if (!/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex[0])) return { r: 0, g: 0, b: 0 }
-    return figma.util.rgb(hex[0]) //TODO: fix gradients
-  }
-  return { r: 0, g: 0, b: 0 }
+
+  return hex.length < 7 ? figma.util.rgb(hex) : figma.util.rgba(hex)
 }
 
-export function rgbToHex(rgb: RGB): string {
-  if (!rgb) return ''
-  const toHex = (value: number) => {
-    const hex = Math.round(value * 255).toString(16)
-    return (hex.length === 1 ? '0' + hex : hex).toUpperCase()
+const toHex = (value: number) => {
+  const hex = Math.round(value * 255).toString(16)
+  return (hex.length === 1 ? '0' + hex : hex).toUpperCase()
+}
+
+export type RGB = { r: number; g: number; b: number }
+export type RGBA = { r: number; g: number; b: number; a: number }
+
+export const isRgb = (value: RGB | RGBA): boolean => {
+  return value.r !== undefined && value.g !== undefined && value.b !== undefined
+}
+
+export function rgbToHex(value: RGB | RGBA): string | undefined {
+  if (!isRgb(value)) return undefined
+
+  if (value.a !== undefined && value.a < 1) {
+    return `#${toHex(value.r)}${toHex(value.g)}${toHex(value.b)}${toHex(value.a)}`
   }
 
-  return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`
+  return `#${toHex(value.r)}${toHex(value.g)}${toHex(value.b)}`
 }
 
 export async function createColorStyles(styles) {
@@ -42,21 +48,35 @@ export async function createColorStyles(styles) {
 
 export function createPaints(color: string): Paint[] {
   if (typeof color === 'string') {
-    return [{ type: 'SOLID', color: hexToRgb(color) }]
+    const rgba = hexToRgbA(color)
+    return [
+      {
+        type: 'SOLID',
+        color: { r: rgba.r, g: rgba.g, b: rgba.b },
+        opacity: rgba.a || 1,
+      },
+    ]
+  } else if (Array.isArray(color) && color.length === 2) {
+    const startColor = hexToRgbA(color[0])
+    const endColor = hexToRgbA(color[1])
+
+    return [
+      {
+        type: 'GRADIENT_LINEAR',
+        gradientTransform: [
+          [1, 0, 0],
+          [0, 1, 0.7],
+        ],
+        gradientStops: [
+          { color: { r: startColor.r, g: startColor.g, b: startColor.b }, position: 0, opacity: startColor.a || 1 },
+          { color: { r: endColor.r, g: endColor.g, b: endColor.b }, position: 1, opacity: endColor.a || 1 },
+        ],
+      },
+    ]
   }
-  return [
-    {
-      type: 'GRADIENT_LINEAR',
-      gradientTransform: [
-        [1, 0, 0],
-        [0, 1, 0.7],
-      ],
-      gradientStops: [
-        { color: { ...hexToRgb(color[0]), a: 1 }, position: 0 },
-        { color: { ...hexToRgb(color[1]), a: 1 }, position: 1 },
-      ],
-    },
-  ]
+
+  // По умолчанию возвращаем пустой массив, если формат не поддерживается
+  return []
 }
 
 export function hexColorMatch(style: PaintStyle, hex: string): boolean {
@@ -80,16 +100,6 @@ export function findAndSetStyle(color?: string, element?: ComponentNode | Rectan
     const fills: Paint[] = createPaints(color)
     element.fills = fills
   }
-}
-
-export function adjustColorBrightness(hex: string, percent: number): string {
-  let { r, g, b } = hexToRgb(hex)
-
-  r = Math.min(255, Math.max(0, r + (r * percent) / 100))
-  g = Math.min(255, Math.max(0, g + (g * percent) / 100))
-  b = Math.min(255, Math.max(0, b + (b * percent) / 100))
-
-  return rgbToHex({ r: Math.round(r), g: Math.round(g), b: Math.round(b) })
 }
 
 export function parseColor(color: string): RGB | RGBA {

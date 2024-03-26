@@ -49,7 +49,6 @@ const WelcomeScreen = () => {
         data,
         data: { type },
       } = event.data.pluginMessage
-      console.log('type', type)
       if (type === 'currentRender') {
         setCurrentRender(data.name)
       }

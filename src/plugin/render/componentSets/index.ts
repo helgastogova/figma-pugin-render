@@ -37,7 +37,6 @@ export const handleRendering = async (demoPage: PageNode, componentSets: Compone
           verticalPadding: 30,
           horizontalPadding: 30,
           borderRadius: 24,
-          backgroundColor: 'none',
         },
         demoPage,
         'right',

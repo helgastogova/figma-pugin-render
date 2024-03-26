@@ -6,7 +6,7 @@ interface CreatePaletteProps {
   frame: FrameNode | PageNode
 }
 
-const createPalette = ({ style, frame }: CreatePaletteProps): void => {
+export const createPalette = ({ style, frame }: CreatePaletteProps): void => {
   const paletteWrapper = createFrame(
     {
       name: `Palette / ${style.name} `,
