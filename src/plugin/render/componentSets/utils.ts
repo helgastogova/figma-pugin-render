@@ -1,5 +1,5 @@
-import { createFrame, createText, getDemoTitle, findPageByName } from '../helpers'
-import { createTableHead } from '../helpers/table'
+import { createFrame, createText, getDemoTitle, findPageByName } from '../../helpers'
+import { createTableHead } from '../../helpers/table'
 
 interface NestedCombinations {
   [key: string]: any

@@ -1,7 +1,8 @@
 import { generateVariables } from './render/primitives'
 import { CreateUIMessageType } from './types'
 import { findAllComponentSetsOnPage, getDemoPage } from './utils'
-import { handleRendering } from './render'
+import { handleRendering } from './render/componentSets'
+import { generateTokens } from './render/primitives/tockens'
 
 figma.showUI(__html__, { width: 900, height: 450, title: 'Render Components Sets Demo', themeColors: false })
 
@@ -33,8 +34,9 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
         // TODO: Load other fonts user has used in their design system
       ])
 
-      await handleRendering(demoPage, componentSets)
-      await generateVariables(demoPage)
+      // await handleRendering(demoPage, componentSets)
+      // await generateVariables(demoPage)
+      await generateTokens(demoPage)
 
       figma.closePlugin('Demo rendered successfully.')
     } catch (error) {

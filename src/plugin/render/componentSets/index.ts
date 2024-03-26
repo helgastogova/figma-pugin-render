@@ -1,7 +1,7 @@
-import { renderDemo } from './renderComponentSets'
-import { createColorStyles } from '../helpers/colors'
-import { createFrame } from '../helpers'
-import { colorStylesWithThemes, colorStylesWithoutThemes } from '../helpers/palette'
+import { renderDemo } from './utils'
+import { createColorStyles } from '../../helpers/colors'
+import { createFrame } from '../../helpers'
+import { colorStylesWithThemes, colorStylesWithoutThemes } from '../../helpers/palette'
 
 export const handleRendering = async (demoPage: PageNode, componentSets: ComponentSetNode[]) => {
   const localCollections = await figma.variables.getLocalVariableCollectionsAsync()
