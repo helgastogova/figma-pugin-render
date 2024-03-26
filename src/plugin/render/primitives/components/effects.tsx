@@ -15,28 +15,19 @@ const createEffect = ({ style, frame }: CreateEffectProps): void => {
       verticalAlign: 'MIN',
       itemSpacing: 8,
       verticalPadding: 8,
+      maxWidth: 260,
+      minHeight: 140,
+      borderRadius: 8,
     },
     frame,
   )
 
-  console.log('style', style, style.effects)
-
-  const myEffectStyle: EffectStyle = figma.getStyleById('someEffectStyleId') as EffectStyle
-
-  const effectBlock = figma.createRectangle()
-  effectBlock.resize(260, 140)
-  effectBlock.cornerRadius = 4
-
-  applyEffectToNode(effectWrapper, myEffectStyle)
-
-  effectWrapper.appendChild(effectBlock)
+  effectWrapper.setEffectStyleIdAsync(style.id)
 }
 
 export const renderEffectStyles = async (effectStyles: EffectStyleData, page: PageNode): Promise<void> => {
   const styles = effectStyles.styles
   figma.currentPage = page
-
-  console.log('we are working with', effectStyles)
 
   const effectsFrame = createFrame(
     {
@@ -56,7 +47,7 @@ export const renderEffectStyles = async (effectStyles: EffectStyleData, page: Pa
   const caption = getDemoTitle('Effects')
   effectsFrame.appendChild(caption)
 
-  const effectFrame = createFrame(
+  const showCase = createFrame(
     {
       name: 'Demo / Effects',
       direction: 'HORIZONTAL',
@@ -66,13 +57,13 @@ export const renderEffectStyles = async (effectStyles: EffectStyleData, page: Pa
       verticalAlign: 'MIN',
       autoWidth: true,
       autoHeight: true,
-      itemSpacing: 16,
+      itemSpacing: 40,
     },
     effectsFrame,
   )
 
   styles.forEach((style) => {
-    createEffect({ style, frame: effectFrame })
+    createEffect({ style, frame: showCase })
   })
 
   page.appendChild(effectsFrame)
@@ -80,6 +71,7 @@ export const renderEffectStyles = async (effectStyles: EffectStyleData, page: Pa
 
 function createEffectFromStyle(effectStyle: EffectStyle): Effect[] {
   const effects: Effect[] = effectStyle.effects.map((effect) => {
+    console.log('effect', effect, effect.type)
     switch (effect.type) {
       case 'DROP_SHADOW':
       case 'INNER_SHADOW':
@@ -99,7 +91,7 @@ function createEffectFromStyle(effectStyle: EffectStyle): Effect[] {
           visible: effect.visible,
         }
       default:
-        throw new Error(`Unsupported effect type: ${effect.type}`)
+        throw new Error(`Unsupported effect type: ${effect?.type}`)
     }
   })
 
@@ -108,6 +100,7 @@ function createEffectFromStyle(effectStyle: EffectStyle): Effect[] {
 
 function applyEffectToNode(node: SceneNode, effectStyle: EffectStyle): void {
   if ('effects' in node) {
-    node.effects = createEffectFromStyle(effectStyle)
+    Object.assign(node.effects, createEffectFromStyle(effectStyle))
   }
+  console.log('node', node.effects)
 }
