@@ -20,11 +20,17 @@ export type EffectStyleData = StyleData & {
   styles: EffectStyle[]
 }
 
-async function getStylesByType(type: 'color' | 'text' | 'effect'): Promise<BaseStyle[]> {
+export type GridStyleData = StyleData & {
+  type: 'grid'
+  styles: GridStyle[]
+}
+
+async function getStylesByType(type: 'color' | 'text' | 'effect' | 'grid'): Promise<BaseStyle[]> {
   const styleMethods = {
     color: figma.getLocalPaintStyles,
     text: figma.getLocalTextStyles,
     effect: figma.getLocalEffectStyles,
+    grid: figma.getLocalGridStyles,
   }
   const styles = styleMethods[type]()
   return styles.length > 0 ? styles : []
