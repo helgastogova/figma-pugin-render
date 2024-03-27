@@ -196,7 +196,8 @@ function renderTest({
           name: frameName.split('=')[0],
           horizontalAlign: 'CENTER',
           verticalAlign: 'CENTER',
-          minWidth: minWidth + 40,
+          // minWidth: minWidth + 40,
+          minWidth: 200,
           minHeight: minHeight + 40,
           borderRadius: 24,
         },
@@ -271,6 +272,7 @@ export const renderDemo = async ({ componentSet, parentFrame, backgroundColor }:
       verticalPadding: 50,
       horizontalPadding: 50,
       borderRadius: 24,
+      backgroundColor: '#fff',
     },
     parentFrame ?? demoPage,
   )

@@ -1,6 +1,5 @@
 import { getCollections } from '../getLocalStyles'
 import { createFrame, createText } from '@src/plugin/helpers'
-import { createPalette } from '../components/palette'
 import { rgbToHex, isRgb } from '@src/plugin/helpers/colors'
 //hiddenFromPublishing
 

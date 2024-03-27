@@ -7,7 +7,7 @@ export const createTableHead = (headings: string[], minWidth?: number) => {
     itemSpacing: 50,
   })
 
-  headings.forEach((items) => {
+  headings.forEach((items, index) => {
     const th = createFrame({
       name: 'cell',
       itemSpacing: 0,
@@ -15,8 +15,8 @@ export const createTableHead = (headings: string[], minWidth?: number) => {
       horizontalAlign: 'CENTER',
       verticalAlign: 'CENTER',
       verticalPadding: 0,
-      minWidth: minWidth + 40,
-      maxWidth: minWidth + 40,
+      minWidth: index === 0 ? 200 : minWidth + 40,
+      maxWidth: index === 0 ? 200 : minWidth + 40,
     })
 
     th.appendChild(createText({ characters: items, fontSize: 18 }))

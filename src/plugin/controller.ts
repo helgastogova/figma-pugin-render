@@ -46,8 +46,8 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
           throw error
         })
         .then(async () => {
-          await generateVariables(demoPage)
           await generateTokens(demoPage)
+          await generateVariables(demoPage)
           figma.ui.postMessage({ type: 'success', message: 'Demo rendered successfully.' })
         })
         .catch((error) => {

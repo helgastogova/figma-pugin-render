@@ -13,6 +13,8 @@ export const createFrame = (
 
   if (props.backgroundColor) {
     findAndSetStyle(props.backgroundColor, frame)
+  } else {
+    frame.fills = []
   }
 
   if (direction === 'bottom') {
