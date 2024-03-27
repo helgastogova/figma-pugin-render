@@ -4,10 +4,10 @@ import { findAllComponentSetsOnPage, getDemoPage } from './utils'
 import { handleRenderingComponentSets } from './render/componentSets'
 // import { generateTokens } from './render/primitives/tokens'
 
-figma.showUI(__html__, { width: 400, height: 450, title: 'Render Components Sets Demo', themeColors: false })
+figma.showUI(__html__, { width: 400, height: 450, title: 'Showcase render', themeColors: false })
 
 figma.ui.onmessage = async (msg: CreateUIMessageType) => {
-  const componentSets = findAllComponentSetsOnPage()
+  const { componentSets, standaloneComponentSets } = findAllComponentSetsOnPage()
 
   const componentSetsDataPartial = componentSets.map((componentSet) => {
     return {
@@ -38,7 +38,9 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
       })
 
       //await generateTokens(demoPage)
-      await Promise.all([handleRenderingComponentSets(demoPage, componentSets)])
+      await Promise.all([
+        handleRenderingComponentSets(demoPage, [...componentSets, ...(standaloneComponentSets as any)]),
+      ])
         .catch((error) => {
           figma.ui.postMessage({ type: 'error', message: 'Failed to render demo' })
           console.error(error)

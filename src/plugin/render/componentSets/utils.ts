@@ -132,6 +132,7 @@ function renderTest({
       parentFrame,
     )
     componentSet.children.forEach((component) => {
+      if (!isComponentNode(component)) return
       const instance = component.createInstance()
       instance.name = component.name
       cell.appendChild(instance)

@@ -1,29 +1,42 @@
-export const findAllComponentSetsOnPage = (): ComponentSetNode[] => {
-  const realComponentSets = figma.root.findAll((node) => node.type === 'COMPONENT_SET') as ComponentSetNode[]
+type CustomComponentSet = {
+  name: string
+  children: ComponentNode[]
+}
 
-  const allComponents = figma.root.findAll((node) => node.type === 'COMPONENT') as ComponentNode[]
-  const standaloneComponents = allComponents.filter((component) => component.parent.type !== 'COMPONENT_SET')
+export const findAllComponentSetsOnPage = (): {
+  componentSets: ComponentSetNode[]
+  standaloneComponentSets: CustomComponentSet[]
+} => {
+  const componentSets: ComponentSetNode[] = []
+  const standaloneComponents = new Map<string, ComponentNode[]>()
 
-  const groupedComponents = standaloneComponents.reduce(
-    (acc, component) => {
-      const parentName = component.parent.name
-      if (!acc[parentName]) {
-        acc[parentName] = []
+  figma.root.findAll((node) => {
+    if (node.type === 'COMPONENT_SET') {
+      componentSets.push(node as ComponentSetNode)
+    } else if (node.type === 'COMPONENT') {
+      const component = node as ComponentNode
+      if (component.parent.type !== 'COMPONENT_SET') {
+        const parentName = component.parent.name
+        if (!standaloneComponents.has(parentName)) {
+          standaloneComponents.set(parentName, [])
+        }
+        standaloneComponents.get(parentName)?.push(component)
       }
-      acc[parentName].push(component)
-      return acc
-    },
-    {} as Record<string, ComponentNode[]>,
-  )
+    }
+    return false
+  })
 
-  const standaloneComponentsSet = Object.entries(groupedComponents).map(([name, components]) => {
-    return {
+  const standaloneComponentSets: CustomComponentSet[] = Array.from(standaloneComponents.entries()).map(
+    ([name, components]) => ({
       name,
       children: components,
-    }
-  }) as ComponentSetNode[]
+    }),
+  )
 
-  return [...realComponentSets, ...standaloneComponentsSet]
+  return {
+    componentSets,
+    standaloneComponentSets,
+  }
 }
 
 export const getDemoPage = (): PageNode => {
