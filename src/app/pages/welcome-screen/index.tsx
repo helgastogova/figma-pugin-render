@@ -77,7 +77,7 @@ const WelcomeScreen = () => {
                   ? currentRender
                   : componentSetsArray?.map((item, i) => {
                       return (
-                        <div key={item.id}>
+                        <div key={`${item.id}_${i}`}>
                           {i + 1}) {item.name}
                         </div>
                       )

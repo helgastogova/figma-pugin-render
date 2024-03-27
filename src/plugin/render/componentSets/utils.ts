@@ -115,6 +115,29 @@ function renderTest({
   const depthLevel = currentPath.length / 2
   const maxDepth = getMaxDepth(nestedCombinations)
 
+  // component
+  if (maxDepth === 0 && depthLevel === 0 && componentSet.children.length !== 0) {
+    const cell = createFrame(
+      {
+        name: 'Component variants',
+        direction: 'HORIZONTAL',
+        horizontalAlign: 'CENTER',
+        verticalAlign: 'CENTER',
+        verticalPadding: 20,
+        horizontalPadding: 20,
+        layoutAlign: 'STRETCH',
+        itemSpacing: 20,
+        backgroundColor,
+      },
+      parentFrame,
+    )
+    componentSet.children.forEach((component) => {
+      const instance = component.createInstance()
+      instance.name = component.name
+      cell.appendChild(instance)
+    })
+  }
+
   const isLastOrPenultimateLevel = depthLevel >= maxDepth - 1
   const properties = currentPath?.reduce((acc, val, index, array) => {
     if (index % 2 === 0 && array[index + 1] !== undefined) {

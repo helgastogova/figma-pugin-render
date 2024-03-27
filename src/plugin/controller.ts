@@ -1,8 +1,8 @@
-import { generateVariables } from './render/primitives'
+// import { generateVariables } from './render/primitives'
 import { CreateUIMessageType } from './types'
 import { findAllComponentSetsOnPage, getDemoPage } from './utils'
-import { handleRendering } from './render/componentSets'
-import { generateTokens } from './render/primitives/tokens'
+import { handleRenderingComponentSets } from './render/componentSets'
+// import { generateTokens } from './render/primitives/tokens'
 
 figma.showUI(__html__, { width: 400, height: 450, title: 'Render Components Sets Demo', themeColors: false })
 
@@ -38,8 +38,7 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
       })
 
       //await generateTokens(demoPage)
-
-      await Promise.all([handleRendering(demoPage, componentSets)])
+      await Promise.all([handleRenderingComponentSets(demoPage, componentSets)])
         .catch((error) => {
           figma.ui.postMessage({ type: 'error', message: 'Failed to render demo' })
           console.error(error)
