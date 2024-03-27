@@ -1,8 +1,8 @@
-// import { generateVariables } from './render/primitives'
+import { generateVariables } from './render/primitives'
 import { CreateUIMessageType } from './types'
 import { findAllComponentSetsOnPage, getDemoPage } from './utils'
 import { handleRenderingComponentSets } from './render/componentSets'
-// import { generateTokens } from './render/primitives/tokens'
+import { generateTokens } from './render/primitives/tokens'
 
 figma.showUI(__html__, { width: 400, height: 450, title: 'Showcase render', themeColors: false })
 
@@ -47,8 +47,8 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
           throw error
         })
         .then(async () => {
-          // await generateTokens(demoPage)
-          // await generateVariables(demoPage)
+          await generateTokens(demoPage)
+          await generateVariables(demoPage)
           figma.ui.postMessage({ type: 'success', message: 'Demo rendered successfully.' })
         })
         .catch((error) => {
