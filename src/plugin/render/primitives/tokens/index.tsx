@@ -144,11 +144,10 @@ export const generateTokens = async (page: PageNode): Promise<void> => {
   }
 }
 
-function renderDemo(frame: FrameNode, variable: Variable, mode: { name: string; modeId: string }): Promise<void> {
+function renderDemo(frame: FrameNode, variable: Variable, mode: { name: string; modeId: string }) {
   const value = variable.valuesByMode[mode.modeId ?? ''] ?? ''
-  console.log(variable.resolvedType)
-  if (variable.resolvedType === 'COLOR' && isRgb(value)) {
-    const color = rgbToHex(value)
+  if (variable.resolvedType === 'COLOR' && isRgb(value as RGB)) {
+    const color = rgbToHex(value as RGB)
 
     if (color) {
       const colorFrame = createFrame(

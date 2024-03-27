@@ -21,7 +21,7 @@ export const isRgb = (value: RGB | RGBA): boolean => {
 export function rgbToHex(value: RGB | RGBA): string | undefined {
   if (!isRgb(value)) return undefined
 
-  if (value.a !== undefined && value.a < 1) {
+  if ('a' in value && value.a !== undefined && value.a < 1) {
     return `#${toHex(value.r)}${toHex(value.g)}${toHex(value.b)}${toHex(value.a)}`
   }
 
@@ -46,14 +46,14 @@ export async function createColorStyles(styles) {
   })
 }
 
-export function createPaints(color: string): Paint[] {
+export function createPaints(color: string | string[]): Paint[] {
   if (typeof color === 'string') {
-    const rgba = hexToRgbA(color)
+    const { r, g, b, a } = hexToRgbA(color)
     return [
       {
         type: 'SOLID',
-        color: { r: rgba.r, g: rgba.g, b: rgba.b },
-        opacity: rgba.a || 1,
+        color: { r, g, b },
+        opacity: a ?? 1,
       },
     ]
   } else if (Array.isArray(color) && color.length === 2) {
@@ -68,14 +68,19 @@ export function createPaints(color: string): Paint[] {
           [0, 1, 0.7],
         ],
         gradientStops: [
-          { color: { r: startColor.r, g: startColor.g, b: startColor.b }, position: 0, opacity: startColor.a || 1 },
-          { color: { r: endColor.r, g: endColor.g, b: endColor.b }, position: 1, opacity: endColor.a || 1 },
+          {
+            color: { r: startColor.r, g: startColor.g, b: startColor.b, a: 'a' in startColor ? startColor.a : 1 },
+            position: 0,
+          },
+          {
+            color: { r: endColor.r, g: endColor.g, b: endColor.b, a: 'a' in endColor ? endColor.a : 1 },
+            position: 1,
+          },
         ],
       },
     ]
   }
 
-  // По умолчанию возвращаем пустой массив, если формат не поддерживается
   return []
 }
 
