@@ -284,7 +284,7 @@ export const renderDemo = async ({ componentSet, parentFrame, backgroundColor }:
       direction: 'VERTICAL',
       horizontalAlign: 'CENTER',
       verticalAlign: 'MIN',
-      itemSpacing: 20,
+      itemSpacing: 50,
       verticalPadding: 30,
       horizontalPadding: 30,
       borderRadius: 24,
