@@ -1,6 +1,6 @@
 import { getCollections } from '../getLocalStyles'
 import { createFrame, createText } from '@src/plugin/helpers'
-import { rgbToHex, isRgb } from '@src/plugin/helpers/colors'
+import { rgbToHex, isRgb, hexToRgbA } from '@src/plugin/helpers/colors'
 //hiddenFromPublishing
 
 interface VariableCollection {
@@ -9,238 +9,300 @@ interface VariableCollection {
   variableIds: string[]
   modes?: { name: string; modeId: string }[]
 }
+function isVariableAlias(value: VariableValue): value is VariableAlias {
+  if (typeof value !== 'object') return false
+  return (value as VariableAlias).type === 'VARIABLE_ALIAS'
+}
 
 export const generateTokens = async (page: PageNode): Promise<void> => {
-  const collections = await getCollections()
+  const variableCollections = await figma.variables.getLocalVariableCollectionsAsync()
+  const collections = [] as Collection[]
 
-  const topLevelFrame = createFrame(
-    {
-      name: 'Tokens',
-      direction: 'HORIZONTAL',
-      horizontalAlign: 'MIN',
-      verticalAlign: 'MIN',
-      itemSpacing: 50,
-      verticalPadding: 30,
-      horizontalPadding: 30,
-      borderRadius: 24,
-    },
-    page,
-    'right',
-  )
+  const defaultModeId = variableCollections[0].modes[0].modeId
 
-  const groupVariables = (variables: Variable[]): Map<string, Map<string, Map<string, Variable[]>>> => {
-    const topLevelGroups = new Map<string, Map<string, Map<string, Variable[]>>>()
+  // iterate through all the collections
+  for (let x = 0; x < variableCollections.length; x++) {
+    const collection = variableCollections[x]
 
-    variables.forEach((variable) => {
-      const [topLevel, secondLevel, ...rest] = variable.name.split('/')
-      const thirdLevelName = rest.join('/')
-
-      if (!topLevelGroups.has(topLevel)) {
-        topLevelGroups.set(topLevel, new Map<string, Map<string, Variable[]>>())
-      }
-      const secondLevelGroups = topLevelGroups.get(topLevel)
-      if (!secondLevelGroups?.has(secondLevel)) {
-        secondLevelGroups?.set(secondLevel, new Map<string, Variable[]>())
-      }
-      const thirdLevelGroups = secondLevelGroups?.get(secondLevel)
-      if (!thirdLevelGroups?.has(thirdLevelName)) {
-        thirdLevelGroups?.set(thirdLevelName, [])
-      }
-      thirdLevelGroups?.get(thirdLevelName)?.push(variable)
-    })
-    return topLevelGroups
-  }
-
-  for (const collection of Object.values(collections)) {
-    const variables: Variable[] = collection.variableIds.map((id) => figma.variables.getVariableById(id))
-    const topLevelGroups = groupVariables(variables)
-
-    const renderModeFrames = async (collection: VariableCollection) => {
-      const modes = collection.modes || [{ name: 'Default', modeId: '' }]
-      for (const mode of modes) {
-        const modeFrame = createFrame(
-          {
-            name: `${collection.name} / ${mode.name}`,
-            direction: 'HORIZONTAL',
-            horizontalAlign: 'MIN',
-            verticalAlign: 'MIN',
-            itemSpacing: 50,
-            verticalPadding: 30,
-            horizontalPadding: 30,
-            borderRadius: 24,
-          },
-          topLevelFrame,
-          'right',
-        )
-
-        topLevelGroups.forEach((secondLevelGroups, topLevelName) => {
-          const topLevelFrame = createFrame(
-            {
-              name: `${topLevelName}`,
-              direction: 'VERTICAL',
-              horizontalAlign: 'MIN',
-              verticalAlign: 'MIN',
-              itemSpacing: 10,
-              verticalPadding: 10,
-              horizontalPadding: 10,
-              borderRadius: 12,
-            },
-            modeFrame,
-            'right',
-          )
-
-          topLevelFrame.appendChild(
-            createText({
-              characters: `${topLevelName}`,
-              fontSize: 24,
-              fontName: { family: 'Roboto', style: 'Regular' },
-            }),
-          )
-
-          secondLevelGroups.forEach((thirdLevelGroups, secondLevelName) => {
-            const secondLevelFrame = createFrame(
-              {
-                name: `${secondLevelName}`,
-                direction: thirdLevelGroups.size > 1 ? 'HORIZONTAL' : 'VERTICAL',
-                horizontalAlign: 'MIN',
-                verticalAlign: 'MIN',
-                itemSpacing: 5,
-                verticalPadding: 5,
-                horizontalPadding: 5,
-                borderRadius: 8,
-              },
-              topLevelFrame,
-              'right',
-            )
-
-            thirdLevelGroups.forEach((variables, thirdLevelName) => {
-              const thirdLevelFrame = createFrame(
-                {
-                  name: `${thirdLevelName}`,
-                  direction: 'VERTICAL',
-                  horizontalAlign: 'CENTER',
-                  verticalAlign: 'MIN',
-                  itemSpacing: 2,
-                  verticalPadding: 2,
-                  horizontalPadding: 2,
-                  borderRadius: 4,
-                },
-                secondLevelFrame,
-                'right',
-              )
-
-              variables.forEach((variable) => {
-                renderDemo(thirdLevelFrame, variable, mode)
-              })
-            })
-          })
-
-          modeFrame.appendChild(topLevelFrame)
-        })
+    // setup modes objects
+    const modes = {} as { [key: string]: Mode }
+    for (let j = 0; j < collection.modes.length; j++) {
+      modes[collection.modes[j].modeId] = {
+        name: collection.modes[j].name,
+        variables: [],
       }
     }
 
-    await renderModeFrames(collection)
+    // through all the variables
+    for (let i = 0; i < collection.variableIds.length; i++) {
+      const variableId = collection.variableIds[i]
+      const variable = await figma.variables.getVariableByIdAsync(variableId)
+
+      // get the variable for each modes
+      for (let j = 0; j < collection.modes.length; j++) {
+        const mode = collection.modes[j]
+        const value = variable?.valuesByMode[mode.modeId]
+        if (!value) continue
+
+        // if it's a variable id, we need to find the name of it
+        if (isVariableAlias(value)) {
+          const alias = await figma.variables.getVariableByIdAsync(value.id)
+          if (!alias) continue
+          modes[mode.modeId].variables.push({
+            name: variable.name,
+            alias: alias,
+            value: alias.valuesByMode[defaultModeId],
+            type: alias.resolvedType,
+          })
+        } else {
+          // not a variable alias
+          modes[mode.modeId].variables.push({
+            name: variable.name,
+            value: value,
+            type: variable.resolvedType,
+          })
+        }
+      }
+    }
+
+    // push the collection to the collections array
+    collections.push({
+      name: collection.name,
+      modes: Object.values(modes),
+    })
   }
-}
+  // console.log(collections)
 
-function renderDemo(frame: FrameNode, variable: Variable, mode: { name: string; modeId: string }) {
-  const value = variable.valuesByMode[mode.modeId ?? ''] ?? ''
-  if (variable.resolvedType === 'COLOR' && isRgb(value as RGB)) {
-    const color = rgbToHex(value as RGB)
-
-    if (color) {
-      const colorFrame = createFrame(
+  collections.forEach((collection) => {
+    collection.modes.forEach((mode) => {
+      const modeFrame = createFrame(
         {
-          name: `${variable.name} / ${color}`,
+          name: `${collection.name} / ${mode.name}`,
           direction: 'VERTICAL',
           horizontalAlign: 'MIN',
           verticalAlign: 'MIN',
-          itemSpacing: 8,
-          verticalPadding: 8,
-          horizontalPadding: 16,
-          backgroundColor: color,
-          minWidth: 300,
-          minHeight: 140,
+          itemSpacing: 50,
+          verticalPadding: 30,
+          horizontalPadding: 30,
+          borderRadius: 24,
+        },
+        page,
+        'right',
+      )
+
+      const groupedVariables = groupVariablesByNames([mode])
+      console.log(`Grouped variables for mode ${mode.name}:`, groupedVariables)
+
+      renderGroupsRecursive(modeFrame, groupedVariables, mode)
+    })
+  })
+}
+
+// Группировка переменных по именам внутри режима (mode)
+const groupVariablesByNames = (modes: VariableMode[]): Map<string, any> => {
+  const groupedVariables = new Map<string, any>()
+
+  modes.forEach((mode) => {
+    mode.variables.forEach((variable) => {
+      const parts = variable.name.split('/')
+      let currentMap = groupedVariables
+
+      parts.forEach((part, index) => {
+        if (index === parts.length - 1) {
+          if (!currentMap.has(part)) currentMap.set(part, [])
+          currentMap.get(part).push(variable)
+        } else {
+          if (!currentMap.has(part)) currentMap.set(part, new Map())
+          currentMap = currentMap.get(part)
+        }
+      })
+    })
+  })
+
+  return groupedVariables
+}
+
+export const renderModeFrames = async (
+  collection: VariableCollection,
+  topLevelFrame: FrameNode,
+  topLevelGroups: Map<string, any>,
+) => {
+  const modes = collection.modes // || [{ name: 'Default', modeId: '' }]
+  for (const mode of modes) {
+    const modeFrame = createFrame(
+      {
+        name: `${collection.name} / ${mode.name}`,
+        direction: 'HORIZONTAL',
+        horizontalAlign: 'MIN',
+        verticalAlign: 'MIN',
+        itemSpacing: 50,
+        verticalPadding: 30,
+        horizontalPadding: 30,
+        borderRadius: 24,
+      },
+      topLevelFrame,
+      'right',
+    )
+
+    renderGroupsRecursive(modeFrame, topLevelGroups, mode)
+  }
+}
+
+const renderGroupsRecursive = (
+  frame: FrameNode,
+  groups: Map<string, any> | Variable[],
+  mode: { name: string; modeId: string },
+  depth: number = 0,
+) => {
+  if (Array.isArray(groups)) {
+    for (const variable of groups) {
+      renderDemo(frame, variable, mode)
+    }
+  } else {
+    for (const [groupName, subGroups] of groups) {
+      const subFrame = createFrame(
+        {
+          name: `${groupName} / ${depth}`,
+          direction: depth === 0 ? 'VERTICAL' : 'HORIZONTAL',
+          horizontalAlign: 'MIN',
+          verticalAlign: 'MIN',
+          itemSpacing: 10,
+          verticalPadding: 10,
+          horizontalPadding: 10,
+          borderRadius: 12,
         },
         frame,
       )
 
-      Object.assign(colorFrame, {
-        // fills: style.paints,
-        strokeWeight: 1,
-        strokes: [{ type: 'SOLID', color: { r: 0.9, g: 0.9, b: 0.9 } }],
-      })
+      let wrapper
 
-      const textWrapper = createFrame(
-        {
-          name: `${variable.name}/${color}`,
-          direction: 'VERTICAL',
-          horizontalAlign: 'MIN',
-          verticalAlign: 'MIN',
-          borderRadius: 6,
-          verticalPadding: 8,
-          horizontalPadding: 16,
-          backgroundColor: '#ffffff',
-          itemSpacing: 8,
-        },
-        colorFrame,
-      )
+      if (depth === 0) {
+        subFrame.appendChild(
+          createText({
+            characters: `${groupName}`,
+            fontSize: 18,
+            fontName: { family: 'Roboto', style: 'Regular' },
+          }),
+        )
 
-      textWrapper.appendChild(
-        createText({
-          characters: `${variable.name}`,
-          fontSize: 18,
-          fontName: { family: 'Roboto', style: 'Regular' },
-        }),
-      )
-      textWrapper.appendChild(
-        createText({
-          characters: `${color}`,
-          fontSize: 18,
-          fontName: { family: 'Roboto', style: 'Regular' },
-        }),
-      )
+        wrapper = createFrame(
+          {
+            name: `${groupName} / ${depth}`,
+            direction: depth === 0 ? 'VERTICAL' : 'HORIZONTAL',
+            horizontalAlign: 'MIN',
+            verticalAlign: 'MIN',
+            itemSpacing: 10,
+            verticalPadding: 10,
+            horizontalPadding: 10,
+            borderRadius: 12,
+          },
+          subFrame,
+        )
+      }
+
+      renderGroupsRecursive(depth === 0 ? wrapper : subFrame, subGroups, mode, depth + 1)
     }
   }
-  //   switch (variable.resolvedType) {
-  //     case 'COLOR':
-  //       return createPalette(variable, frame)
-  //     case 'TEXT':
-  //       return createTextFrame(variable, frame)
-  //     case 'NUMBER':
-  //       return createNumberFrame(variable, frame)
-  //     case 'BOOLEAN':
-  //       return createBooleanFrame(variable, frame)
-  //     case 'ENUM':
-  //       return createEnumFrame(variable, frame)
-  //     case 'IMAGE':
-  //       return createImageFrame(variable, frame)
-  //     case 'SHADOW':
-  //       return createShadowFrame(variable, frame)
-  //     case 'EFFECT':
-  //       return createEffectFrame(variable, frame)
-  //     default:
-  //       return Promise.resolve()
-  //   }
 }
 
-/*
+const renderDemo = (frame: FrameNode, variable: Variable, mode: { name: string; modeId: string }) => {
+  const { name, value, type } = variable
+  console.log(`Rendering demo for variable: ${type} ${name} in mode: ${mode.name}`)
+  if (!value) return
+
+  switch (type) {
+    case 'COLOR':
+      createColorBlock(frame, name, value, mode)
+      break
+    case 'STROKE_COLOR':
+      createBlock(frame, variable, mode)
+      break
+    // Add other cases as necessary
+  }
 }
-declare type VariableValue = boolean | string | number | RGB | RGBA | VariableAlias
-declare type VariableScope =
-  | 'ALL_SCOPES'
-  | 'TEXT_CONTENT'
-  | 'CORNER_RADIUS'
-  | 'WIDTH_HEIGHT'
-  | 'GAP'
-  | 'ALL_FILLS'
-  | 'FRAME_FILL'
-  | 'SHAPE_FILL'
-  | 'TEXT_FILL'
-  | 'STROKE_COLOR'
-  | 'STROKE_FLOAT'
-  | 'EFFECT_FLOAT'
-  | 'EFFECT_COLOR'
-  | 'OPACITY'
-  */
+
+const createBlock = (frame: FrameNode, name: string, value: any) => {
+  const block = createFrame(
+    {
+      name,
+      direction: 'VERTICAL',
+      horizontalAlign: 'MIN',
+      verticalAlign: 'MIN',
+      itemSpacing: 10,
+      verticalPadding: 10,
+      horizontalPadding: 10,
+      borderRadius: 12,
+    },
+    frame,
+  )
+
+  createText({
+    name: 'Name',
+    text: name,
+    parent: block,
+  })
+
+  createText({
+    name: 'Value',
+    text: value,
+    parent: block,
+  })
+}
+
+const createColorBlock = (frame: FrameNode, name: string, value: RGB) => {
+  const color = rgbToHex(value as RGB) ?? ''
+
+  if (!color) return
+
+  const wrapper = createFrame(
+    {
+      name: `${name} / ${color}`,
+      direction: 'VERTICAL',
+      horizontalAlign: 'MIN',
+      verticalAlign: 'MIN',
+      itemSpacing: 8,
+      verticalPadding: 8,
+      horizontalPadding: 16,
+      backgroundColor: color,
+      minWidth: 300,
+      minHeight: 140,
+    },
+    frame,
+  )
+
+  Object.assign(wrapper, {
+    // fills: style.paints,
+    strokeWeight: 1,
+    strokes: [{ type: 'SOLID', color: { r: 0.9, g: 0.9, b: 0.9 } }],
+  })
+
+  const textWrapper = createFrame(
+    {
+      name: `${name}/${color}`,
+      direction: 'VERTICAL',
+      horizontalAlign: 'MIN',
+      verticalAlign: 'MIN',
+      borderRadius: 6,
+      verticalPadding: 8,
+      horizontalPadding: 16,
+      backgroundColor: '#ffffff',
+      itemSpacing: 8,
+    },
+    wrapper,
+  )
+
+  textWrapper.appendChild(
+    createText({
+      characters: `${name}`,
+      fontSize: 18,
+      fontName: { family: 'Roboto', style: 'Regular' },
+    }),
+  )
+  textWrapper.appendChild(
+    createText({
+      characters: `${color}`,
+      fontSize: 18,
+      fontName: { family: 'Roboto', style: 'Regular' },
+    }),
+  )
+}

@@ -105,6 +105,4 @@ export const renderColorStyles = async (colorStyles: ColorStyleData, frame: Fram
   paintStyles.forEach((style) => {
     createPalette({ style, frame: paletteFrameColors })
   })
-
-  // page.appendChild(paletteFrame)
 }

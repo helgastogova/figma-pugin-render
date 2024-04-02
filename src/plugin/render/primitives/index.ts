@@ -2,7 +2,6 @@ import { getLocalStyles, ColorStyleData, TextStyleData, EffectStyleData } from '
 import { renderTextStyles } from './components/text'
 import { renderColorStyles } from './components/palette'
 import { renderEffectStyles } from './components/effects'
-import { getCollections } from './getLocalStyles'
 
 import { createFrame } from '../../helpers'
 
@@ -39,8 +38,4 @@ export const generateVariables = async (page: PageNode): Promise<void> => {
     renderEffectStyles(effectStyles as EffectStyleData, frame)
     // renderGridStyles(gridStyles, frame)
   })
-
-  const collections = await getCollections()
-
-  console.log('Variables generated', collections)
 }

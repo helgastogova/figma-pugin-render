@@ -24,7 +24,7 @@ export type GridStyleData = StyleData & {
   styles: GridStyle[]
 }
 
-async function getStylesByType(type: 'color' | 'text' | 'effect' | 'grid'): Promise<BaseStyle[]> {
+async function getStylesByType(type: 'color' | 'text' | 'effect'): Promise<BaseStyle[]> {
   const styleMethods = {
     color: figma.getLocalPaintStyles,
     text: figma.getLocalTextStyles,
@@ -37,7 +37,7 @@ async function getStylesByType(type: 'color' | 'text' | 'effect' | 'grid'): Prom
 }
 
 export async function getLocalStyles(
-  type: 'color' | 'text' | 'effect',
+  type: 'color' | 'text' | 'effect', // | 'grid',
 ): Promise<ColorStyleData | TextStyleData | EffectStyleData> {
   const styles = await getStylesByType(type)
   const cleanedStyleData = assembleStylesArray(styles)
@@ -57,10 +57,12 @@ export type NormalizedCollectionMap = Record<string, NormalizedCollection>
 export const getCollections = async (): Promise<NormalizedCollectionMap> => {
   const collections: NormalizedCollectionMap = {}
   const rawCollections = await figma.variables.getLocalVariableCollectionsAsync()
+
   rawCollections.map((collection) => {
-    const { id, name, remote, modes, variableIds } = collection
-    collections[id] = { id, name, remote, modes, variableIds }
+    const { id, name, remote, modes, variableIds, defaultModeId } = collection
+    collections[id] = { id, name, remote, modes, variableIds, defaultModeId }
   })
+
   return collections
 }
 

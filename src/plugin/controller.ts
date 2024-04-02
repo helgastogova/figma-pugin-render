@@ -1,4 +1,4 @@
-import { generateVariables } from './render/primitives'
+// import { generateVariables } from './render/primitives'
 import { CreateUIMessageType } from './types'
 import { findAllComponentSetsOnPage, getDemoPage } from './utils'
 import { handleRenderingComponentSets } from './render/componentSets'
@@ -39,7 +39,8 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
 
       //await generateTokens(demoPage)
       await Promise.all([
-        handleRenderingComponentSets(demoPage, [...componentSets, ...(standaloneComponentSets as any)]),
+        //  handleRenderingComponentSets(demoPage, [...componentSets, ...(standaloneComponentSets as any)]),
+        handleRenderingComponentSets(demoPage, []),
       ])
         .catch((error) => {
           figma.ui.postMessage({ type: 'error', message: 'Failed to render demo' })
@@ -48,21 +49,21 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
         })
         .then(async () => {
           await generateTokens(demoPage)
-          await generateVariables(demoPage)
+          // await generateVariables(demoPage)
           figma.ui.postMessage({ type: 'success', message: 'Demo rendered successfully.' })
         })
         .catch((error) => {
           console.error('Error during post-rendering:', error)
         })
-      figma.closePlugin()
+      // figma.closePlugin()
     } catch (error) {
       figma.ui.postMessage({ type: 'error', message: 'Failed to load fonts' })
       console.error(error)
     }
 
-    figma.closePlugin()
+    // figma.closePlugin()
   }
   if (msg.type === 'cancel') {
-    figma.closePlugin()
+    // figma.closePlugin()
   }
 }
