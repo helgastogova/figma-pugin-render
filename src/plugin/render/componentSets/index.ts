@@ -41,7 +41,7 @@ export const handleRenderingComponentSets = async (demoPage: PageNode, component
         demoPage,
         'right',
       )
-      frame.setExplicitVariableModeForCollection(tokensCollection.id, mode.modeId) //TODO: deprecated
+      frame.setExplicitVariableModeForCollection(tokensCollection.id, mode.modeId) //TODO:  but that the one we have for setting the mode
       await renderComponentSetsInBatches(componentSets, frame, mode.name)
     }
   } else {

@@ -1,4 +1,3 @@
-import { getCollections } from '../getLocalStyles'
 import { createFrame, createText } from '@src/plugin/helpers'
 import { rgbToHex, isRgb, hexToRgbA } from '@src/plugin/helpers/colors'
 //hiddenFromPublishing
@@ -9,6 +8,7 @@ interface VariableCollection {
   variableIds: string[]
   modes?: { name: string; modeId: string }[]
 }
+
 function isVariableAlias(value: VariableValue): value is VariableAlias {
   if (typeof value !== 'object') return false
   return (value as VariableAlias).type === 'VARIABLE_ALIAS'
@@ -16,17 +16,18 @@ function isVariableAlias(value: VariableValue): value is VariableAlias {
 
 export const generateTokens = async (page: PageNode): Promise<void> => {
   const variableCollections = await figma.variables.getLocalVariableCollectionsAsync()
+
+  if (!variableCollections?.length) return
   const collections = [] as Collection[]
 
-  const defaultModeId = variableCollections[0].modes[0].modeId
+  const defaultModeId = variableCollections[0]?.modes[0]?.modeId
 
-  // iterate through all the collections
   for (let x = 0; x < variableCollections.length; x++) {
     const collection = variableCollections[x]
 
     // setup modes objects
     const modes = {} as { [key: string]: Mode }
-    for (let j = 0; j < collection.modes.length; j++) {
+    for (let j = 0; j < collection?.modes?.length; j++) {
       modes[collection.modes[j].modeId] = {
         name: collection.modes[j].name,
         variables: [],
@@ -71,34 +72,76 @@ export const generateTokens = async (page: PageNode): Promise<void> => {
       modes: Object.values(modes),
     })
   }
-  // console.log(collections)
 
+  // главные блоки
+  // TODO: add mode support
   collections.forEach((collection) => {
     collection.modes.forEach((mode) => {
       const modeFrame = createFrame(
         {
           name: `${collection.name} / ${mode.name}`,
-          direction: 'VERTICAL',
+          direction: 'HORIZONTAL',
+          wrap: 'WRAP',
+          maxWidth: 1360,
           horizontalAlign: 'MIN',
           verticalAlign: 'MIN',
+          autoWidth: true,
+          autoHeight: true,
           itemSpacing: 50,
-          verticalPadding: 30,
-          horizontalPadding: 30,
+          verticalPadding: 50,
+          horizontalPadding: 50,
           borderRadius: 24,
+          backgroundColor: mode.name === 'Dark' ? '#251F1F' : mode.name === 'Light' ? '#E9E8E8' : '#FFFFFF',
         },
         page,
         'right',
       )
 
       const groupedVariables = groupVariablesByNames([mode])
-      console.log(`Grouped variables for mode ${mode.name}:`, groupedVariables)
+      for (const [groupName, subGroups] of groupedVariables) {
+        const subFrame = createFrame(
+          {
+            name: `${groupName}`,
+            wrap: 'WRAP',
+            maxWidth: 1360,
+            horizontalAlign: 'MIN',
+            verticalAlign: 'MIN',
+            verticalPadding: 50,
+            autoWidth: true,
+            autoHeight: true,
+            itemSpacing: 16,
+          },
+          modeFrame,
+        )
 
-      renderGroupsRecursive(modeFrame, groupedVariables, mode)
+        subFrame.appendChild(
+          createText({
+            characters: `${groupName}`,
+            fontSize: 42,
+            fontName: { family: 'Roboto', style: 'Regular' },
+          }),
+        )
+
+        const wrapper = createFrame(
+          {
+            name: `${groupName} / wrapper`,
+            wrap: 'WRAP',
+            maxWidth: 1360,
+            horizontalAlign: 'MIN',
+            verticalAlign: 'MIN',
+            autoWidth: true,
+            autoHeight: true,
+            itemSpacing: 16,
+            verticalPadding: 8,
+          },
+          subFrame,
+        )
+
+        renderGroupsRecursive({ frame: wrapper, groups: subGroups, mode, topGroupName: groupName })
+      }
     })
   })
 }
-
-// Группировка переменных по именам внутри режима (mode)
 const groupVariablesByNames = (modes: VariableMode[]): Map<string, any> => {
   const groupedVariables = new Map<string, any>()
 
@@ -108,12 +151,19 @@ const groupVariablesByNames = (modes: VariableMode[]): Map<string, any> => {
       let currentMap = groupedVariables
 
       parts.forEach((part, index) => {
-        if (index === parts.length - 1) {
-          if (!currentMap.has(part)) currentMap.set(part, [])
-          currentMap.get(part).push(variable)
-        } else {
-          if (!currentMap.has(part)) currentMap.set(part, new Map())
+        if (index < parts.length - 1) {
+          if (!currentMap.has(part)) {
+            currentMap.set(part, new Map())
+          }
           currentMap = currentMap.get(part)
+        } else {
+          if (!currentMap.has(part)) {
+            currentMap.set(part, [])
+          }
+          const list = currentMap.get(part)
+          if (!list.some((item) => item.name === variable.name)) {
+            list.push(variable)
+          }
         }
       })
     })
@@ -122,102 +172,110 @@ const groupVariablesByNames = (modes: VariableMode[]): Map<string, any> => {
   return groupedVariables
 }
 
-export const renderModeFrames = async (
-  collection: VariableCollection,
-  topLevelFrame: FrameNode,
-  topLevelGroups: Map<string, any>,
-) => {
-  const modes = collection.modes // || [{ name: 'Default', modeId: '' }]
-  for (const mode of modes) {
-    const modeFrame = createFrame(
-      {
-        name: `${collection.name} / ${mode.name}`,
-        direction: 'HORIZONTAL',
-        horizontalAlign: 'MIN',
-        verticalAlign: 'MIN',
-        itemSpacing: 50,
-        verticalPadding: 30,
-        horizontalPadding: 30,
-        borderRadius: 24,
-      },
-      topLevelFrame,
-      'right',
-    )
-
-    renderGroupsRecursive(modeFrame, topLevelGroups, mode)
-  }
-}
-
-const renderGroupsRecursive = (
-  frame: FrameNode,
-  groups: Map<string, any> | Variable[],
-  mode: { name: string; modeId: string },
-  depth: number = 0,
-) => {
+const renderGroupsRecursive = ({
+  frame,
+  groups,
+  mode,
+  depth = 0,
+  topGroupName = '',
+}: {
+  frame: FrameNode
+  groups: Map<string, any> | Variable[]
+  mode: { name: string; modeId: string }
+  depth?: number
+  topGroupName?: string
+}) => {
   if (Array.isArray(groups)) {
     for (const variable of groups) {
-      renderDemo(frame, variable, mode)
+      renderDemo({ frame, variable, mode, topGroupName })
     }
   } else {
     for (const [groupName, subGroups] of groups) {
       const subFrame = createFrame(
         {
           name: `${groupName} / ${depth}`,
-          direction: depth === 0 ? 'VERTICAL' : 'HORIZONTAL',
+          wrap: 'WRAP',
+          maxWidth: 1360,
           horizontalAlign: 'MIN',
           verticalAlign: 'MIN',
-          itemSpacing: 10,
-          verticalPadding: 10,
-          horizontalPadding: 10,
-          borderRadius: 12,
+          autoWidth: true,
+          autoHeight: true,
+          itemSpacing: 16,
+          verticalPadding: 8,
         },
         frame,
       )
 
-      let wrapper
-
-      if (depth === 0) {
-        subFrame.appendChild(
-          createText({
-            characters: `${groupName}`,
-            fontSize: 18,
-            fontName: { family: 'Roboto', style: 'Regular' },
-          }),
-        )
-
-        wrapper = createFrame(
-          {
-            name: `${groupName} / ${depth}`,
-            direction: depth === 0 ? 'VERTICAL' : 'HORIZONTAL',
-            horizontalAlign: 'MIN',
-            verticalAlign: 'MIN',
-            itemSpacing: 10,
-            verticalPadding: 10,
-            horizontalPadding: 10,
-            borderRadius: 12,
-          },
-          subFrame,
-        )
-      }
-
-      renderGroupsRecursive(depth === 0 ? wrapper : subFrame, subGroups, mode, depth + 1)
+      renderGroupsRecursive({ frame: subFrame, groups: subGroups, mode, depth: depth + 1, topGroupName })
     }
   }
 }
 
-const renderDemo = (frame: FrameNode, variable: Variable, mode: { name: string; modeId: string }) => {
+type GroupType =
+  | 'background'
+  | 'border'
+  | 'text'
+  | 'shadow'
+  | 'elevation'
+  | 'gradient'
+  | 'opacity'
+  | 'size'
+  | 'spacing'
+  | 'radius'
+  | 'font'
+  | 'icon'
+  | 'line'
+
+const getGroupType = (loweredTopGroupName: string): GroupType => {
+  if (
+    loweredTopGroupName.includes('background') ||
+    loweredTopGroupName.includes('content') ||
+    loweredTopGroupName.includes('color')
+  )
+    return 'background'
+  if (loweredTopGroupName.includes('border') || loweredTopGroupName.includes('outline')) return 'border'
+  if (loweredTopGroupName.includes('text')) return 'text'
+  if (loweredTopGroupName.includes('shadow')) return 'shadow'
+  if (loweredTopGroupName.includes('elevation')) return 'elevation'
+  if (loweredTopGroupName.includes('gradient')) return 'gradient'
+  if (loweredTopGroupName.includes('opacity')) return 'opacity'
+  if (loweredTopGroupName.includes('size')) return 'size'
+  if (loweredTopGroupName.includes('spacing')) return 'spacing'
+  if (loweredTopGroupName.includes('radius')) return 'radius'
+  if (loweredTopGroupName.includes('font')) return 'font'
+  if (loweredTopGroupName.includes('icon')) return 'icon'
+  if (loweredTopGroupName.includes('line')) return 'line'
+  return ''
+}
+
+const renderDemo = ({
+  frame,
+  variable,
+  mode,
+  topGroupName,
+}: {
+  frame: FrameNode
+  variable: { name: string; value: any; type: string }
+  mode: { name: string; modeId: string }
+  topGroupName?: string
+}) => {
   const { name, value, type } = variable
-  console.log(`Rendering demo for variable: ${type} ${name} in mode: ${mode.name}`)
+  // console.log(`Rendering demo for variable: ${type} ${name} in mode: ${mode.name}`)
   if (!value) return
+
+  const groupType = getGroupType(topGroupName?.toLowerCase() ?? '')
 
   switch (type) {
     case 'COLOR':
-      createColorBlock(frame, name, value, mode)
+      createColorBlock({ frame, name, value, mode, groupType })
       break
     case 'STROKE_COLOR':
       createBlock(frame, variable, mode)
       break
     // Add other cases as necessary
+
+    default:
+      break
   }
 }
 
@@ -249,7 +307,17 @@ const createBlock = (frame: FrameNode, name: string, value: any) => {
   })
 }
 
-const createColorBlock = (frame: FrameNode, name: string, value: RGB) => {
+const createColorBlock = ({
+  frame,
+  name,
+  value,
+  groupType,
+}: {
+  frame: FrameNode
+  name: string
+  value: RGB
+  groupType?: GroupType
+}) => {
   const color = rgbToHex(value as RGB) ?? ''
 
   if (!color) return
@@ -262,19 +330,32 @@ const createColorBlock = (frame: FrameNode, name: string, value: RGB) => {
       verticalAlign: 'MIN',
       itemSpacing: 8,
       verticalPadding: 8,
-      horizontalPadding: 16,
-      backgroundColor: color,
+      horizontalPadding: 8,
+      backgroundColor: groupType === 'background' && color,
       minWidth: 300,
       minHeight: 140,
+      borderRadius: 24,
     },
     frame,
   )
 
-  Object.assign(wrapper, {
-    // fills: style.paints,
-    strokeWeight: 1,
-    strokes: [{ type: 'SOLID', color: { r: 0.9, g: 0.9, b: 0.9 } }],
-  })
+  switch (groupType) {
+    case 'background':
+      Object.assign(wrapper, {
+        strokeWeight: 1,
+        strokes: [{ type: 'SOLID', color: { r: 0.9, g: 0.9, b: 0.9 } }],
+      })
+      break
+    case 'border':
+      Object.assign(wrapper, {
+        strokeWeight: 3,
+        strokes: [{ type: 'SOLID', color: figma.util.rgb(color) }],
+      })
+      break
+
+    default:
+      break
+  }
 
   const textWrapper = createFrame(
     {
@@ -282,7 +363,7 @@ const createColorBlock = (frame: FrameNode, name: string, value: RGB) => {
       direction: 'VERTICAL',
       horizontalAlign: 'MIN',
       verticalAlign: 'MIN',
-      borderRadius: 6,
+      borderRadius: 16,
       verticalPadding: 8,
       horizontalPadding: 16,
       backgroundColor: '#ffffff',
@@ -294,7 +375,7 @@ const createColorBlock = (frame: FrameNode, name: string, value: RGB) => {
   textWrapper.appendChild(
     createText({
       characters: `${name}`,
-      fontSize: 18,
+      fontSize: 14,
       fontName: { family: 'Roboto', style: 'Regular' },
     }),
   )
