@@ -38,8 +38,8 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
       })
 
       await Promise.all([
-        handleRenderingComponentSets(demoPage, [...componentSets, ...(standaloneComponentSets as any)]),
-        // handleRenderingComponentSets(demoPage, []),
+        //handleRenderingComponentSets(demoPage, [...componentSets, ...(standaloneComponentSets as any)]),
+        handleRenderingComponentSets(demoPage, []),
       ])
         .catch((error) => {
           figma.ui.postMessage({ type: 'error', message: 'Failed to render demo' })
@@ -48,19 +48,19 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
         })
         .then(async () => {
           await generateTokens(demoPage)
-          await generateVariables(demoPage)
+          // await generateVariables(demoPage)
           figma.ui.postMessage({ type: 'success', message: 'Demo rendered successfully.' })
         })
         .catch((error) => {
           console.error('Error during post-rendering:', error)
         })
-      figma.closePlugin()
+      // figma.closePlugin()
     } catch (error) {
       figma.ui.postMessage({ type: 'error', message: 'Failed to load fonts' })
       console.error(error)
     }
 
-    figma.closePlugin()
+    // figma.closePlugin()
   }
   if (msg.type === 'cancel') {
     figma.closePlugin()

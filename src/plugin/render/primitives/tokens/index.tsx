@@ -2,13 +2,6 @@ import { createFrame, createText } from '@src/plugin/helpers'
 import { rgbToHex, isRgb, hexToRgbA } from '@src/plugin/helpers/colors'
 //hiddenFromPublishing
 
-interface VariableCollection {
-  id: string
-  name: string
-  variableIds: string[]
-  modes?: { name: string; modeId: string }[]
-}
-
 function isVariableAlias(value: VariableValue): value is VariableAlias {
   if (typeof value !== 'object') return false
   return (value as VariableAlias).type === 'VARIABLE_ALIAS'
@@ -43,24 +36,29 @@ export const generateTokens = async (page: PageNode): Promise<void> => {
       for (let j = 0; j < collection.modes.length; j++) {
         const mode = collection.modes[j]
         const value = variable?.valuesByMode[mode.modeId]
+        const scopes = variable?.scopes
         if (!value) continue
 
         // if it's a variable id, we need to find the name of it
         if (isVariableAlias(value)) {
           const alias = await figma.variables.getVariableByIdAsync(value.id)
+
           if (!alias) continue
           modes[mode.modeId].variables.push({
             name: variable.name,
             alias: alias,
             value: alias.valuesByMode[defaultModeId],
             type: alias.resolvedType,
+            scopes: scopes ?? alias.scopes,
           })
         } else {
           // not a variable alias
+
           modes[mode.modeId].variables.push({
             name: variable.name,
             value: value,
             type: variable.resolvedType,
+            scopes: scopes ?? variable.scopes,
           })
         }
       }
@@ -142,6 +140,7 @@ export const generateTokens = async (page: PageNode): Promise<void> => {
     })
   })
 }
+
 const groupVariablesByNames = (modes: VariableMode[]): Map<string, any> => {
   const groupedVariables = new Map<string, any>()
 
@@ -225,6 +224,10 @@ type GroupType =
   | 'font'
   | 'icon'
   | 'line'
+  | 'border-radius'
+  | 'unknown'
+
+//'background' | 'border' | 'text' | 'shadow' | 'elevation' | 'gradient' | 'opacity' | 'size' | 'spacing' | 'radius' | 'font' | 'icon' | 'line' | 'layout' | 'animation' | 'interaction' | 'transition' | 'zindex' | 'breakpoint' | 'scale' | 'media' | 'sound' | 'motion' | 'grid' | 'component' | 'unknown';
 
 const getGroupType = (loweredTopGroupName: string): GroupType => {
   if (
@@ -233,6 +236,7 @@ const getGroupType = (loweredTopGroupName: string): GroupType => {
     loweredTopGroupName.includes('color')
   )
     return 'background'
+  if (loweredTopGroupName.includes('radius')) return 'border-radius'
   if (loweredTopGroupName.includes('border') || loweredTopGroupName.includes('outline')) return 'border'
   if (loweredTopGroupName.includes('text')) return 'text'
   if (loweredTopGroupName.includes('shadow')) return 'shadow'
@@ -240,12 +244,16 @@ const getGroupType = (loweredTopGroupName: string): GroupType => {
   if (loweredTopGroupName.includes('gradient')) return 'gradient'
   if (loweredTopGroupName.includes('opacity')) return 'opacity'
   if (loweredTopGroupName.includes('size')) return 'size'
-  if (loweredTopGroupName.includes('spacing')) return 'spacing'
+  if (
+    loweredTopGroupName.includes('spacing') | loweredTopGroupName.includes('space') ||
+    loweredTopGroupName.includes('gap')
+  )
+    return 'gap'
   if (loweredTopGroupName.includes('radius')) return 'radius'
   if (loweredTopGroupName.includes('font')) return 'font'
   if (loweredTopGroupName.includes('icon')) return 'icon'
   if (loweredTopGroupName.includes('line')) return 'line'
-  return ''
+  return 'unknown'
 }
 
 const renderDemo = ({
@@ -255,22 +263,21 @@ const renderDemo = ({
   topGroupName,
 }: {
   frame: FrameNode
-  variable: { name: string; value: any; type: string }
+  variable: { name: string; value: any; type: 'BOOLEAN' | 'COLOR' | 'FLOAT' | 'STRING' }
   mode: { name: string; modeId: string }
   topGroupName?: string
 }) => {
-  const { name, value, type } = variable
-  // console.log(`Rendering demo for variable: ${type} ${name} in mode: ${mode.name}`)
+  const { name, value, type, scopes } = variable
+
   if (!value) return
 
   const groupType = getGroupType(topGroupName?.toLowerCase() ?? '')
-
   switch (type) {
     case 'COLOR':
       createColorBlock({ frame, name, value, mode, groupType })
       break
-    case 'STROKE_COLOR':
-      createBlock(frame, variable, mode)
+    case 'FLOAT':
+      createBlock({ frame, name, value, mode, groupType })
       break
     // Add other cases as necessary
 
@@ -279,8 +286,29 @@ const renderDemo = ({
   }
 }
 
-const createBlock = (frame: FrameNode, name: string, value: any) => {
-  const block = createFrame(
+const createBlock = ({
+  frame,
+  name,
+  value,
+  groupType,
+}: {
+  frame: FrameNode
+  name: string
+  value: number | string
+  groupType?: GroupType
+}) => {
+  const getBackgroundColor = (groupType: string): string | null => {
+    switch (groupType) {
+      case 'border-radius':
+        return '#787878'
+      case 'gap':
+        return '#FFE5E4'
+      default:
+        return null
+    }
+  }
+
+  const wrapper = createFrame(
     {
       name,
       direction: 'VERTICAL',
@@ -289,22 +317,34 @@ const createBlock = (frame: FrameNode, name: string, value: any) => {
       itemSpacing: 10,
       verticalPadding: 10,
       horizontalPadding: 10,
-      borderRadius: 12,
+      backgroundColor: getBackgroundColor(groupType),
     },
     frame,
   )
 
-  createText({
-    name: 'Name',
-    text: name,
-    parent: block,
-  })
+  wrapper.appendChild(
+    createText({
+      characters: value.toString(),
+    }),
+  )
 
-  createText({
-    name: 'Value',
-    text: value,
-    parent: block,
-  })
+  switch (groupType) {
+    // case 'unknown':
+    case 'border-radius':
+      wrapper.cornerRadius = +value
+      wrapper.minHeight = 200
+      wrapper.minWidth = 200
+      break
+
+    case 'gap':
+      wrapper.minHeight = +value
+      wrapper.minWidth = 200
+
+      break
+
+    default:
+      break
+  }
 }
 
 const createColorBlock = ({
@@ -331,7 +371,7 @@ const createColorBlock = ({
       itemSpacing: 8,
       verticalPadding: 8,
       horizontalPadding: 8,
-      backgroundColor: groupType === 'background' && color,
+      backgroundColor: ['background', 'unknown'].includes(groupType) && color,
       minWidth: 300,
       minHeight: 140,
       borderRadius: 24,
@@ -340,6 +380,7 @@ const createColorBlock = ({
   )
 
   switch (groupType) {
+    case 'unknown':
     case 'background':
       Object.assign(wrapper, {
         strokeWeight: 1,
@@ -350,6 +391,20 @@ const createColorBlock = ({
       Object.assign(wrapper, {
         strokeWeight: 3,
         strokes: [{ type: 'SOLID', color: figma.util.rgb(color) }],
+      })
+      break
+    case 'shadow':
+      Object.assign(wrapper, {
+        effects: [
+          {
+            type: 'DROP_SHADOW',
+            color: figma.util.rgb(color),
+            offset: { x: 0, y: 4 },
+            radius: 4,
+            visible: true,
+            blendMode: 'NORMAL',
+          },
+        ],
       })
       break
 
