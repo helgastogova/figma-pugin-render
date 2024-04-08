@@ -1,5 +1,5 @@
 import { createFrame, createText } from '@src/plugin/helpers'
-import { rgbToHex, isRgb } from '@src/plugin/helpers/colors'
+import { rgbToHex, isRgb, isRgba } from '@src/plugin/helpers/colors'
 
 type VariableScopeWithPrimitive = VariableScope | 'PRIMITIVE' | 'COLOR'
 type Mode = {
@@ -290,7 +290,7 @@ const renderDemo = ({
         }),
       )
       const elementsWrapper =
-        scopes === ['PRIMITIVE']
+        scopes.length === 1 && scopes[0] === 'PRIMITIVE'
           ? frameForItems
           : createFrame(
               {
@@ -354,7 +354,7 @@ const renderDemo = ({
       //     fontName: { family: 'Roboto', style: 'Regular' },
       //   }),
       // )
-  
+
       scopes.forEach((scope) => {
         createBlock({ frame: frameForFloatItems, name, value, mode, scope })
       })
@@ -380,8 +380,9 @@ const createBlock = ({
   value: VariableValue
   scope?: VariableScopeWithPrimitive
 }) => {
+  const backgroundColor =
+    mode.name.toLowerCase() === 'dark' ? '#251F1F' : mode.name.toLowerCase() === 'light' ? '#E9E8E8' : '#FFFFFF'
   /*
-
 ALL_SCOPES
 CORNER_RADIUS
 WIDTH_HEIGHT
@@ -400,12 +401,11 @@ EFFECT_FLOAT
       itemSpacing: 16,
       verticalPadding: 8,
       minHeight: 100,
-      minWidth: 140;
+      minWidth: 140,
       horizontalPadding: 8,
     },
     frame,
   )
-
 
   switch (scope) {
     case 'ALL_SCOPES':
@@ -597,7 +597,7 @@ const createColorCase = ({
     Object.assign(colorBlock, {
       strokeWeight: 1,
       strokes: [{ type: 'SOLID', color: { r: 0.9, g: 0.9, b: 0.9 } }],
-      fills: [{ type: 'SOLID', color: { r: value.r, g: value.g, b: value.b }, opacity: value.a ?? 1 }],
+      fills: [{ type: 'SOLID', color: { r: value.r, g: value.g, b: value.b }, opacity: isRgba(value) ? value.a : 1 }],
     })
   } else {
     switch (scope) {
@@ -608,7 +608,9 @@ const createColorCase = ({
         Object.assign(colorBlock, {
           strokeWeight: 1,
           strokes: [{ type: 'SOLID', color: { r: 0.7, g: 0.7, b: 0.7 } }],
-          fills: [{ type: 'SOLID', color: { r: value.r, g: value.g, b: value.b }, opacity: value.a ?? 1 }],
+          fills: [
+            { type: 'SOLID', color: { r: value.r, g: value.g, b: value.b }, opacity: isRgba(value) ? value.a : 1 },
+          ],
         })
 
         break

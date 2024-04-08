@@ -14,8 +14,11 @@ const toHex = (value: number) => {
 export type RGB = { r: number; g: number; b: number }
 export type RGBA = { r: number; g: number; b: number; a: number }
 
-export const isRgb = (value: RGB | RGBA): boolean => {
+export const isRgb = (value: any): boolean => {
   return value.r !== undefined && value.g !== undefined && value.b !== undefined
+}
+export const isRgba = (value: any): boolean => {
+  return value.r !== undefined && value.g !== undefined && value.b !== undefined && value.a !== undefined
 }
 
 export function rgbToHex(value: RGB | RGBA): string | undefined {
