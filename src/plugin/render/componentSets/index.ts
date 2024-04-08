@@ -16,6 +16,7 @@ export const handleRenderingComponentSets = async (demoPage: PageNode, component
   ) => {
     for (let i = 0; i < componentSets.length; i++) {
       await renderDemo({
+        demoPage,
         componentSet: componentSets[i],
         parentFrame: frame,
         backgroundColor: modeName === 'Dark' ? '#251F1F' : '#E9E8E8',

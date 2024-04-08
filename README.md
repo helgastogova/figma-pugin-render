@@ -1,3 +1,3 @@
 # figma-pugin-render
 
-figma plugin for rendering component sets demo
+figma plugin for Showcases render

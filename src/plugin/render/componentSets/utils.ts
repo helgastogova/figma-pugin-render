@@ -1,4 +1,4 @@
-import { createFrame, createText, getDemoTitle, findPageByName } from '../../helpers'
+import { createFrame, createText, getDemoTitle } from '../../helpers'
 import { createTableHead } from '../../helpers/table'
 
 interface NestedCombinations {
@@ -248,20 +248,25 @@ function renderTest({
   })
 }
 interface RenderDemoProps {
+  demoPage: PageNode
   componentSet: ComponentSetNode
   parentFrame?: FrameNode | PageNode
   backgroundColor?: string
 }
 
-export const renderDemo = async ({ componentSet, parentFrame, backgroundColor }: RenderDemoProps): Promise<void> => {
+export const renderDemo = async ({
+  demoPage,
+  componentSet,
+  parentFrame,
+  backgroundColor,
+}: RenderDemoProps): Promise<void> => {
   if (!componentSet) {
     console.error('Component Set not found')
     return
   }
-  const demoPage = findPageByName('Component Sets [Demo]')
 
   if (!demoPage || demoPage.type !== 'PAGE') {
-    console.error('Component Sets [Demo] page not found or not a page')
+    console.error('Could not create page for rendering showcases')
     return
   }
 

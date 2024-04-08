@@ -1,6 +1,5 @@
 import { createFrame, createText } from '@src/plugin/helpers'
 import { rgbToHex, isRgb, hexToRgbA } from '@src/plugin/helpers/colors'
-//hiddenFromPublishing
 
 function isVariableAlias(value: VariableValue): value is VariableAlias {
   if (typeof value !== 'object') return false
@@ -37,13 +36,15 @@ export const generateTokens = async (page: PageNode): Promise<void> => {
         const mode = collection.modes[j]
         const value = variable?.valuesByMode[mode.modeId]
         const scopes = variable?.scopes
-        if (!value) continue
+
+        if (!value || variable.hiddenFromPublishing) continue
 
         // if it's a variable id, we need to find the name of it
         if (isVariableAlias(value)) {
           const alias = await figma.variables.getVariableByIdAsync(value.id)
 
           if (!alias) continue
+
           modes[mode.modeId].variables.push({
             name: variable.name,
             alias: alias,
@@ -52,13 +53,12 @@ export const generateTokens = async (page: PageNode): Promise<void> => {
             scopes: scopes ?? alias.scopes,
           })
         } else {
-          // not a variable alias
-
+          const newScopes = scopes ?? variable.scopes
           modes[mode.modeId].variables.push({
             name: variable.name,
             value: value,
             type: variable.resolvedType,
-            scopes: scopes ?? variable.scopes,
+            scopes: newScopes.length ? newScopes : ['PRIMITIVE'],
           })
         }
       }
@@ -77,34 +77,38 @@ export const generateTokens = async (page: PageNode): Promise<void> => {
     collection.modes.forEach((mode) => {
       const modeFrame = createFrame(
         {
-          name: `${collection.name} / ${mode.name}`,
-          direction: 'HORIZONTAL',
+          name: `Collection ${collection.name} for ${mode.name} mode`,
           wrap: 'WRAP',
-          maxWidth: 1360,
+          maxWidth: 1430,
           horizontalAlign: 'MIN',
           verticalAlign: 'MIN',
           autoWidth: true,
           autoHeight: true,
           itemSpacing: 50,
-          verticalPadding: 50,
-          horizontalPadding: 50,
           borderRadius: 24,
-          backgroundColor: mode.name === 'Dark' ? '#251F1F' : mode.name === 'Light' ? '#E9E8E8' : '#FFFFFF',
+          // backgroundColor: '#FFFFFF',
         },
         page,
         'right',
       )
 
+      // add boredee
+      Object.assign(modeFrame, {
+        strokes: [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }],
+        strokeWeight: 5,
+      })
+
       const groupedVariables = groupVariablesByNames([mode])
       for (const [groupName, subGroups] of groupedVariables) {
         const subFrame = createFrame(
           {
-            name: `${groupName}`,
-            wrap: 'WRAP',
-            maxWidth: 1360,
+            name: `Group name: ${groupName}`,
+            direction: 'VERTICAL',
+            maxWidth: 1430,
             horizontalAlign: 'MIN',
             verticalAlign: 'MIN',
             verticalPadding: 50,
+            horizontalPadding: 50,
             autoWidth: true,
             autoHeight: true,
             itemSpacing: 16,
@@ -114,7 +118,7 @@ export const generateTokens = async (page: PageNode): Promise<void> => {
 
         subFrame.appendChild(
           createText({
-            characters: `${groupName}`,
+            characters: `Group name: ${groupName}`,
             fontSize: 42,
             fontName: { family: 'Roboto', style: 'Regular' },
           }),
@@ -122,7 +126,8 @@ export const generateTokens = async (page: PageNode): Promise<void> => {
 
         const wrapper = createFrame(
           {
-            name: `${groupName} / wrapper`,
+            name: `wrapper for ${groupName}`,
+            direction: 'HORIZONTAL',
             wrap: 'WRAP',
             maxWidth: 1360,
             horizontalAlign: 'MIN',
@@ -130,7 +135,6 @@ export const generateTokens = async (page: PageNode): Promise<void> => {
             autoWidth: true,
             autoHeight: true,
             itemSpacing: 16,
-            verticalPadding: 8,
           },
           subFrame,
         )
@@ -210,74 +214,95 @@ const renderGroupsRecursive = ({
   }
 }
 
-type GroupType =
-  | 'background'
-  | 'border'
-  | 'text'
-  | 'shadow'
-  | 'elevation'
-  | 'gradient'
-  | 'opacity'
-  | 'size'
-  | 'spacing'
-  | 'radius'
-  | 'font'
-  | 'icon'
-  | 'line'
-  | 'border-radius'
-  | 'unknown'
-
-//'background' | 'border' | 'text' | 'shadow' | 'elevation' | 'gradient' | 'opacity' | 'size' | 'spacing' | 'radius' | 'font' | 'icon' | 'line' | 'layout' | 'animation' | 'interaction' | 'transition' | 'zindex' | 'breakpoint' | 'scale' | 'media' | 'sound' | 'motion' | 'grid' | 'component' | 'unknown';
-
-const getGroupType = (loweredTopGroupName: string): GroupType => {
-  if (
-    loweredTopGroupName.includes('background') ||
-    loweredTopGroupName.includes('content') ||
-    loweredTopGroupName.includes('color')
-  )
-    return 'background'
-  if (loweredTopGroupName.includes('radius')) return 'border-radius'
-  if (loweredTopGroupName.includes('border') || loweredTopGroupName.includes('outline')) return 'border'
-  if (loweredTopGroupName.includes('text')) return 'text'
-  if (loweredTopGroupName.includes('shadow')) return 'shadow'
-  if (loweredTopGroupName.includes('elevation')) return 'elevation'
-  if (loweredTopGroupName.includes('gradient')) return 'gradient'
-  if (loweredTopGroupName.includes('opacity')) return 'opacity'
-  if (loweredTopGroupName.includes('size')) return 'size'
-  if (
-    loweredTopGroupName.includes('spacing') | loweredTopGroupName.includes('space') ||
-    loweredTopGroupName.includes('gap')
-  )
-    return 'gap'
-  if (loweredTopGroupName.includes('radius')) return 'radius'
-  if (loweredTopGroupName.includes('font')) return 'font'
-  if (loweredTopGroupName.includes('icon')) return 'icon'
-  if (loweredTopGroupName.includes('line')) return 'line'
-  return 'unknown'
-}
-
 const renderDemo = ({
   frame,
   variable,
   mode,
-  topGroupName,
 }: {
   frame: FrameNode
-  variable: { name: string; value: any; type: 'BOOLEAN' | 'COLOR' | 'FLOAT' | 'STRING' }
+  variable: {
+    name: string
+    value: VariableValue
+    type: VariableDataType
+    scopes: VariableScope[]
+  }
   mode: { name: string; modeId: string }
-  topGroupName?: string
 }) => {
+  const backgroundColor =
+    mode.name.toLowerCase() === 'dark' ? '#251F1F' : mode.name.toLowerCase() === 'light' ? '#E9E8E8' : '#FFFFFF'
+
   const { name, value, type, scopes } = variable
 
   if (!value) return
 
-  const groupType = getGroupType(topGroupName?.toLowerCase() ?? '')
   switch (type) {
     case 'COLOR':
-      createColorBlock({ frame, name, value, mode, groupType })
+      const frameForItems = createFrame(
+        {
+          name: `${name}/${type}`,
+          direction: 'VERTICAL',
+          horizontalAlign: 'MIN',
+          verticalAlign: 'MIN',
+          autoWidth: true,
+          autoHeight: true,
+          itemSpacing: 16,
+          verticalPadding: 16,
+        },
+        frame,
+      )
+      const textWrapper = createFrame(
+        {
+          name: `${name}/${rgbToHex(value)}`,
+          direction: 'VERTICAL',
+          horizontalAlign: 'MIN',
+          verticalAlign: 'MIN',
+          itemSpacing: 8,
+        },
+        frameForItems,
+      )
+
+      textWrapper.appendChild(
+        createText({
+          characters: `${name}`,
+          fontSize: 14,
+          fontName: { family: 'Roboto', style: 'Regular' },
+        }),
+      )
+      textWrapper.appendChild(
+        createText({
+          characters: `${rgbToHex(value)}`,
+          fontSize: 18,
+          fontName: { family: 'Roboto', style: 'Regular' },
+        }),
+      )
+      const elementsWrapper =
+        scopes === ['PRIMITIVE']
+          ? frameForItems
+          : createFrame(
+              {
+                name: 'Scope elements',
+                wrap: 'WRAP',
+                maxWidth: 1360,
+                horizontalAlign: 'MIN',
+                verticalAlign: 'MIN',
+                autoWidth: true,
+                autoHeight: true,
+                itemSpacing: 16,
+                verticalPadding: 16,
+                horizontalPadding: 16,
+                borderRadius: 16,
+                backgroundColor,
+              },
+              frameForItems,
+            )
+
+      scopes.forEach((scope) => {
+        createColorCase({ frame: elementsWrapper, name, value, mode, scope })
+      })
+
       break
     case 'FLOAT':
-      createBlock({ frame, name, value, mode, groupType })
+      createBlock({ frame, name, value, mode, scopes })
       break
     // Add other cases as necessary
 
@@ -286,28 +311,7 @@ const renderDemo = ({
   }
 }
 
-const createBlock = ({
-  frame,
-  name,
-  value,
-  groupType,
-}: {
-  frame: FrameNode
-  name: string
-  value: number | string
-  groupType?: GroupType
-}) => {
-  const getBackgroundColor = (groupType: string): string | null => {
-    switch (groupType) {
-      case 'border-radius':
-        return '#787878'
-      case 'gap':
-        return '#FFE5E4'
-      default:
-        return null
-    }
-  }
-
+const createBlock = ({ frame, name, value }: { frame: FrameNode; name: string; value: VariableValue }) => {
   const wrapper = createFrame(
     {
       name,
@@ -317,7 +321,6 @@ const createBlock = ({
       itemSpacing: 10,
       verticalPadding: 10,
       horizontalPadding: 10,
-      backgroundColor: getBackgroundColor(groupType),
     },
     frame,
   )
@@ -327,118 +330,197 @@ const createBlock = ({
       characters: value.toString(),
     }),
   )
-
-  switch (groupType) {
-    // case 'unknown':
-    case 'border-radius':
-      wrapper.cornerRadius = +value
-      wrapper.minHeight = 200
-      wrapper.minWidth = 200
-      break
-
-    case 'gap':
-      wrapper.minHeight = +value
-      wrapper.minWidth = 200
-
-      break
-
-    default:
-      break
-  }
 }
 
-const createColorBlock = ({
+/* 
+Scopes allow a variable to be shown/hidden in the variable picker UI for various fields. This is useful to help declutter the Figma UI if you have a large number of variables. Currently only supported on FLOAT and COLOR variables.
+ALL_SCOPES is a special scope that means that the variable will be shown in the picker UI for all current and any future fields. If ALL_SCOPES is set, no additional scopes can be set.
+Likewise, ALL_FILLS is a special scope that means that the variable will be shown in the picker UI for all current and any future color fill fields. If ALL_FILLS is set, no additional fill scopes can be set.
+Valid scopes for FLOAT variables are: ALL_SCOPES, TEXT_CONTENT, WIDTH_HEIGHT, GAP, STROKE_FLOAT, OPACITY, and EFFECT_FLOAT.
+Valid scopes for COLOR variables are ALL_SCOPES, ALL_FILLS, FRAME_FILL, SHAPE_FILL, TEXT_FILL, STROKE_COLOR, and EFFECT_COLOR.
+
+'BOOLEAN' | 'COLOR' | 'FLOAT' | 'STRING'
+
+'ALL_SCOPES'
+'TEXT_CONTENT'
+'CORNER_RADIUS'
+'WIDTH_HEIGHT'
+'GAP'
+'ALL_FILLS'
+'FRAME_FILL'
+'SHAPE_FILL'
+'TEXT_FILL'
+'STROKE_COLOR'
+'STROKE_FLOAT'
+'EFFECT_FLOAT'
+'EFFECT_COLOR'
+'OPACITY'
+
+'COLOR' scopes:
+'ALL_SCOPES'
+'ALL_FILLS'
+'FRAME_FILL'
+'SHAPE_FILL'
+'TEXT_FILL'
+'STROKE_COLOR'
+'EFFECT_COLOR'
+
+'FLOAT' scopes:
+'ALL_SCOPES'
+'TEXT_CONTENT'
+'WIDTH_HEIGHT'
+'GAP'
+'STROKE_FLOAT'
+'OPACITY'
+'EFFECT_FLOAT'
+
+'BOOLEAN' scopes:
+'ALL_SCOPES'
+'TEXT_CONTENT'
+'WIDTH_HEIGHT'
+'GAP'
+'STROKE_FLOAT'
+'OPACITY'
+'EFFECT_FLOAT'
+
+'STRING' scopes:
+'ALL_SCOPES'
+'TEXT_CONTENT'
+'WIDTH_HEIGHT'
+'GAP'
+'STROKE_FLOAT'
+'OPACITY'
+'EFFECT_FLOAT'
+----
+
+'ALL_SCOPES' – All
+'ALL_FILLS' – All fills
+'FRAME_FILL' – Fill: Frame
+'SHAPE_FILL' – Fill: Shape
+'TEXT_FILL' – Fill: Text
+'STROKE_COLOR' – Stroke
+'EFFECT_COLOR' – Effecs
+
+type Effect = DropShadowEffect | InnerShadowEffect | BlurEffect
+
+*/
+
+const createColorCase = ({
   frame,
+  mode,
   name,
   value,
-  groupType,
+  scope,
 }: {
   frame: FrameNode
   name: string
-  value: RGB
-  groupType?: GroupType
+  mode: { name: string; modeId: string }
+  value: VariableValue
+  scope?: VariableScope
 }) => {
+  const fontColor =
+    mode.name.toLowerCase() === 'dark' ? '#E9E8E8' : mode.name.toLowerCase() === 'light' ? '#251F1F' : '#000000'
   const color = rgbToHex(value as RGB) ?? ''
-
   if (!color) return
 
   const wrapper = createFrame(
     {
-      name: `${name} / ${color}`,
+      name: `${name}/${color}/${scope}`,
       direction: 'VERTICAL',
-      horizontalAlign: 'MIN',
+      horizontalAlign: 'CENTER',
       verticalAlign: 'MIN',
-      itemSpacing: 8,
+      itemSpacing: 16,
       verticalPadding: 8,
       horizontalPadding: 8,
-      backgroundColor: ['background', 'unknown'].includes(groupType) && color,
-      minWidth: 300,
-      minHeight: 140,
-      borderRadius: 24,
     },
     frame,
   )
 
-  switch (groupType) {
-    case 'unknown':
-    case 'background':
-      Object.assign(wrapper, {
-        strokeWeight: 1,
-        strokes: [{ type: 'SOLID', color: { r: 0.9, g: 0.9, b: 0.9 } }],
-      })
-      break
-    case 'border':
-      Object.assign(wrapper, {
-        strokeWeight: 3,
-        strokes: [{ type: 'SOLID', color: figma.util.rgb(color) }],
-      })
-      break
-    case 'shadow':
-      Object.assign(wrapper, {
-        effects: [
-          {
-            type: 'DROP_SHADOW',
-            color: figma.util.rgb(color),
-            offset: { x: 0, y: 4 },
-            radius: 4,
-            visible: true,
-            blendMode: 'NORMAL',
-          },
-        ],
-      })
-      break
-
-    default:
-      break
-  }
-
-  const textWrapper = createFrame(
+  const colorBlock = createFrame(
     {
-      name: `${name}/${color}`,
+      name: 'color block',
       direction: 'VERTICAL',
-      horizontalAlign: 'MIN',
-      verticalAlign: 'MIN',
-      borderRadius: 16,
-      verticalPadding: 8,
-      horizontalPadding: 16,
-      backgroundColor: '#ffffff',
-      itemSpacing: 8,
+      horizontalAlign: 'CENTER',
+      verticalAlign: 'CENTER',
+      minWidth: 140,
+      minHeight: 100,
+      borderRadius: 24,
     },
     wrapper,
   )
 
-  textWrapper.appendChild(
-    createText({
-      characters: `${name}`,
-      fontSize: 14,
-      fontName: { family: 'Roboto', style: 'Regular' },
-    }),
-  )
-  textWrapper.appendChild(
-    createText({
-      characters: `${color}`,
-      fontSize: 18,
-      fontName: { family: 'Roboto', style: 'Regular' },
-    }),
-  )
+  if (['PRIMITIVE', 'ALL_SCOPES'].includes(scope)) {
+    Object.assign(colorBlock, {
+      strokeWeight: 1,
+      strokes: [{ type: 'SOLID', color: { r: 0.9, g: 0.9, b: 0.9 } }],
+      fills: [{ type: 'SOLID', color: { r: value.r, g: value.g, b: value.b }, opacity: value.a }],
+    })
+  } else {
+    switch (scope) {
+      case 'ALL_FILLS':
+      case 'FRAME_FILL':
+      case 'SHAPE_FILL':
+      case 'COLOR': // for general colors (primitives)
+        Object.assign(colorBlock, {
+          strokeWeight: 1,
+          strokes: [{ type: 'SOLID', color: { r: 0.7, g: 0.7, b: 0.7 } }],
+          fills: [{ type: 'SOLID', color: { r: value.r, g: value.g, b: value.b }, opacity: value.a }],
+        })
+        break
+      case 'STROKE_COLOR':
+        Object.assign(colorBlock, {
+          strokeWeight: 3,
+          strokes: [{ type: 'SOLID', color: { r: value.r, g: value.g, b: value.b } }],
+        })
+        break
+      case 'EFFECT_COLOR':
+        Object.assign(colorBlock, {
+          effects: [
+            {
+              type: 'DROP_SHADOW',
+              color: value,
+              offset: { x: 0, y: 4 },
+              radius: 4,
+              visible: true,
+              blendMode: 'NORMAL',
+            },
+          ],
+        })
+        break
+      case 'TEXT_FILL':
+        colorBlock.appendChild(
+          createText({
+            characters: 'Text',
+            fontSize: 54,
+            fontColor: color,
+            fontName: { family: 'Roboto', style: 'Regular' },
+            textAlignVertical: 'CENTER',
+          }),
+        )
+        break
+      default:
+        break
+    }
+    if (scope !== 'PRIMITIVE') {
+      wrapper.appendChild(
+        createText({
+          characters: `Scope: ${getHumanScopeName(scope)}`,
+          fontSize: 14,
+          fontName: { family: 'Roboto', style: 'Regular' },
+          fontColor,
+        }),
+      )
+    }
+  }
+}
+
+const getHumanScopeName = (scope: VariableScope): string => {
+  if (scope === 'ALL_SCOPES') return 'All'
+  if (scope === 'ALL_FILLS') return 'All fills'
+  if (scope === 'FRAME_FILL') return 'Frame fill'
+  if (scope === 'SHAPE_FILL') return 'Shape fill'
+  if (scope === 'TEXT_FILL') return 'Text fill'
+  if (scope === 'STROKE_COLOR') return 'Stroke'
+  if (scope === 'EFFECT_COLOR') return 'Effects'
+  return ''
 }

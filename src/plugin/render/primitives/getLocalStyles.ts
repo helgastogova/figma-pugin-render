@@ -50,7 +50,10 @@ export async function getLocalStyles(
   }
 }
 
-export type NormalizedCollection = Pick<VariableCollection, 'id' | 'name' | 'remote' | 'modes' | 'variableIds'>
+export type NormalizedCollection = Pick<
+  VariableCollection,
+  'id' | 'name' | 'remote' | 'modes' | 'variableIds' | 'defaultModeId'
+>
 
 export type NormalizedCollectionMap = Record<string, NormalizedCollection>
 

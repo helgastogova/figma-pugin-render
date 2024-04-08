@@ -2,7 +2,7 @@
   "type": "module",
   "name": "figma-plugin-render-components-sets",
   "version": "1.0.0",
-  "description": "Figma plugin for rendering demo for component sets",
+  "description": "Figma plugin for Showcases render",
   "license": "ISC",
   "scripts": {
     "dev": "PORT=5000 rollup -c -w",

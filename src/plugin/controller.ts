@@ -24,7 +24,7 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
   if (msg.type === 'render-demo') {
     try {
       const demoPage = getDemoPage()
-      demoPage.name = 'Component Sets [Demo]'
+
       figma.currentPage = demoPage
 
       await Promise.all([
@@ -54,13 +54,13 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
         .catch((error) => {
           console.error('Error during post-rendering:', error)
         })
-      // figma.closePlugin()
+      figma.closePlugin()
     } catch (error) {
       figma.ui.postMessage({ type: 'error', message: 'Failed to load fonts' })
       console.error(error)
     }
 
-    // figma.closePlugin()
+    figma.closePlugin()
   }
   if (msg.type === 'cancel') {
     figma.closePlugin()

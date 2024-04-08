@@ -161,13 +161,6 @@ export function findComponentByName(name: string, node: BaseNode): ComponentNode
   return null
 }
 
-export const findPageByName = (name: 'Component Sets [Demo]') => {
-  let pageName = ''
-  if (name === 'Component Sets [Demo]') pageName = 'Component Sets [Demo]'
-  if (!pageName) return figma.currentPage
-  return figma.root.findOne((node) => node.name === pageName) ?? figma.currentPage
-}
-
 //
 export const hasChildren = (node: BaseNode): node is BaseNode & ChildrenMixin => Boolean(node['children'])
 
