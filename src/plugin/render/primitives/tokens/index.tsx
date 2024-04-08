@@ -1,5 +1,17 @@
 import { createFrame, createText } from '@src/plugin/helpers'
-import { rgbToHex, isRgb, hexToRgbA } from '@src/plugin/helpers/colors'
+import { rgbToHex, isRgb } from '@src/plugin/helpers/colors'
+
+type VariableScopeWithPrimitive = VariableScope | 'PRIMITIVE' | 'COLOR'
+type Mode = {
+  name: string
+  variables: {
+    name: string
+    value: VariableValue
+    type: VariableDataType
+    scopes: VariableScopeWithPrimitive[]
+    alias?: VariableAlias
+  }[]
+}
 
 function isVariableAlias(value: VariableValue): value is VariableAlias {
   if (typeof value !== 'object') return false
@@ -10,7 +22,7 @@ export const generateTokens = async (page: PageNode): Promise<void> => {
   const variableCollections = await figma.variables.getLocalVariableCollectionsAsync()
 
   if (!variableCollections?.length) return
-  const collections = [] as Collection[]
+  const collections = [] as VariableCollection[]
 
   const defaultModeId = variableCollections[0]?.modes[0]?.modeId
 
@@ -224,7 +236,7 @@ const renderDemo = ({
     name: string
     value: VariableValue
     type: VariableDataType
-    scopes: VariableScope[]
+    scopes: VariableScopeWithPrimitive[]
   }
   mode: { name: string; modeId: string }
 }) => {
@@ -237,6 +249,8 @@ const renderDemo = ({
 
   switch (type) {
     case 'COLOR':
+      if (!isRgb(value)) return
+
       const frameForItems = createFrame(
         {
           name: `${name}/${type}`,
@@ -302,7 +316,49 @@ const renderDemo = ({
 
       break
     case 'FLOAT':
-      createBlock({ frame, name, value, mode, scopes })
+      const frameForFloatItems = createFrame(
+        {
+          name: `${name}/${type}`,
+          direction: 'VERTICAL',
+          horizontalAlign: 'MIN',
+          verticalAlign: 'MIN',
+          autoWidth: true,
+          autoHeight: true,
+          itemSpacing: 16,
+          verticalPadding: 16,
+        },
+        frame,
+      )
+      const textWrapperForFloat = createFrame(
+        {
+          name: `${name}/${rgbToHex(value)}`,
+          direction: 'VERTICAL',
+          horizontalAlign: 'MIN',
+          verticalAlign: 'MIN',
+          itemSpacing: 8,
+        },
+        frameForFloatItems,
+      )
+
+      textWrapperForFloat.appendChild(
+        createText({
+          characters: `${name}`,
+          fontSize: 14,
+          fontName: { family: 'Roboto', style: 'Regular' },
+        }),
+      )
+      // textWrapper.appendChild(
+      //   createText({
+      //     characters: `${rgbToHex(value)}`,
+      //     fontSize: 18,
+      //     fontName: { family: 'Roboto', style: 'Regular' },
+      //   }),
+      // )
+  
+      scopes.forEach((scope) => {
+        createBlock({ frame: frameForFloatItems, name, value, mode, scope })
+      })
+
       break
     // Add other cases as necessary
 
@@ -311,23 +367,108 @@ const renderDemo = ({
   }
 }
 
-const createBlock = ({ frame, name, value }: { frame: FrameNode; name: string; value: VariableValue }) => {
+const createBlock = ({
+  frame,
+  name,
+  value,
+  mode,
+  scope,
+}: {
+  frame: FrameNode
+  name: string
+  mode: { name: string; modeId: string }
+  value: VariableValue
+  scope?: VariableScopeWithPrimitive
+}) => {
+  /*
+
+ALL_SCOPES
+CORNER_RADIUS
+WIDTH_HEIGHT
+GAP
+TEXT_CONTENT
+STROKE_FLOAT
+OPACITY
+EFFECT_FLOAT
+*/
   const wrapper = createFrame(
     {
-      name,
+      name: `${name}/${scope}/${value}`,
       direction: 'VERTICAL',
-      horizontalAlign: 'MIN',
+      horizontalAlign: 'CENTER',
       verticalAlign: 'MIN',
-      itemSpacing: 10,
-      verticalPadding: 10,
-      horizontalPadding: 10,
+      itemSpacing: 16,
+      verticalPadding: 8,
+      minHeight: 100,
+      minWidth: 140;
+      horizontalPadding: 8,
     },
     frame,
   )
 
-  wrapper.appendChild(
+
+  switch (scope) {
+    case 'ALL_SCOPES':
+      break
+    case 'CORNER_RADIUS':
+      Object.assign(wrapper, {
+        cornerRadius: value as number,
+        fills: [{ type: 'SOLID', color: { r: 0.7, g: 0.7, b: 0.7 } }],
+      })
+      break
+    // case 'WIDTH_HEIGHT':
+    //   Object.assign(wrapper, {
+    //     width: value as number,
+    //     height: value as number,
+    //   })
+    //   break
+    // case 'GAP':
+    //   Object.assign(wrapper, {
+    //     itemSpacing: value as number,
+    //   })
+    //   break
+    // case 'TEXT_CONTENT':
+    //   wrapper.appendChild(
+    //     createText({
+    //       characters: 'Text',
+    //       fontSize: 42,
+    //       fontName: { family: 'Roboto', style: 'Regular' },
+    //     }),
+    //   )
+    //   break
+    // case 'STROKE_FLOAT':
+    //   Object.assign(wrapper, {
+    //     strokeWeight: value as number,
+    //     strokes: [{ type: 'SOLID', color: { r: 0, g: 0, b: 0 } }],
+    //   })
+    //   break
+    // case 'OPACITY':
+    //   Object.assign(wrapper, {
+    //     opacity: value as number,
+    //   })
+    //   break
+    // case 'EFFECT_FLOAT':
+    //   Object.assign(wrapper, {
+    //     effects: [
+    //       {
+    //         type: 'DROP_SHADOW',
+    //         color: { r: 0, g: 0, b: 0 },
+    //         offset: { x: 0, y: 4 },
+    //         radius: value as number,
+    //         visible: true,
+    //         blendMode: 'NORMAL',
+    //       },
+    //     ],
+    //   })
+    //   break
+    default:
+      break
+  }
+  frame.appendChild(
     createText({
-      characters: value.toString(),
+      characters: `Scope: ${getHumanScopeName(scope)}`,
+      fontSize: 14,
+      fontName: { family: 'Roboto', style: 'Regular' },
     }),
   )
 }
@@ -415,13 +556,16 @@ const createColorCase = ({
   frame: FrameNode
   name: string
   mode: { name: string; modeId: string }
-  value: VariableValue
-  scope?: VariableScope
+  value: RGB
+  scope?: VariableScopeWithPrimitive
 }) => {
-  const fontColor =
-    mode.name.toLowerCase() === 'dark' ? '#E9E8E8' : mode.name.toLowerCase() === 'light' ? '#251F1F' : '#000000'
+  if (!isRgb(value as RGB)) return
+
   const color = rgbToHex(value as RGB) ?? ''
   if (!color) return
+
+  const fontColor =
+    mode.name.toLowerCase() === 'dark' ? '#E9E8E8' : mode.name.toLowerCase() === 'light' ? '#251F1F' : '#000000'
 
   const wrapper = createFrame(
     {
@@ -453,7 +597,7 @@ const createColorCase = ({
     Object.assign(colorBlock, {
       strokeWeight: 1,
       strokes: [{ type: 'SOLID', color: { r: 0.9, g: 0.9, b: 0.9 } }],
-      fills: [{ type: 'SOLID', color: { r: value.r, g: value.g, b: value.b }, opacity: value.a }],
+      fills: [{ type: 'SOLID', color: { r: value.r, g: value.g, b: value.b }, opacity: value.a ?? 1 }],
     })
   } else {
     switch (scope) {
@@ -464,8 +608,9 @@ const createColorCase = ({
         Object.assign(colorBlock, {
           strokeWeight: 1,
           strokes: [{ type: 'SOLID', color: { r: 0.7, g: 0.7, b: 0.7 } }],
-          fills: [{ type: 'SOLID', color: { r: value.r, g: value.g, b: value.b }, opacity: value.a }],
+          fills: [{ type: 'SOLID', color: { r: value.r, g: value.g, b: value.b }, opacity: value.a ?? 1 }],
         })
+
         break
       case 'STROKE_COLOR':
         Object.assign(colorBlock, {
@@ -514,7 +659,7 @@ const createColorCase = ({
   }
 }
 
-const getHumanScopeName = (scope: VariableScope): string => {
+const getHumanScopeName = (scope: VariableScopeWithPrimitive): string => {
   if (scope === 'ALL_SCOPES') return 'All'
   if (scope === 'ALL_FILLS') return 'All fills'
   if (scope === 'FRAME_FILL') return 'Frame fill'
@@ -522,5 +667,6 @@ const getHumanScopeName = (scope: VariableScope): string => {
   if (scope === 'TEXT_FILL') return 'Text fill'
   if (scope === 'STROKE_COLOR') return 'Stroke'
   if (scope === 'EFFECT_COLOR') return 'Effects'
-  return ''
+  if (scope === 'PRIMITIVE') return 'Primitive'
+  return scope
 }
