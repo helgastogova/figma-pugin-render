@@ -1,5 +1,5 @@
 import { createFrame, createText } from '@src/plugin/helpers'
-import { rgbToHex, isRgb, isRgba } from '@src/plugin/helpers/colors'
+import { rgbToHex, isRgb, isRgba, hexToRgbA } from '@src/plugin/helpers/colors'
 
 type VariableScopeWithPrimitive = VariableScope | 'PRIMITIVE' | 'COLOR'
 type Mode = {
@@ -422,11 +422,24 @@ EFFECT_FLOAT
     //     height: value as number,
     //   })
     //   break
-    // case 'GAP':
-    //   Object.assign(wrapper, {
-    //     itemSpacing: value as number,
-    //   })
-    //   break
+    case 'GAP':
+      createFrame(
+        {
+          name: `Gap ${value}`,
+          direction: 'VERTICAL',
+          horizontalAlign: 'CENTER',
+          verticalAlign: 'MIN',
+          itemSpacing: 16,
+          verticalPadding: 8,
+          minHeight: value as number,
+          maxHeight: value as number,
+          minWidth: 140,
+          backgroundColor: '#FCBFBF',
+          horizontalPadding: 8,
+        },
+        wrapper,
+      )
+      break
     // case 'TEXT_CONTENT':
     //   wrapper.appendChild(
     //     createText({
