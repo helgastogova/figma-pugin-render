@@ -82,6 +82,8 @@ export function assembleStylesArray(styles) {
       theme: '',
       type: style.type,
       paints: style.paints ?? [],
+      item: style,
+      // TODO: тут вообще то разные типы
     }
 
     if (item.name.includes('_') || item.name.includes('.')) {

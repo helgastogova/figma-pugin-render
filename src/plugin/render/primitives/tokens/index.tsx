@@ -24,6 +24,7 @@ export const generateTokens = async (page: PageNode): Promise<void> => {
           // backgroundColor: '#FFFFFF',
         },
         page,
+        'right',
       )
 
       Object.assign(modeFrame, {

@@ -76,7 +76,6 @@ export const getDemoTitle = (text: string): FrameNode => {
     horizontalAlign: 'MIN',
     verticalAlign: 'MIN',
     verticalPadding: 16,
-    horizontalPadding: 16,
   })
 
   blocksFrame.appendChild(

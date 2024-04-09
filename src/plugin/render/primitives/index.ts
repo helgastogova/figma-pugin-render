@@ -31,11 +31,12 @@ export const generateVariables = async (page: PageNode): Promise<void> => {
     stylesPromises.colorStyles,
     stylesPromises.textStyles,
     stylesPromises.effectStyles,
-    // stylesPromises.gridStyles,
+    //  stylesPromises.gridStyles,
   ]).then(([colorStyles, textStyles, effectStyles]) => {
-    renderColorStyles(colorStyles as ColorStyleData, frame)
+    console.log(textStyles)
+    // renderColorStyles(colorStyles as ColorStyleData, frame)
     renderTextStyles(textStyles as TextStyleData, frame)
-    renderEffectStyles(effectStyles as EffectStyleData, frame)
+    // renderEffectStyles(effectStyles as EffectStyleData, frame)
     // renderGridStyles(gridStyles, frame)
   })
 }

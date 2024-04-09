@@ -1,4 +1,4 @@
-// import { generateVariables } from './render/primitives'
+import { generateVariables } from './render/primitives'
 import { CreateUIMessageType } from './types'
 import { findAllComponentSetsOnPage, getDemoPage } from './utils'
 import { handleRenderingComponentSets } from './render/componentSets'
@@ -27,6 +27,18 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
 
       figma.currentPage = demoPage
 
+      const textStyles = figma.getLocalTextStyles()
+
+      const uniqueFontNames = new Set<{ family: string; style: string }>()
+
+      textStyles?.forEach((item) => {
+        if (item.fontName?.family && item.fontName?.style) {
+          uniqueFontNames.add({ family: item.fontName.family, style: item.fontName.style })
+        }
+      })
+
+      await Promise.all([...uniqueFontNames].map((fontName) => figma.loadFontAsync(fontName)))
+
       await Promise.all([
         figma.loadFontAsync({ family: 'Roboto', style: 'Regular' }),
         figma.loadFontAsync({ family: 'Roboto', style: 'Bold' }),
@@ -38,8 +50,8 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
       })
 
       await Promise.all([
-        //handleRenderingComponentSets(demoPage, [...componentSets, ...(standaloneComponentSets as any)]),
-        handleRenderingComponentSets(demoPage, []),
+        handleRenderingComponentSets(demoPage, [...componentSets, ...(standaloneComponentSets as any)]),
+        //handleRenderingComponentSets(demoPage, []),
       ])
         .catch((error) => {
           figma.ui.postMessage({ type: 'error', message: 'Failed to render demo' })
@@ -47,8 +59,8 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
           throw error
         })
         .then(async () => {
+          await generateVariables(demoPage)
           await generateTokens(demoPage)
-          // await generateVariables(demoPage)
           figma.ui.postMessage({ type: 'success', message: 'Demo rendered successfully.' })
         })
         .catch((error) => {
