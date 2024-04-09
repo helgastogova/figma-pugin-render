@@ -416,12 +416,15 @@ EFFECT_FLOAT
         fills: [{ type: 'SOLID', color: { r: 0.7, g: 0.7, b: 0.7 } }],
       })
       break
-    // case 'WIDTH_HEIGHT':
-    //   Object.assign(wrapper, {
-    //     width: value as number,
-    //     height: value as number,
-    //   })
-    //   break
+    case 'WIDTH_HEIGHT':
+      Object.assign(wrapper, {
+        maxWidth: value as number,
+        minWidth: value as number,
+        maxHeight: value as number,
+        minHeight: value as number,
+        fills: [{ type: 'SOLID', color: { r: 0.7, g: 0.7, b: 0.7 } }],
+      })
+      break
     case 'GAP':
       createFrame(
         {
