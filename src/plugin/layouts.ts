@@ -30,6 +30,7 @@ export type LayoutsProps = {
   ]
   backgroundColor?: string
   clipsContent?: boolean
+  opacity?: number
 }
 
 export const getLayoutProps = ({
@@ -51,6 +52,7 @@ export const getLayoutProps = ({
   layoutGrow = DEFAULT_LAYOUT_SETTINGS.layoutGrow,
   layoutAlign = DEFAULT_LAYOUT_SETTINGS.layoutAlign,
   clipsContent = DEFAULT_LAYOUT_SETTINGS.clipsContent,
+  opacity = 1,
 }: LayoutsProps) => {
   return {
     name,
@@ -71,5 +73,6 @@ export const getLayoutProps = ({
     layoutGrow,
     layoutAlign,
     clipsContent,
+    opacity,
   }
 }

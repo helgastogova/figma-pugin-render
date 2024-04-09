@@ -1,31 +1,32 @@
-function buildVariableTree(parts: string[], variable: Variable, index: number = 0, currentMap: Map<string, any>): void {
-  const part = parts[index]
+function buildVariableTree(parts: string[], variable: Variable, currentMap: Map<string, any>): void {
+  // Используем 'root' для элементов без разделения
+  const groupName = parts.length > 1 ? parts.slice(0, -1).join('/') : 'root'
+  const variableName = parts[parts.length - 1]
 
-  if (index === parts.length - 1) {
-    if (!currentMap.has(part)) {
-      currentMap.set(part, [])
-    }
-    const list = currentMap.get(part)
-    if (!list.some((item) => item.name === variable.name)) {
-      list.push(variable)
-    }
-  } else {
-    if (!currentMap.has(part)) {
-      currentMap.set(part, new Map())
-    }
-    buildVariableTree(parts, variable, index + 1, currentMap.get(part))
+  if (!currentMap.has(groupName)) {
+    currentMap.set(groupName, new Map())
   }
+  const group = currentMap.get(groupName)
+
+  if (!group.has(variableName)) {
+    group.set(variableName, [])
+  }
+  group.get(variableName).push(variable)
 }
 
-export const groupVariablesByNames = (modes: VariableMode[]): Map<string, { name: string; value: string }[]> => {
-  const groupedVariables = new Map<string, { name: string; value: string }[]>()
+export const groupVariablesByNames = (modes: VariableMode[]): Map<string, Map<string, Variable[]>> => {
+  const groupedVariables = new Map<string, Map<string, Variable[]>>()
 
   modes.forEach((mode) => {
     mode.variables.forEach((variable) => {
-      const parts = variable.name.split('/')
-      buildVariableTree(parts, variable, 0, groupedVariables)
+      const parts = variable.name.includes('/') ? variable.name.split('/') : ['root', variable.name]
+      buildVariableTree(parts, variable, groupedVariables)
     })
   })
 
-  return groupedVariables
+  const sortedGroupedVariables = new Map<string, Map<string, Variable[]>>(
+    Array.from(groupedVariables.entries()).sort((a, b) => a[0].localeCompare(b[0])),
+  )
+
+  return sortedGroupedVariables
 }

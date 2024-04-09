@@ -11,19 +11,19 @@ export const generateTokens = async (page: PageNode): Promise<void> => {
     collection.modes.forEach((mode) => {
       const modeFrame = createFrame(
         {
-          name: `Collection ${collection.name} for ${mode.name} mode`,
-          wrap: 'WRAP',
-          maxWidth: 1430,
+          name: `Collection ${collection.name} for the ${mode.name} mode`,
+          direction: 'HORIZONTAL',
           horizontalAlign: 'MIN',
           verticalAlign: 'MIN',
           autoWidth: true,
           autoHeight: true,
           itemSpacing: 50,
           borderRadius: 24,
+          verticalPadding: 50,
+          horizontalPadding: 50,
           // backgroundColor: '#FFFFFF',
         },
         page,
-        'right',
       )
 
       Object.assign(modeFrame, {
@@ -40,34 +40,30 @@ export const generateTokens = async (page: PageNode): Promise<void> => {
             maxWidth: 1430,
             horizontalAlign: 'MIN',
             verticalAlign: 'MIN',
-            verticalPadding: 50,
-            horizontalPadding: 50,
             autoWidth: true,
             autoHeight: true,
             itemSpacing: 16,
           },
           modeFrame,
         )
-
-        subFrame.appendChild(
-          createText({
-            characters: `Group name: ${groupName}`,
-            fontSize: 34,
-            fontName: { family: 'Roboto', style: 'Regular' },
-          }),
-        )
+        groupName !== 'root' &&
+          subFrame.appendChild(
+            createText({
+              characters: `${groupName}`,
+              fontSize: 24,
+              fontName: { family: 'Roboto', style: 'Bold' },
+            }),
+          )
 
         const wrapper = createFrame(
           {
             name: `wrapper for ${groupName}`,
-            direction: 'HORIZONTAL',
-            wrap: 'WRAP',
-            maxWidth: 1360,
+            direction: 'VERTICAL',
             horizontalAlign: 'MIN',
             verticalAlign: 'MIN',
             autoWidth: true,
             autoHeight: true,
-            itemSpacing: 16,
+            itemSpacing: 30,
           },
           subFrame,
         )

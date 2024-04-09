@@ -1,17 +1,29 @@
 import { createFrame, createText } from '@src/plugin/helpers'
-import { rgbToHex, isRgb, isRgba, hexToRgbA } from '@src/plugin/helpers/colors'
+import { rgbToHex, isRgb, isRgba } from '@src/plugin/helpers/colors'
 
-type VariableScopeWithPrimitive = VariableScope | 'PRIMITIVE' | 'COLOR'
+type VariableScopeWithPrimitive = VariableScope | 'PRIMITIVE' | 'COLOR' | 'DEFAULT_FLOAT'
 
 const getHumanScopeName = (scope: VariableScopeWithPrimitive): string => {
   if (scope === 'ALL_SCOPES') return 'All'
-  if (scope === 'ALL_FILLS') return 'All fills'
+  if (scope === 'ALL_FILLS') return 'All'
   if (scope === 'FRAME_FILL') return 'Frame fill'
   if (scope === 'SHAPE_FILL') return 'Shape fill'
   if (scope === 'TEXT_FILL') return 'Text fill'
   if (scope === 'STROKE_COLOR') return 'Stroke'
   if (scope === 'EFFECT_COLOR') return 'Effects'
   if (scope === 'PRIMITIVE') return 'Primitive'
+
+  if (scope === 'DEFAULT_COLOR') return ''
+  if (scope === 'DEFAULT_FLOAT') return ''
+
+  if (scope === 'CORNER_RADIUS') return 'Corner radius'
+  if (scope === 'TEXT_CONTENT') return 'Text content'
+  if (scope === 'WIDTH_HEIGHT') return 'Width and height'
+  if (scope === 'GAP') return 'Gap (Auto layout)'
+  if (scope === 'STROKE_FLOAT') return 'Stroke'
+  if (scope === 'OPACITY') return 'Layer opacity'
+  if (scope === 'EFFECT_FLOAT') return 'Effects'
+
   return scope
 }
 
@@ -28,7 +40,7 @@ export const renderGroupsRecursive = ({
   depth?: number
   topGroupName?: string
 }) => {
-  if (Array.isArray(groups)) {
+  if (Array.isArray(groups) && groups.length < 2) {
     for (const variable of groups) {
       renderDemo({ frame, variable, mode, topGroupName })
     }
@@ -36,18 +48,26 @@ export const renderGroupsRecursive = ({
     for (const [groupName, subGroups] of groups) {
       const subFrame = createFrame(
         {
-          name: `${groupName} / ${depth}`,
-          wrap: 'WRAP',
-          maxWidth: 1360,
+          name: `${groupName}`,
+          direction: 'VERTICAL',
+          autoWidth: true,
           horizontalAlign: 'MIN',
           verticalAlign: 'MIN',
           autoWidth: true,
           autoHeight: true,
-          itemSpacing: 16,
-          verticalPadding: 8,
+          itemSpacing: 20,
         },
         frame,
       )
+
+      !Array.isArray(subGroups) &&
+        subFrame.appendChild(
+          createText({
+            characters: `${groupName}`,
+            fontSize: 36 - depth * 4,
+            fontName: { family: 'Roboto', style: 'Regular' },
+          }),
+        )
 
       renderGroupsRecursive({ frame: subFrame, groups: subGroups, mode, depth: depth + 1, topGroupName })
     }
@@ -61,6 +81,7 @@ const renderDemo = ({
 }: {
   frame: FrameNode
   variable: {
+    hidden?: boolean
     name: string
     value: VariableValue
     type: VariableDataType
@@ -81,10 +102,10 @@ const renderDemo = ({
 
       const frameForItems = createFrame(
         {
-          name: `${name}/${type}`,
-          direction: 'VERTICAL',
+          name: `type=${type}, name=${name}`,
+          direction: 'HORIZONTAL',
           horizontalAlign: 'MIN',
-          verticalAlign: 'MIN',
+          verticalAlign: 'CENTER',
           autoWidth: true,
           autoHeight: true,
           itemSpacing: 16,
@@ -92,6 +113,33 @@ const renderDemo = ({
         },
         frame,
       )
+
+      const elementsWrapper =
+        scopes.length === 1 && scopes[0] === 'PRIMITIVE'
+          ? frameForItems
+          : createFrame(
+              {
+                name: 'Scope elements',
+                direction: 'HORIZONTAL',
+                horizontalAlign: 'MIN',
+                verticalAlign: 'MIN',
+                autoWidth: true,
+                autoHeight: true,
+                itemSpacing: 16,
+                borderRadius: 16,
+                // backgroundColor,
+              },
+              frameForItems,
+            )
+
+      if (scopes.length > 1 || scopes[0] === 'ALL_SCOPES' || scopes[0] === 'PRIMITIVE') {
+        createColorCase({ frame: elementsWrapper, name, value, mode, scope: 'DEFAULT_COLOR' })
+      } else {
+        scopes.forEach((scope) => {
+          createColorCase({ frame: elementsWrapper, name, value, mode, scope })
+        })
+      }
+
       const textWrapper = createFrame(
         {
           name: `${name}/${rgbToHex(value)}`,
@@ -105,61 +153,55 @@ const renderDemo = ({
 
       textWrapper.appendChild(
         createText({
-          characters: `${name}`,
-          fontSize: 14,
-          fontName: { family: 'Roboto', style: 'Regular' },
+          characters: `${rgbToHex(value)}`,
+          fontSize: 24,
+          fontName: { family: 'Roboto', style: 'Bold' },
         }),
       )
+
       textWrapper.appendChild(
         createText({
-          characters: `${rgbToHex(value)}`,
+          characters: name,
           fontSize: 18,
           fontName: { family: 'Roboto', style: 'Regular' },
         }),
       )
-      const elementsWrapper =
-        scopes.length === 1 && scopes[0] === 'PRIMITIVE'
-          ? frameForItems
-          : createFrame(
-              {
-                name: 'Scope elements',
-                wrap: 'WRAP',
-                maxWidth: 1360,
-                horizontalAlign: 'MIN',
-                verticalAlign: 'MIN',
-                autoWidth: true,
-                autoHeight: true,
-                itemSpacing: 16,
-                verticalPadding: 16,
-                horizontalPadding: 16,
-                borderRadius: 16,
-                backgroundColor,
-              },
-              frameForItems,
-            )
 
-      scopes.forEach((scope) => {
-        createColorCase({ frame: elementsWrapper, name, value, mode, scope })
-      })
+      textWrapper.appendChild(
+        createText({
+          characters: `${scopes.length > 1 ? 'Scopes' : 'Scope'}: ${scopes.map(getHumanScopeName).join(', ')}`,
+          fontSize: 14,
+          fontName: { family: 'Roboto', style: 'Regular' },
+        }),
+      )
 
       break
     case 'FLOAT':
       const frameForFloatItems = createFrame(
         {
           name: `${name}/${type}`,
-          direction: 'VERTICAL',
+          direction: 'HORIZONTAL',
           horizontalAlign: 'MIN',
-          verticalAlign: 'MIN',
+          verticalAlign: 'CENTER',
           autoWidth: true,
           autoHeight: true,
-          itemSpacing: 16,
+          itemSpacing: 20,
           verticalPadding: 16,
         },
         frame,
       )
+
+      if (scopes.length > 1 || scopes[0] === 'ALL_SCOPES') {
+        createBlock({ frame: frameForFloatItems, name, value, mode, scope: 'DEFAULT_FLOAT' })
+      } else {
+        scopes.forEach((scope) => {
+          createBlock({ frame: frameForFloatItems, name, value, mode, scope })
+        })
+      }
+
       const textWrapperForFloat = createFrame(
         {
-          name: `${name}/${rgbToHex(value)}`,
+          name: name,
           direction: 'VERTICAL',
           horizontalAlign: 'MIN',
           verticalAlign: 'MIN',
@@ -170,23 +212,26 @@ const renderDemo = ({
 
       textWrapperForFloat.appendChild(
         createText({
+          characters: `${value}`,
+          fontSize: 24,
+          fontName: { family: 'Roboto', style: 'Bold' },
+        }),
+      )
+
+      textWrapperForFloat.appendChild(
+        createText({
           characters: `${name}`,
           fontSize: 14,
           fontName: { family: 'Roboto', style: 'Regular' },
         }),
       )
-      // textWrapper.appendChild(
-      //   createText({
-      //     characters: `${rgbToHex(value)}`,
-      //     fontSize: 18,
-      //     fontName: { family: 'Roboto', style: 'Regular' },
-      //   }),
-      // )
-
-      scopes.forEach((scope) => {
-        createBlock({ frame: frameForFloatItems, name, value, mode, scope })
-      })
-
+      textWrapperForFloat.appendChild(
+        createText({
+          characters: `${scopes.length > 1 ? 'Scopes' : 'Scope'}: ${scopes.map(getHumanScopeName).join(', ')}`,
+          fontSize: 14,
+          fontName: { family: 'Roboto', style: 'Regular' },
+        }),
+      )
       break
     // Add other cases as necessary
 
@@ -210,16 +255,7 @@ const createBlock = ({
 }) => {
   const backgroundColor =
     mode.name.toLowerCase() === 'dark' ? '#251F1F' : mode.name.toLowerCase() === 'light' ? '#E9E8E8' : '#FFFFFF'
-  /*
-    ALL_SCOPES
-    CORNER_RADIUS
-    WIDTH_HEIGHT
-    GAP
-    TEXT_CONTENT
-    STROKE_FLOAT
-    OPACITY
-    EFFECT_FLOAT
-    */
+
   const wrapper = createFrame(
     {
       name: `${name}/${scope}/${value}`,
@@ -228,8 +264,8 @@ const createBlock = ({
       verticalAlign: 'MIN',
       itemSpacing: 16,
       verticalPadding: 8,
-      minHeight: 100,
-      minWidth: 140,
+      minHeight: 80,
+      minWidth: 100,
       horizontalPadding: 8,
     },
     frame,
@@ -237,6 +273,21 @@ const createBlock = ({
 
   switch (scope) {
     case 'ALL_SCOPES':
+    case 'DEFAULT_FLOAT':
+    case 'GAP':
+    case 'STROKE_FLOAT':
+    case 'TEXT_CONTENT':
+    case 'EFFECT_FLOAT':
+    case 'WIDTH_HEIGHT':
+      wrapper.appendChild(
+        createText({
+          characters: `${value}`,
+          fontSize: 52,
+          fontName: { family: 'Roboto', style: 'Bold' },
+          fontColor: '#B2B0B0',
+          textAlignHorizontal: 'CENTER',
+        }),
+      )
       break
     case 'CORNER_RADIUS':
       Object.assign(wrapper, {
@@ -244,7 +295,7 @@ const createBlock = ({
         fills: [{ type: 'SOLID', color: { r: 0.7, g: 0.7, b: 0.7 } }],
       })
       break
-    case 'WIDTH_HEIGHT':
+
       Object.assign(wrapper, {
         maxWidth: value as number,
         minWidth: value as number,
@@ -253,68 +304,16 @@ const createBlock = ({
         fills: [{ type: 'SOLID', color: { r: 0.7, g: 0.7, b: 0.7 } }],
       })
       break
-    case 'GAP':
-      createFrame(
-        {
-          name: `Gap ${value}`,
-          direction: 'VERTICAL',
-          horizontalAlign: 'CENTER',
-          verticalAlign: 'MIN',
-          itemSpacing: 16,
-          verticalPadding: 8,
-          minHeight: value as number,
-          maxHeight: value as number,
-          minWidth: 140,
-          backgroundColor: '#FCBFBF',
-          horizontalPadding: 8,
-        },
-        wrapper,
-      )
+
+    case 'OPACITY':
+      Object.assign(wrapper, {
+        opacity: (value > 1 ? 1 : value) as number,
+      })
       break
-    // case 'TEXT_CONTENT':
-    //   wrapper.appendChild(
-    //     createText({
-    //       characters: 'Text',
-    //       fontSize: 42,
-    //       fontName: { family: 'Roboto', style: 'Regular' },
-    //     }),
-    //   )
-    //   break
-    // case 'STROKE_FLOAT':
-    //   Object.assign(wrapper, {
-    //     strokeWeight: value as number,
-    //     strokes: [{ type: 'SOLID', color: { r: 0, g: 0, b: 0 } }],
-    //   })
-    //   break
-    // case 'OPACITY':
-    //   Object.assign(wrapper, {
-    //     opacity: value as number,
-    //   })
-    //   break
-    // case 'EFFECT_FLOAT':
-    //   Object.assign(wrapper, {
-    //     effects: [
-    //       {
-    //         type: 'DROP_SHADOW',
-    //         color: { r: 0, g: 0, b: 0 },
-    //         offset: { x: 0, y: 4 },
-    //         radius: value as number,
-    //         visible: true,
-    //         blendMode: 'NORMAL',
-    //       },
-    //     ],
-    //   })
-    //   break
+
     default:
       break
   }
-  frame.appendChild(
-    createText({
-      characters: `Scope: ${getHumanScopeName(scope)}`,
-      fontSize: 14,
-      fontName: { family: 'Roboto', style: 'Regular' },
-    }),
-  )
 }
 
 const createColorCase = ({
@@ -340,13 +339,11 @@ const createColorCase = ({
 
   const wrapper = createFrame(
     {
-      name: `${name}/${color}/${scope}`,
+      name: `scope=${scope}`,
       direction: 'VERTICAL',
       horizontalAlign: 'CENTER',
       verticalAlign: 'MIN',
       itemSpacing: 16,
-      verticalPadding: 8,
-      horizontalPadding: 8,
     },
     frame,
   )
@@ -357,14 +354,14 @@ const createColorCase = ({
       direction: 'VERTICAL',
       horizontalAlign: 'CENTER',
       verticalAlign: 'CENTER',
-      minWidth: 140,
-      minHeight: 100,
+      minWidth: 60,
+      minHeight: 60,
       borderRadius: 24,
     },
     wrapper,
   )
 
-  if (['PRIMITIVE', 'ALL_SCOPES'].includes(scope)) {
+  if (['DEFAULT_COLOR', 'ALL_SCOPES'].includes(scope)) {
     Object.assign(colorBlock, {
       strokeWeight: 1,
       strokes: [{ type: 'SOLID', color: { r: 0.9, g: 0.9, b: 0.9 } }],
@@ -375,6 +372,7 @@ const createColorCase = ({
       case 'ALL_FILLS':
       case 'FRAME_FILL':
       case 'SHAPE_FILL':
+      case 'EFFECT_COLOR':
       case 'COLOR': // for general colors (primitives)
         Object.assign(colorBlock, {
           strokeWeight: 1,
@@ -391,7 +389,6 @@ const createColorCase = ({
           strokes: [{ type: 'SOLID', color: { r: value.r, g: value.g, b: value.b } }],
         })
         break
-      case 'EFFECT_COLOR':
         Object.assign(colorBlock, {
           effects: [
             {
@@ -408,26 +405,16 @@ const createColorCase = ({
       case 'TEXT_FILL':
         colorBlock.appendChild(
           createText({
-            characters: 'Text',
+            characters: 'YO',
             fontSize: 54,
             fontColor: color,
-            fontName: { family: 'Roboto', style: 'Regular' },
+            fontName: { family: 'Roboto', style: 'Bold' },
             textAlignVertical: 'CENTER',
           }),
         )
         break
       default:
         break
-    }
-    if (scope !== 'PRIMITIVE') {
-      wrapper.appendChild(
-        createText({
-          characters: `Scope: ${getHumanScopeName(scope)}`,
-          fontSize: 14,
-          fontName: { family: 'Roboto', style: 'Regular' },
-          fontColor,
-        }),
-      )
     }
   }
 }
