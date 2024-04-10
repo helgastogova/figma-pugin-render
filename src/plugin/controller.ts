@@ -28,26 +28,26 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
       figma.currentPage = demoPage
 
       const textStyles = figma.getLocalTextStyles()
+      const uniqueFontNames = new Set(textStyles.map((style) => style.fontName))
 
-      const uniqueFontNames = new Set<{ family: string; style: string }>()
-
-      textStyles?.forEach((item) => {
-        if (item.fontName?.family && item.fontName?.style) {
-          uniqueFontNames.add({ family: item.fontName.family, style: item.fontName.style })
-        }
-      })
-
-      await Promise.all([...uniqueFontNames].map((fontName) => figma.loadFontAsync(fontName)))
-
-      await Promise.all([
-        figma.loadFontAsync({ family: 'Roboto', style: 'Regular' }),
-        figma.loadFontAsync({ family: 'Roboto', style: 'Bold' }),
-        figma.loadFontAsync({ family: 'Inter', style: 'Regular' }),
-        // TODO: Load other fonts user has used in their design system
-      ]).catch((error) => {
-        figma.ui.postMessage({ type: 'error', message: 'Failed to load fonts' })
-        console.error(error)
-      })
+      await Promise.allSettled([
+        ...Array.from(uniqueFontNames)
+          .filter((fontName) => fontName)
+          .map((fontName) =>
+            figma
+              .loadFontAsync(fontName)
+              .catch((error) => console.error(`Failed to load font ${fontName.family} ${fontName.style}:`, error)),
+          ),
+        figma
+          .loadFontAsync({ family: 'Roboto', style: 'Regular' })
+          .catch((error) => console.error('Failed to load font Roboto Regular:', error)),
+        figma
+          .loadFontAsync({ family: 'Roboto', style: 'Bold' })
+          .catch((error) => console.error('Failed to load font Roboto Bold:', error)),
+        figma
+          .loadFontAsync({ family: 'Inter', style: 'Regular' })
+          .catch((error) => console.error('Failed to load font Inter Regular:', error)),
+      ])
 
       await Promise.all([
         handleRenderingComponentSets(demoPage, [...componentSets, ...(standaloneComponentSets as any)]),
