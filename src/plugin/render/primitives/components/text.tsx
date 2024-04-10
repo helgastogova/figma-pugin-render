@@ -33,7 +33,7 @@ export const renderTextStyles = async (textStyles: TextStyleData, frame: FrameNo
           direction: 'VERTICAL',
           horizontalAlign: 'MIN',
           verticalAlign: 'MIN',
-          itemSpacing: 16,
+          itemSpacing: 50,
           verticalPadding: 16,
           horizontalPadding: 16,
           borderRadius: 8,
@@ -49,6 +49,7 @@ export const renderTextStyles = async (textStyles: TextStyleData, frame: FrameNo
           {
             name: item.name,
             direction: 'VERTICAL',
+            autoWidth: true,
             verticalAlign: 'MIN',
             horizontalAlign: 'MIN',
             itemSpacing: 8,
@@ -62,11 +63,24 @@ export const renderTextStyles = async (textStyles: TextStyleData, frame: FrameNo
           }),
         )
 
+        const { description, fontSize, lineHeight } = item.item
+
         fontLine.appendChild(
           createText({
-            characters: `font-size: ${item.item.fontSize}, line-height: ${getLineHeight(item.item.lineHeight)}`,
+            characters: `font-size: ${fontSize}, line-height: ${getLineHeight(lineHeight)}`,
             fontSize: 16,
             fontColor: '#555555',
+          }),
+        )
+
+        fontLine.appendChild(
+          figma.createText({
+            characters: `Description: ${description}`,
+            fontSize: 16,
+            fontColor: '#555555',
+            layoutSizingVertical: 'HUG',
+            layoutSizingHorizontal: 'FILL',
+            textAutoResize: 'WIDTH_AND_HEIGHT',
           }),
         )
       })
@@ -77,8 +91,12 @@ const getLineHeight = (lineHeight: LineHeight): string => {
   if (lineHeight.unit === 'AUTO') {
     return 'auto'
   }
+
+  const lineHeightValue = Math.round(lineHeight.value * 100) / 100
   if (lineHeight.unit === 'PIXELS') {
-    return `${lineHeight.value}px`
+    // до целого числа
+
+    return `${lineHeightValue}px`
   }
-  return `${lineHeight.value}%`
+  return `${lineHeightValue}%`
 }

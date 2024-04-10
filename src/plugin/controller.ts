@@ -49,8 +49,8 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
         await loadFonts(fontNames)
 
         await Promise.all([
-          //handleRenderingComponentSets(demoPage, [...componentSets, ...(standaloneComponentSets as any)]),
-          handleRenderingComponentSets(demoPage, []),
+          handleRenderingComponentSets(demoPage, [...componentSets, ...(standaloneComponentSets as any)]),
+          //handleRenderingComponentSets(demoPage, []),
         ])
           .catch((error) => {
             figma.ui.postMessage({ type: 'error', message: 'Failed to render demo' })

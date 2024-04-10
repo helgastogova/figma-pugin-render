@@ -1,7 +1,7 @@
 import { createFrame, createText } from '@src/plugin/helpers'
 import { rgbToHex, isRgb, isRgba } from '@src/plugin/helpers/colors'
 
-type VariableScopeWithPrimitive = VariableScope | 'PRIMITIVE' | 'COLOR' | 'DEFAULT_FLOAT'
+type VariableScopeWithPrimitive = VariableScope | 'PRIMITIVE' | 'COLOR' | 'DEFAULT_FLOAT' | 'DEFAULT_COLOR'
 
 const getHumanScopeName = (scope: VariableScopeWithPrimitive): string => {
   if (scope === 'ALL_SCOPES') return 'All'
@@ -53,7 +53,6 @@ export const renderGroupsRecursive = ({
           autoWidth: true,
           horizontalAlign: 'MIN',
           verticalAlign: 'MIN',
-          autoWidth: true,
           autoHeight: true,
           itemSpacing: 20,
         },
@@ -90,8 +89,8 @@ const renderDemo = ({
   }
   mode: { name: string; modeId: string }
 }) => {
-  const backgroundColor =
-    mode.name.toLowerCase() === 'dark' ? '#251F1F' : mode.name.toLowerCase() === 'light' ? '#E9E8E8' : '#FFFFFF'
+  // const backgroundColor =
+  //   mode.name.toLowerCase() === 'dark' ? '#251F1F' : mode.name.toLowerCase() === 'light' ? '#E9E8E8' : '#FFFFFF'
 
   const { name, value, type, scopes, description } = variable
 
@@ -134,7 +133,7 @@ const renderDemo = ({
             )
 
       if (scopes.length > 1 || scopes[0] === 'ALL_SCOPES' || scopes[0] === 'PRIMITIVE') {
-        createColorCase({ frame: elementsWrapper, name, value, mode, scope: 'DEFAULT_COLOR' })
+        createColorCase({ frame: elementsWrapper, name, value: value as RGB, mode, scope: 'DEFAULT_COLOR' })
       } else {
         scopes.forEach((scope) => {
           createColorCase({ frame: elementsWrapper, name, value, mode, scope })
@@ -143,7 +142,7 @@ const renderDemo = ({
 
       const textWrapper = createFrame(
         {
-          name: `${name}/${rgbToHex(value)}`,
+          name: `${name}/${rgbToHex(value as RGB)}`,
           direction: 'VERTICAL',
           horizontalAlign: 'MIN',
           verticalAlign: 'MIN',
@@ -168,14 +167,16 @@ const renderDemo = ({
         }),
       )
 
-      description &&
+      if (description) {
         textWrapper.appendChild(
           createText({
             characters: `Description: ${description}`,
             fontSize: 18,
             fontName: { family: 'Roboto', style: 'Regular' },
+            textAutoResize: 'WIDTH_AND_HEIGHT',
           }),
         )
+      }
 
       break
     case 'FLOAT':
@@ -214,19 +215,12 @@ const renderDemo = ({
 
       textWrapperForFloat.appendChild(
         createText({
-          characters: `${value}`,
+          characters: `${name}, ${value}`,
           fontSize: 24,
           fontName: { family: 'Roboto', style: 'Bold' },
         }),
       )
 
-      textWrapperForFloat.appendChild(
-        createText({
-          characters: `${name}`,
-          fontSize: 14,
-          fontName: { family: 'Roboto', style: 'Regular' },
-        }),
-      )
       textWrapperForFloat.appendChild(
         createText({
           characters: `${scopes.length > 1 ? 'Scopes' : 'Scope'}: ${scopes.map(getHumanScopeName).join(', ')}`,
@@ -246,7 +240,7 @@ const createBlock = ({
   frame,
   name,
   value,
-  mode,
+  // mode,
   scope,
 }: {
   frame: FrameNode
@@ -255,8 +249,8 @@ const createBlock = ({
   value: VariableValue
   scope?: VariableScopeWithPrimitive
 }) => {
-  const backgroundColor =
-    mode.name.toLowerCase() === 'dark' ? '#251F1F' : mode.name.toLowerCase() === 'light' ? '#E9E8E8' : '#FFFFFF'
+  // const backgroundColor =
+  //   mode.name.toLowerCase() === 'dark' ? '#251F1F' : mode.name.toLowerCase() === 'light' ? '#E9E8E8' : '#FFFFFF'
 
   const wrapper = createFrame(
     {
@@ -309,7 +303,7 @@ const createBlock = ({
 
     case 'OPACITY':
       Object.assign(wrapper, {
-        opacity: (value > 1 ? 1 : value) as number,
+        opacity: (+value > 1 ? 1 : value) as number,
       })
       break
 
@@ -320,24 +314,24 @@ const createBlock = ({
 
 const createColorCase = ({
   frame,
-  mode,
-  name,
+  // mode,
+  // name,
   value,
   scope,
 }: {
   frame: FrameNode
   name: string
   mode: { name: string; modeId: string }
-  value: RGB
+  value: RGBA | RGB
   scope?: VariableScopeWithPrimitive
 }) => {
-  if (!isRgb(value as RGB)) return
+  if (!isRgb(value as RGBA | RGB)) return
 
-  const color = rgbToHex(value as RGB) ?? ''
+  const color = rgbToHex(value as RGBA | RGB) ?? ''
   if (!color) return
 
-  const fontColor =
-    mode.name.toLowerCase() === 'dark' ? '#E9E8E8' : mode.name.toLowerCase() === 'light' ? '#251F1F' : '#000000'
+  // const fontColor =
+  //   mode.name.toLowerCase() === 'dark' ? '#E9E8E8' : mode.name.toLowerCase() === 'light' ? '#251F1F' : '#000000'
 
   const wrapper = createFrame(
     {
