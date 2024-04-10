@@ -1,5 +1,6 @@
 import { createFrame, createText, getDemoTitle } from '../../../helpers'
 import { ColorStyleData } from '../getLocalStyles'
+import { rgbToHex } from '@src/plugin/helpers/colors'
 
 interface CreatePaletteProps {
   style: PaintStyle // Используйте BaseStyle вместо PaintStyle
@@ -10,7 +11,7 @@ export const createPalette = ({ style, frame }: CreatePaletteProps): void => {
   const paletteWrapper = createFrame(
     {
       name: `Palette / ${style.name} `,
-      direction: 'VERTICAL',
+      direction: 'HORIZONTAL',
       horizontalAlign: 'MIN',
       verticalAlign: 'MIN',
       itemSpacing: 8,
@@ -29,8 +30,8 @@ export const createPalette = ({ style, frame }: CreatePaletteProps): void => {
       verticalPadding: 8,
       horizontalPadding: 8,
       backgroundColor: '#ffffff',
-      minHeight: 140,
-      minWidth: 260,
+      minHeight: 60,
+      minWidth: 60,
     },
     paletteWrapper,
   )
@@ -50,11 +51,20 @@ export const createPalette = ({ style, frame }: CreatePaletteProps): void => {
       borderRadius: 6,
       verticalPadding: 8,
       horizontalPadding: 16,
-      backgroundColor: '#ffffff',
       itemSpacing: 8,
     },
-    fillWrapper,
+    paletteWrapper,
   )
+
+  const hex = rgbToHex(style?.paints[0]?.color) ?? ''
+  hex &&
+    textWrapper.appendChild(
+      createText({
+        characters: hex,
+        fontSize: 24,
+        fontName: { family: 'Roboto', style: 'Bold' },
+      }),
+    )
 
   textWrapper.appendChild(
     createText({
@@ -85,15 +95,13 @@ export const renderColorStyles = async (colorStyles: ColorStyleData, frame: Fram
     frame,
   )
 
-  const caption = getDemoTitle('Palette')
+  const caption = getDemoTitle('Palette / Colors (Local styles)')
   paletteFrame.appendChild(caption)
 
   const paletteFrameColors = createFrame(
     {
       name: 'Demo / Palette / Colors',
       direction: 'HORIZONTAL',
-      wrap: 'WRAP',
-      maxWidth: 1364,
       horizontalAlign: 'MIN',
       verticalAlign: 'MIN',
       autoWidth: true,
@@ -102,7 +110,33 @@ export const renderColorStyles = async (colorStyles: ColorStyleData, frame: Fram
     },
     paletteFrame,
   )
-  paintStyles.forEach((style) => {
-    createPalette({ style, frame: paletteFrameColors })
-  })
+
+  const groupedPaintStyles = paintStyles.reduce((acc, style) => {
+    const groupName = style.name.split('/')[0].trim()
+    acc[groupName] = acc[groupName] || []
+    acc[groupName].push(style)
+    return acc
+  }, {})
+
+  groupedPaintStyles &&
+    Object.keys(groupedPaintStyles).forEach((key) => {
+      const groupFrame = createFrame(
+        {
+          name: key,
+          direction: 'VERTICAL',
+          horizontalAlign: 'MIN',
+          verticalAlign: 'MIN',
+          itemSpacing: 16,
+          verticalPadding: 16,
+          horizontalPadding: 16,
+          borderRadius: 8,
+          backgroundColor: '#ffffff',
+        },
+        paletteFrameColors,
+      )
+
+      groupedPaintStyles[key].forEach((style) => {
+        createPalette({ style, frame: groupFrame })
+      })
+    })
 }

@@ -86,13 +86,14 @@ const renderDemo = ({
     value: VariableValue
     type: VariableDataType
     scopes: VariableScopeWithPrimitive[]
+    description?: string
   }
   mode: { name: string; modeId: string }
 }) => {
   const backgroundColor =
     mode.name.toLowerCase() === 'dark' ? '#251F1F' : mode.name.toLowerCase() === 'light' ? '#E9E8E8' : '#FFFFFF'
 
-  const { name, value, type, scopes } = variable
+  const { name, value, type, scopes, description } = variable
 
   if (!value) return
 
@@ -153,7 +154,7 @@ const renderDemo = ({
 
       textWrapper.appendChild(
         createText({
-          characters: `${rgbToHex(value)}`,
+          characters: `${name}, ${rgbToHex(value)}`,
           fontSize: 24,
           fontName: { family: 'Roboto', style: 'Bold' },
         }),
@@ -161,19 +162,20 @@ const renderDemo = ({
 
       textWrapper.appendChild(
         createText({
-          characters: name,
+          characters: `${scopes.length > 1 ? 'Scopes' : 'Scope'}: ${scopes.map(getHumanScopeName).join(', ')}`,
           fontSize: 18,
           fontName: { family: 'Roboto', style: 'Regular' },
         }),
       )
 
-      textWrapper.appendChild(
-        createText({
-          characters: `${scopes.length > 1 ? 'Scopes' : 'Scope'}: ${scopes.map(getHumanScopeName).join(', ')}`,
-          fontSize: 14,
-          fontName: { family: 'Roboto', style: 'Regular' },
-        }),
-      )
+      description &&
+        textWrapper.appendChild(
+          createText({
+            characters: `Description: ${description}`,
+            fontSize: 18,
+            fontName: { family: 'Roboto', style: 'Regular' },
+          }),
+        )
 
       break
     case 'FLOAT':

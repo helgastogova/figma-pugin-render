@@ -18,30 +18,67 @@ export const renderTextStyles = async (textStyles: TextStyleData, frame: FrameNo
   )
   demoFrame.appendChild(getDemoTitle('Typography'))
 
-  for (const item of textStyles.styles ?? []) {
-    const fontLine = createFrame(
-      {
-        name: item.name,
-        direction: 'VERTICAL',
-        verticalAlign: 'MIN',
-        horizontalAlign: 'MIN',
-        itemSpacing: 8,
-      },
-      demoFrame,
-    )
-    fontLine.appendChild(
-      createText({
-        characters: item.name,
-        textStyleId: item.id,
-      }),
-    )
+  const groupedTextStyles = textStyles.styles.reduce((acc, style) => {
+    const groupName = style.name.split('/')[0].trim()
+    acc[groupName] = acc[groupName] || []
+    acc[groupName].push(style)
+    return acc
+  }, {})
 
-    fontLine.appendChild(
-      createText({
-        characters: `font-size: ${item.item.fontSize}, line-height: ${Math.round(item.item.lineHeight.value)}${item.item.lineHeight.unit === 'PIXELS' ? 'px' : '%'}`,
-        fontSize: 16,
-        fontColor: '#555555',
-      }),
-    )
+  groupedTextStyles &&
+    Object.keys(groupedTextStyles).forEach((key) => {
+      const groupFrame = createFrame(
+        {
+          name: key,
+          direction: 'VERTICAL',
+          horizontalAlign: 'MIN',
+          verticalAlign: 'MIN',
+          itemSpacing: 16,
+          verticalPadding: 16,
+          horizontalPadding: 16,
+          borderRadius: 8,
+          backgroundColor: '#ffffff',
+        },
+        demoFrame,
+      )
+
+      groupFrame.appendChild(getDemoTitle(key))
+
+      groupedTextStyles[key].forEach((item) => {
+        const fontLine = createFrame(
+          {
+            name: item.name,
+            direction: 'VERTICAL',
+            verticalAlign: 'MIN',
+            horizontalAlign: 'MIN',
+            itemSpacing: 8,
+          },
+          groupFrame,
+        )
+        fontLine.appendChild(
+          createText({
+            characters: item.name,
+            textStyleId: item.id,
+          }),
+        )
+
+        fontLine.appendChild(
+          createText({
+            characters: `font-size: ${item.item.fontSize}, line-height: ${getLineHeight(item.item.lineHeight)}`,
+            fontSize: 16,
+            fontColor: '#555555',
+          }),
+        )
+      })
+    })
+}
+
+const getLineHeight = (lineHeight: LineHeight): string => {
+  if (lineHeight.unit === 'AUTO') {
+    return 'auto'
   }
+  if (lineHeight.unit === 'PIXELS') {
+    return `${lineHeight.value}px`
+  }
+  return `${lineHeight.value}%`
 }

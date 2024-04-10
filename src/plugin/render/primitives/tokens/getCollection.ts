@@ -13,6 +13,7 @@ interface ModeWithVariables {
 
 const isVariableAlias = (value: VariableValue): value is VariableAlias =>
   typeof value === 'object' && value && 'type' in value && value.type === 'VARIABLE_ALIAS'
+
 const fetchVariablesForModes = async (
   variableIds: string[],
   modes: Mode[],
@@ -46,6 +47,7 @@ const fetchVariablesForModes = async (
         value: aliasValue,
         type: variable.resolvedType,
         scopes: scopes.length > 0 ? scopes : ['ALL_SCOPES'],
+        description: variable.description,
       })
     }
   }

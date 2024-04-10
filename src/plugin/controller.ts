@@ -6,14 +6,9 @@ import { generateTokens } from './render/primitives/tokens'
 
 async function loadFonts(fontNames: FontName[]) {
   const loadPromises = fontNames.map((fontName) =>
-    figma
-      .loadFontAsync(fontName)
-      .then(() => {
-        console.log(`Font ${fontName.family} ${fontName.style} loaded.`)
-      })
-      .catch((error) => {
-        console.error(`Error loading font ${fontName.family} ${fontName.style}:`, error)
-      }),
+    figma.loadFontAsync(fontName).catch((error) => {
+      console.error(`Error loading font ${fontName.family} ${fontName.style}:`, error)
+    }),
   )
   await Promise.all(loadPromises)
 }
@@ -54,8 +49,8 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
         await loadFonts(fontNames)
 
         await Promise.all([
-          handleRenderingComponentSets(demoPage, [...componentSets, ...(standaloneComponentSets as any)]),
-          //handleRenderingComponentSets(demoPage, []),
+          //handleRenderingComponentSets(demoPage, [...componentSets, ...(standaloneComponentSets as any)]),
+          handleRenderingComponentSets(demoPage, []),
         ])
           .catch((error) => {
             figma.ui.postMessage({ type: 'error', message: 'Failed to render demo' })

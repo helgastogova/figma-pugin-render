@@ -9,13 +9,14 @@ export const generateVariables = async (page: PageNode): Promise<void> => {
   const frame = createFrame(
     {
       name: 'Primitives / Variables',
-      direction: 'VERTICAL',
-      horizontalAlign: 'CENTER',
+      direction: 'HORIZONTAL',
+      horizontalAlign: 'MIN',
       verticalAlign: 'MIN',
       itemSpacing: 50,
       verticalPadding: 30,
       horizontalPadding: 30,
       borderRadius: 24,
+      backgroundColor: '#ffffff',
     },
     page,
     'right',
@@ -24,19 +25,13 @@ export const generateVariables = async (page: PageNode): Promise<void> => {
     colorStyles: getLocalStyles('color'),
     textStyles: getLocalStyles('text'),
     effectStyles: getLocalStyles('effect'),
-    // gridStyles: getLocalStyles('grid'),
   }
 
-  await Promise.all([
-    stylesPromises.colorStyles,
-    stylesPromises.textStyles,
-    stylesPromises.effectStyles,
-    //  stylesPromises.gridStyles,
-  ]).then(([colorStyles, textStyles, effectStyles]) => {
-    console.log(textStyles)
-    // renderColorStyles(colorStyles as ColorStyleData, frame)
-    renderTextStyles(textStyles as TextStyleData, frame)
-    // renderEffectStyles(effectStyles as EffectStyleData, frame)
-    // renderGridStyles(gridStyles, frame)
-  })
+  await Promise.all([stylesPromises.colorStyles, stylesPromises.textStyles, stylesPromises.effectStyles]).then(
+    ([colorStyles, textStyles, effectStyles]) => {
+      colorStyles.styles.length && renderColorStyles(colorStyles as ColorStyleData, frame)
+      textStyles.styles.length && renderTextStyles(textStyles as TextStyleData, frame)
+      effectStyles.styles.length && renderEffectStyles(effectStyles as EffectStyleData, frame)
+    },
+  )
 }
