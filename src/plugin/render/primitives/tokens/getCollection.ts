@@ -25,8 +25,8 @@ const fetchVariablesForModes = async (
 
   for (const variableId of variableIds) {
     const variable = await figma.variables.getVariableByIdAsync(variableId)
-    // if (!variable || variable.hiddenFromPublishing) continue
-    if (!variable) continue
+    if (!variable || variable.hiddenFromPublishing) continue
+    //if (!variable) continue
 
     for (const mode of modes) {
       const value = variable.valuesByMode[mode.modeId]
