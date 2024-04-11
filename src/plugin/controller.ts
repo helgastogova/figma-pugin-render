@@ -1,9 +1,15 @@
 import { generateVariables } from './render/primitives'
 import { CreateUIMessageType } from './types'
-import { findAllComponentSetsOnPage, getDemoPage } from './utils'
+import { findAllComponentsAndSets, getDemoPage } from './utils'
 import { handleRenderingComponentSets } from './render/componentSets'
 import { generateTokens } from './render/primitives/tokens'
 import { applyAutoLayoutToSelection } from './autolayout'
+//TODO
+
+// 1. titles with library colors
+// 2. group block
+// 3. more than 3 props
+// 4. выделение фрейма с компонентами
 
 async function loadFonts(fontNames: FontName[]) {
   const loadPromises = fontNames.map((fontName) =>
@@ -17,7 +23,7 @@ async function loadFonts(fontNames: FontName[]) {
 figma.showUI(__html__, { width: 400, height: 450, title: 'Showcase render', themeColors: false })
 
 figma.ui.onmessage = async (msg: CreateUIMessageType) => {
-  const { selectedComponents, componentSets, standaloneComponentSets } = findAllComponentSetsOnPage()
+  const { selectedComponents, componentSets, standaloneComponentSets } = findAllComponentsAndSets()
 
   const componentSetsDataPartial = componentSets.map((componentSet) => {
     return {
@@ -43,12 +49,12 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
     }
   })
 
-  console.log('selectedComponents', {
-    type: 'components',
-    componentSets: componentSetsDataPartial,
-    selectedComponents: selectedComponentsDataPartial,
-    standaloneComponentSets: standaloneComponentSetsDataPartial,
-  })
+  // console.log('selectedComponents', {
+  //   type: 'components',
+  //   componentSets: componentSetsDataPartial,
+  //   selectedComponents: selectedComponentsDataPartial,
+  //   standaloneComponentSets: standaloneComponentSetsDataPartial,
+  // })
 
   if (msg.type === 'request-components') {
     figma.ui.postMessage({
@@ -87,12 +93,16 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
 
         await loadFonts(fontNames)
 
+        const renderOnlySelectedComponents = !!selectedComponents.length
+
         await Promise.all([
-          handleRenderingComponentSets(
-            selectedComponents.length ? figma.currentPage : demoPage,
-            selectedComponents.length ? selectedComponents : [...componentSets, ...(standaloneComponentSets as any)],
-            'center',
-          ),
+          handleRenderingComponentSets({
+            page: renderOnlySelectedComponents ? figma.currentPage : demoPage,
+            componentSets: renderOnlySelectedComponents
+              ? selectedComponents
+              : [...componentSets, ...(standaloneComponentSets as any)],
+            renderOnlySelectedComponents,
+          }),
           //handleRenderingComponentSets(demoPage, []),
         ])
           .catch((error) => {

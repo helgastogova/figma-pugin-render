@@ -3,11 +3,15 @@ import { createColorStyles } from '../../helpers/colors'
 import { createFrame } from '../../helpers'
 import { colorStylesWithThemes, colorStylesWithoutThemes } from '../../helpers/palette'
 
-export const handleRenderingComponentSets = async (
-  demoPage: PageNode,
-  componentSets: ComponentSetNode[],
-  renderArea?: 'center',
-) => {
+export const handleRenderingComponentSets = async ({
+  page: demoPage,
+  componentSets,
+  renderOnlySelectedComponents,
+}: {
+  page: PageNode
+  componentSets: ComponentSetNode[]
+  renderOnlySelectedComponents?: boolean
+}) => {
   const localCollections = await figma.variables.getLocalVariableCollectionsAsync()
   const tokensCollection = localCollections.find(
     (collection) => collection.name === 'Tokens' && !collection.hiddenFromPublishing,
@@ -31,9 +35,10 @@ export const handleRenderingComponentSets = async (
 
   if (tokensCollection && tokensCollection.modes.length > 0) {
     createColorStyles(colorStylesWithThemes)
+
     let renderOnPlaceFrame
 
-    if (renderArea === 'center') {
+    if (renderOnlySelectedComponents) {
       renderOnPlaceFrame = createFrame(
         {
           name: 'Showcase render',
@@ -47,7 +52,7 @@ export const handleRenderingComponentSets = async (
         },
         demoPage,
         'right',
-        renderArea,
+        'center',
       )
     }
     for (const mode of tokensCollection.modes) {
@@ -62,7 +67,7 @@ export const handleRenderingComponentSets = async (
           horizontalPadding: 30,
           borderRadius: 24,
         },
-        renderArea === 'center' ? renderOnPlaceFrame : demoPage,
+        renderOnlySelectedComponents ? renderOnPlaceFrame : demoPage,
         'right',
       )
       frame.setExplicitVariableModeForCollection(tokensCollection.id, mode.modeId) //TODO:  but that the one we have for setting the mode

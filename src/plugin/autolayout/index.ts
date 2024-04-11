@@ -10,7 +10,6 @@ export async function applyAutoLayoutToSelection() {
   //     figma.closePlugin('Выделенный узел не является фреймом или компонентом.')
   //     return
   //   }
-  console.log(selectedNode)
   function applyAutoLayout(node) {
     node.primaryAxisSizingMode = 'AUTO'
     node.counterAxisSizingMode = 'AUTO'

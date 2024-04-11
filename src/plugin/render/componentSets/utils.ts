@@ -42,7 +42,7 @@ interface VariantsResult {
 const collectPropsVariants = (componentSet: ComponentSetNode): VariantsResult => {
   const allPropsVariants: Record<string, Set<string>> = {}
 
-  componentSet.children.forEach((component) => {
+  componentSet.children?.forEach((component) => {
     const props = parseComponentProps(component.name)
     Object.entries(props).forEach(([key, value]) => {
       if (!allPropsVariants[key]) {
@@ -115,6 +115,15 @@ function renderTest({
   const depthLevel = currentPath.length / 2
   const maxDepth = getMaxDepth(nestedCombinations)
 
+  const properties = currentPath?.reduce((acc, val, index, array) => {
+    if (index % 2 === 0 && array[index + 1] !== undefined) {
+      acc[val] = array[index + 1]
+    }
+    return acc
+  }, {})
+
+  const hasVariants = Object.keys(properties).length > 0
+
   // component
   if (maxDepth === 0 && depthLevel === 0 && componentSet.children.length !== 0) {
     const cell = createFrame(
@@ -135,17 +144,12 @@ function renderTest({
       if (!isComponentNode(component)) return
       const instance = component.createInstance()
       instance.name = component.name
+
       cell.appendChild(instance)
     })
   }
 
   const isLastOrPenultimateLevel = depthLevel >= maxDepth - 1
-  const properties = currentPath?.reduce((acc, val, index, array) => {
-    if (index % 2 === 0 && array[index + 1] !== undefined) {
-      acc[val] = array[index + 1]
-    }
-    return acc
-  }, {})
 
   if (!isLastOrPenultimateLevel && frameName && depthLevel > 0) {
     parentFrame.appendChild(
@@ -167,7 +171,7 @@ function renderTest({
     const newPath = [...currentPath, propName]
 
     if (propName === 'node') {
-      const component = findComponentByProps({ componentSet, properties })
+      const component = hasVariants ? findComponentByProps({ componentSet, properties }) : componentSet.children[0]
       const cell = createFrame(
         {
           direction: 'VERTICAL',
@@ -261,7 +265,7 @@ export const renderDemo = async ({
   backgroundColor,
 }: RenderDemoProps): Promise<void> => {
   if (!componentSet) {
-    console.error('Component Set not found')
+    console.error('Components are not defined')
     return
   }
 
@@ -325,6 +329,12 @@ export const renderDemo = async ({
   const showHeadersArray = tableHeaders[1] ?? tableHeaders[0]
 
   if (showHeadersArray) rootInsideFrame.appendChild(createTableHead(showHeadersArray, minWidth))
+
+  // if (lastTwoSets.length > 1 && tableHeaders.length)
+  //   tableHeaders[1][0] = `${tableHeaders[0][0]} / ${tableHeaders[1][0]}`
+  // const showHeadersArray = tableHeaders.length ? tableHeaders[1] ?? tableHeaders[0] : []
+
+  // if (showHeadersArray.length) rootInsideFrame.appendChild(createTableHead(showHeadersArray, minWidth))
 
   renderTest({
     componentSet,

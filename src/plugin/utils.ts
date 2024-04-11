@@ -30,13 +30,29 @@ export const findAllComponentSetsOnPage = (): {
       componentSets.push(node as ComponentSetNode)
     } else if (node.type === 'COMPONENT') {
       const component = node as ComponentNode
-      if (component.parent.type !== 'COMPONENT_SET') {
+      if (component.parent.type !== 'COMPONENT_SET' && component.parent.type !== 'COMPONENT') {
         const parentName = component.parent.name
         if (!standaloneComponents.has(parentName)) {
           standaloneComponents.set(parentName, [])
         }
         standaloneComponents.get(parentName)?.push(component)
       }
+    } else if (node.type !== 'COMPONENT' && node.type !== 'COMPONENT_SET') {
+      node.findAll((childNode) => {
+        if (childNode.type === 'COMPONENT_SET') {
+          componentSets.push(childNode as ComponentSetNode)
+        } else if (childNode.type === 'COMPONENT') {
+          const component = childNode as ComponentNode
+          if (component.parent.type !== 'COMPONENT_SET') {
+            const parentName = component.parent.name
+            if (!standaloneComponents.has(parentName)) {
+              standaloneComponents.set(parentName, [])
+            }
+            standaloneComponents.get(parentName)?.push(component)
+          }
+        }
+        return false
+      })
     }
     return false
   })
