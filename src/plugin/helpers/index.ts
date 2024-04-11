@@ -5,34 +5,41 @@ export const createFrame = (
   props: LayoutsProps,
   page?: PageNode | FrameNode,
   direction: 'right' | 'bottom' = 'bottom',
+  renderArea?: 'center',
 ): FrameNode => {
   const currentPage = (page as PageNode) ?? (figma.currentPage as PageNode)
   const frame: FrameNode = figma.createFrame()
 
   Object.assign(frame, getLayoutProps(props))
 
-  if (props.backgroundColor) {
-    findAndSetStyle(props.backgroundColor, frame)
+  props.backgroundColor ? findAndSetStyle(props.backgroundColor, frame) : (frame.fills = [])
+
+  if (renderArea === 'center') {
+    const selectedArea = figma.currentPage.selection[0]
+    if (selectedArea) {
+      frame.x = selectedArea.x + selectedArea.width + 100
+      frame.y = selectedArea.y
+    } else {
+      frame.x = figma.viewport.center.x - frame.width / 2
+      frame.y = figma.viewport.center.y - frame.height / 2
+    }
   } else {
-    frame.fills = []
+    if (direction === 'bottom') {
+      const maxY = currentPage.children
+        .filter((node): node is FrameNode => node.type === 'FRAME')
+        .reduce((max, current) => Math.max(max, current.y + current.height), 0)
+
+      frame.y = maxY + 100
+    }
+
+    if (direction === 'right') {
+      const maxX = currentPage.children
+        .filter((node): node is FrameNode => node.type === 'FRAME')
+        .reduce((max, current) => Math.max(max, current.x + current.width), 0)
+
+      frame.x = maxX + 100
+    }
   }
-
-  if (direction === 'bottom') {
-    const maxY = currentPage.children
-      .filter((node): node is FrameNode => node.type === 'FRAME')
-      .reduce((max, current) => Math.max(max, current.y + current.height), 0)
-
-    frame.y = maxY + 100
-  }
-
-  if (direction === 'right') {
-    const maxX = currentPage.children
-      .filter((node): node is FrameNode => node.type === 'FRAME')
-      .reduce((max, current) => Math.max(max, current.x + current.width), 0)
-
-    frame.x = maxX + 100
-  }
-
   currentPage.appendChild(frame)
 
   return frame

@@ -12,6 +12,19 @@ export const findAllComponentSetsOnPage = (): {
   const standaloneComponents = new Map<string, ComponentNode[]>()
   const selectedComponents: ComponentNode[] = [] // Инициализируем массив для выбранных компонентов
 
+  figma.currentPage.selection.forEach((node) => {
+    if (node.type === 'COMPONENT' || node.type === 'COMPONENT_SET') {
+      selectedComponents.push(node as ComponentNode | ComponentSetNode)
+    }
+  })
+
+  if (selectedComponents.length)
+    return {
+      componentSets: [],
+      standaloneComponentSets: [],
+      selectedComponents,
+    }
+
   figma.root.findAll((node) => {
     if (node.type === 'COMPONENT_SET') {
       componentSets.push(node as ComponentSetNode)
@@ -26,12 +39,6 @@ export const findAllComponentSetsOnPage = (): {
       }
     }
     return false
-  })
-
-  figma.currentPage.selection.forEach((node) => {
-    if (node.type === 'COMPONENT' || node.type === 'COMPONENT_SET') {
-      selectedComponents.push(node as ComponentNode | ComponentSetNode)
-    }
   })
 
   const standaloneComponentSets: CustomComponentSet[] = Array.from(standaloneComponents.entries()).map(

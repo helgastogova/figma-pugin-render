@@ -34,13 +34,20 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
       numberOfComponents: component.children.length,
     }
   })
-  console.log(selectedComponentsDataPartial)
+
   const standaloneComponentSetsDataPartial = standaloneComponentSets.map((componentSet) => {
     return {
       id: componentSet.id,
       name: componentSet.name,
       numberOfComponents: componentSet.children.length,
     }
+  })
+
+  console.log('selectedComponents', {
+    type: 'components',
+    componentSets: componentSetsDataPartial,
+    selectedComponents: selectedComponentsDataPartial,
+    standaloneComponentSets: standaloneComponentSetsDataPartial,
   })
 
   if (msg.type === 'request-components') {
@@ -84,6 +91,7 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
           handleRenderingComponentSets(
             selectedComponents.length ? figma.currentPage : demoPage,
             selectedComponents.length ? selectedComponents : [...componentSets, ...(standaloneComponentSets as any)],
+            'center',
           ),
           //handleRenderingComponentSets(demoPage, []),
         ])
@@ -94,6 +102,7 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
           })
           .then(async () => {
             if (selectedComponents.length) return
+
             await generateVariables(demoPage)
             await generateTokens(demoPage)
             figma.ui.postMessage({ type: 'success', message: 'Demo rendered successfully.' })

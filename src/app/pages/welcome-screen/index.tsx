@@ -6,6 +6,7 @@ import s from './welcome-screen.module.css'
 
 const WelcomeScreen = () => {
   const [componentSetsArray, setComponentSets] = useState([])
+  const [hasSelectedComponents, setHasSelectedComponents] = useState(false)
   const [currentRender, setCurrentRender] = useState('')
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
@@ -44,7 +45,13 @@ const WelcomeScreen = () => {
         data: { type },
       } = event.data.pluginMessage
       if (type === 'components') {
-        setComponentSets({ ...data.componentSets, ...data.selectedComponents, ...data.standaloneComponentSets })
+        if (data.selectedComponents.length) {
+          setComponentSets(data.selectedComponents)
+          setHasSelectedComponents(true)
+        } else {
+          setComponentSets([...data.componentSets, ...data.standaloneComponentSets])
+          setHasSelectedComponents(false)
+        }
         setLoading(false)
       }
     }
@@ -84,6 +91,7 @@ const WelcomeScreen = () => {
               </Text>
             ) : (
               <div>
+                {hasSelectedComponents && <div>We found these components/components sets in your selection: </div>}
                 {currentRender
                   ? currentRender
                   : componentSetsArray?.map((item, i) => {
