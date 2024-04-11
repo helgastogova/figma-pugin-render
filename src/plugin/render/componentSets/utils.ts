@@ -115,8 +115,14 @@ function renderTest({
   const depthLevel = currentPath.length / 2
   const maxDepth = getMaxDepth(nestedCombinations)
 
-  // component
-  if (maxDepth === 0 && depthLevel === 0 && componentSet.children.length !== 0) {
+  const isLastOrPenultimateLevel = depthLevel >= maxDepth - 1
+  const properties = currentPath?.reduce((acc, val, index, array) => {
+    if (index % 2 === 0 && array[index + 1] !== undefined) {
+      acc[val] = array[index + 1]
+    }
+    return acc
+  }, {})
+  if (isComponentNode(componentSet)) {
     const cell = createFrame(
       {
         name: 'Component variants',
@@ -131,121 +137,137 @@ function renderTest({
       },
       parentFrame,
     )
-    componentSet.children.forEach((component) => {
-      if (!isComponentNode(component)) return
-      const instance = component.createInstance()
-      instance.name = component.name
-      cell.appendChild(instance)
-    })
-  }
+    if (!isComponentNode(componentSet)) return
 
-  const isLastOrPenultimateLevel = depthLevel >= maxDepth - 1
-  const properties = currentPath?.reduce((acc, val, index, array) => {
-    if (index % 2 === 0 && array[index + 1] !== undefined) {
-      acc[val] = array[index + 1]
-    }
-    return acc
-  }, {})
-
-  if (!isLastOrPenultimateLevel && frameName && depthLevel > 0) {
-    parentFrame.appendChild(
-      createText({
-        characters: frameName,
-        fontSize: 18,
-        fontColor: '#777',
-        textAlignHorizontal: 'CENTER',
-        layoutAlign: 'STRETCH',
-      }),
-    )
-  }
-
-  const name = Object.entries(properties)
-    .map(([key, value]) => `${key}=${value}`)
-    .join(', ')
-
-  Object.entries(nestedCombinations).forEach(([propName, propValues]) => {
-    const newPath = [...currentPath, propName]
-
-    if (propName === 'node') {
-      const component = findComponentByProps({ componentSet, properties })
+    const instance = componentSet.createInstance()
+    instance.name = componentSet.name
+    cell.appendChild(instance)
+  } else {
+    // component
+    if (maxDepth === 0 && depthLevel === 0 && componentSet.children.length !== 0) {
       const cell = createFrame(
         {
-          direction: 'VERTICAL',
+          name: 'Component variants',
+          direction: 'HORIZONTAL',
           horizontalAlign: 'CENTER',
           verticalAlign: 'CENTER',
-          minWidth: minWidth + 40, // it's strange, but i need to plus paddings here
-          minHeight: minHeight + 40,
           verticalPadding: 20,
           horizontalPadding: 20,
           layoutAlign: 'STRETCH',
+          itemSpacing: 20,
           backgroundColor,
         },
         parentFrame,
       )
+      componentSet.children.forEach((component) => {
+        if (!isComponentNode(component)) return
 
-      if (component) {
         const instance = component.createInstance()
-
-        instance.name = name
-        cell.name = `${name ?? componentSet.name}`
+        instance.name = component.name
         cell.appendChild(instance)
-        parentFrame.appendChild(cell)
-      } else {
-        cell.appendChild(
-          createText({
-            characters: 'N/A',
-            fontSize: 18,
-            fontColor: '#999',
-          }),
-        )
-      }
-      return
+      })
     }
 
-    const frame = createFrame(
-      {
-        name: frameName,
-        direction: isLastOrPenultimateLevel || maxDepth <= 2 || currentPath.length > 3 ? 'HORIZONTAL' : 'VERTICAL', // подумать над этим условием там
-        horizontalAlign: 'CENTER',
-        verticalAlign: 'MIN',
-        itemSpacing: 50,
-        borderRadius: 24,
-      },
-      parentFrame,
-    )
+    if (!isLastOrPenultimateLevel && frameName && depthLevel > 0) {
+      parentFrame.appendChild(
+        createText({
+          characters: frameName,
+          fontSize: 18,
+          fontColor: '#777',
+          textAlignHorizontal: 'CENTER',
+          layoutAlign: 'STRETCH',
+        }),
+      )
+    }
 
-    if (isLastOrPenultimateLevel) {
-      const labelFrame = createFrame(
+    const name = Object.entries(properties)
+      .map(([key, value]) => `${key}=${value}`)
+      .join(', ')
+
+    Object.entries(nestedCombinations).forEach(([propName, propValues]) => {
+      const newPath = [...currentPath, propName]
+
+      if (propName === 'node') {
+        const component = findComponentByProps({ componentSet, properties })
+        const cell = createFrame(
+          {
+            direction: 'VERTICAL',
+            horizontalAlign: 'CENTER',
+            verticalAlign: 'CENTER',
+            minWidth: minWidth + 40, // it's strange, but i need to plus paddings here
+            minHeight: minHeight + 40,
+            verticalPadding: 20,
+            horizontalPadding: 20,
+            layoutAlign: 'STRETCH',
+            backgroundColor,
+          },
+          parentFrame,
+        )
+
+        if (component) {
+          const instance = component.createInstance()
+
+          instance.name = name
+          cell.name = `${name ?? componentSet.name}`
+          cell.appendChild(instance)
+          parentFrame.appendChild(cell)
+        } else {
+          cell.appendChild(
+            createText({
+              characters: 'N/A',
+              fontSize: 18,
+              fontColor: '#999',
+            }),
+          )
+        }
+        return
+      }
+
+      const frame = createFrame(
         {
-          name: frameName.split('=')[0],
+          name: frameName,
+          direction: isLastOrPenultimateLevel || maxDepth <= 2 || currentPath.length > 3 ? 'HORIZONTAL' : 'VERTICAL', // подумать над этим условием там
           horizontalAlign: 'CENTER',
-          verticalAlign: 'CENTER',
-          // minWidth: minWidth + 40,
-          minWidth: 200,
-          minHeight: minHeight + 40,
+          verticalAlign: 'MIN',
+          itemSpacing: 50,
           borderRadius: 24,
         },
-        frame,
+        parentFrame,
       )
 
-      frame.appendChild(labelFrame)
-      labelFrame.appendChild(createText({ characters: frameName.split('=')[1] ?? '', fontSize: 18 }))
-    }
+      if (isLastOrPenultimateLevel) {
+        const labelFrame = createFrame(
+          {
+            name: frameName.split('=')[0],
+            horizontalAlign: 'CENTER',
+            verticalAlign: 'CENTER',
+            // minWidth: minWidth + 40,
+            minWidth: 200,
+            minHeight: minHeight + 40,
+            borderRadius: 24,
+          },
+          frame,
+        )
 
-    Object.entries(propValues).forEach(([propValue, nestedCombinations]) => {
-      renderTest({
-        componentSet,
-        nestedCombinations,
-        parentFrame: frame,
-        currentPath: [...newPath, propValue],
-        minWidth,
-        minHeight,
-        frameName: `${propName}=${propValue}`,
-        tableRows,
-        backgroundColor,
+        frame.appendChild(labelFrame)
+        labelFrame.appendChild(createText({ characters: frameName.split('=')[1] ?? '', fontSize: 18 }))
+      }
+
+      Object.entries(propValues).forEach(([propValue, nestedCombinations]) => {
+        renderTest({
+          componentSet,
+          nestedCombinations,
+          parentFrame: frame,
+          currentPath: [...newPath, propValue],
+          minWidth,
+          minHeight,
+          frameName: `${propName}=${propValue}`,
+          tableRows,
+          backgroundColor,
+        })
       })
     })
-  })
+  }
 }
 interface RenderDemoProps {
   demoPage: PageNode
