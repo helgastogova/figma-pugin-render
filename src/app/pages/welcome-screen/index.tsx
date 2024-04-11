@@ -26,6 +26,17 @@ const WelcomeScreen = () => {
     setCreating(true)
   }
 
+  // const onAutolayout = () => {
+  //   parent.postMessage(
+  //     {
+  //       pluginMessage: {
+  //         type: 'autolayout',
+  //       },
+  //     },
+  //     '*',
+  //   )
+  // }
+
   React.useEffect(() => {
     function handleMessage(event) {
       const {
@@ -33,7 +44,7 @@ const WelcomeScreen = () => {
         data: { type },
       } = event.data.pluginMessage
       if (type === 'components') {
-        setComponentSets(data.componentSets)
+        setComponentSets({ ...data.componentSets, ...data.selectedComponents, ...data.standaloneComponentSets })
         setLoading(false)
       }
     }
@@ -95,6 +106,9 @@ const WelcomeScreen = () => {
           <Button onClick={onCreate} type="primary">
             Create
           </Button>
+          {/* <Button onClick={onAutolayout} type="primary">
+            AUTOLAYOUT
+          </Button> */}
         </div>
       )}
     </Layout>

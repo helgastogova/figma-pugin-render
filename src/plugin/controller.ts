@@ -3,6 +3,7 @@ import { CreateUIMessageType } from './types'
 import { findAllComponentSetsOnPage, getDemoPage } from './utils'
 import { handleRenderingComponentSets } from './render/componentSets'
 import { generateTokens } from './render/primitives/tokens'
+import { applyAutoLayoutToSelection } from './autolayout'
 
 async function loadFonts(fontNames: FontName[]) {
   const loadPromises = fontNames.map((fontName) =>
@@ -16,7 +17,7 @@ async function loadFonts(fontNames: FontName[]) {
 figma.showUI(__html__, { width: 400, height: 450, title: 'Showcase render', themeColors: false })
 
 figma.ui.onmessage = async (msg: CreateUIMessageType) => {
-  const { componentSets, standaloneComponentSets } = findAllComponentSetsOnPage()
+  const { selectedComponents, componentSets, standaloneComponentSets } = findAllComponentSetsOnPage()
 
   const componentSetsDataPartial = componentSets.map((componentSet) => {
     return {
@@ -26,15 +27,46 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
     }
   })
 
+  const selectedComponentsDataPartial = selectedComponents.map((component) => {
+    return {
+      id: component.id,
+      name: component.name,
+      numberOfComponents: component.children.length,
+    }
+  })
+  console.log(selectedComponentsDataPartial)
+  const standaloneComponentSetsDataPartial = standaloneComponentSets.map((componentSet) => {
+    return {
+      id: componentSet.id,
+      name: componentSet.name,
+      numberOfComponents: componentSet.children.length,
+    }
+  })
+
   if (msg.type === 'request-components') {
-    figma.ui.postMessage({ data: { type: 'components', componentSets: componentSetsDataPartial } })
+    figma.ui.postMessage({
+      data: {
+        type: 'components',
+        componentSets: componentSetsDataPartial,
+        selectedComponents: selectedComponentsDataPartial,
+        standaloneComponentSets: standaloneComponentSetsDataPartial,
+      },
+    })
+  }
+
+  if (msg.type === 'autolayout') {
+    applyAutoLayoutToSelection()
   }
 
   if (msg.type === 'render-demo') {
     try {
-      const demoPage = getDemoPage()
-
-      figma.currentPage = demoPage
+      let demoPage
+      if (!selectedComponents.length) {
+        demoPage = getDemoPage()
+        figma.currentPage = demoPage
+      } else {
+        demoPage = figma.currentPage
+      }
 
       try {
         const textStyles = figma.getLocalTextStyles()
@@ -49,7 +81,10 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
         await loadFonts(fontNames)
 
         await Promise.all([
-          handleRenderingComponentSets(demoPage, [...componentSets, ...(standaloneComponentSets as any)]),
+          handleRenderingComponentSets(
+            selectedComponents.length ? figma.currentPage : demoPage,
+            selectedComponents.length ? selectedComponents : [...componentSets, ...(standaloneComponentSets as any)],
+          ),
           //handleRenderingComponentSets(demoPage, []),
         ])
           .catch((error) => {
@@ -58,6 +93,7 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
             throw error
           })
           .then(async () => {
+            if (selectedComponents.length) return
             await generateVariables(demoPage)
             await generateTokens(demoPage)
             figma.ui.postMessage({ type: 'success', message: 'Demo rendered successfully.' })
