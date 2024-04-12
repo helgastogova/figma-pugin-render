@@ -3,26 +3,34 @@ type CustomComponentSet = {
   children: ComponentNode[]
 }
 
-export const findAllComponentSetsOnPage = (): {
+function addChildrenComponents(node: SceneNode, selectedComponents: Set<ComponentNode | ComponentSetNode>) {
+  if (node.type === 'COMPONENT' || node.type === 'COMPONENT_SET') {
+    selectedComponents.add(node as ComponentNode | ComponentSetNode)
+  } else if ('children' in node) {
+    node.children.forEach((child) => {
+      addChildrenComponents(child, selectedComponents)
+    })
+  }
+}
+
+export const findAllComponentsAndSets = (): {
   componentSets: ComponentSetNode[]
   standaloneComponentSets: CustomComponentSet[]
   selectedComponents: Array<ComponentNode | ComponentSetNode>
 } => {
   const componentSets: ComponentSetNode[] = []
   const standaloneComponents = new Map<string, ComponentNode[]>()
-  const selectedComponents: ComponentNode[] = [] // Инициализируем массив для выбранных компонентов
+  const selectedComponents: Set<ComponentNode | ComponentSetNode> = new Set() // Инициализируем Set для выбранных компонентов
 
   figma.currentPage.selection.forEach((node) => {
-    if (node.type === 'COMPONENT' || node.type === 'COMPONENT_SET') {
-      selectedComponents.push(node as ComponentNode | ComponentSetNode)
-    }
+    addChildrenComponents(node, selectedComponents)
   })
 
-  if (selectedComponents.length)
+  if (selectedComponents.size)
     return {
       componentSets: [],
       standaloneComponentSets: [],
-      selectedComponents,
+      selectedComponents: Array.from(selectedComponents),
     }
 
   figma.root.findAll((node) => {
@@ -30,29 +38,36 @@ export const findAllComponentSetsOnPage = (): {
       componentSets.push(node as ComponentSetNode)
     } else if (node.type === 'COMPONENT') {
       const component = node as ComponentNode
-      if (component.parent.type !== 'COMPONENT_SET' && component.parent.type !== 'COMPONENT') {
+
+      if (['COMPONENT_SET', 'COMPONENT'].includes(component.parent.type)) {
         const parentName = component.parent.name
-        if (!standaloneComponents.has(parentName)) {
-          standaloneComponents.set(parentName, [])
+        let components = standaloneComponents.get(parentName)
+        if (!components) {
+          components = []
+          standaloneComponents.set(parentName, components)
         }
-        standaloneComponents.get(parentName)?.push(component)
+        components.push(component)
       }
     } else if (node.type !== 'COMPONENT' && node.type !== 'COMPONENT_SET') {
-      node.findAll((childNode) => {
-        if (childNode.type === 'COMPONENT_SET') {
-          componentSets.push(childNode as ComponentSetNode)
-        } else if (childNode.type === 'COMPONENT') {
-          const component = childNode as ComponentNode
-          if (component.parent.type !== 'COMPONENT_SET') {
-            const parentName = component.parent.name
-            if (!standaloneComponents.has(parentName)) {
-              standaloneComponents.set(parentName, [])
+      if ('findAll' in node && typeof node.findAll === 'function') {
+        node.findAll((childNode) => {
+          if (childNode.type === 'COMPONENT_SET') {
+            componentSets.push(childNode as ComponentSetNode)
+          } else if (childNode.type === 'COMPONENT') {
+            const component = childNode as ComponentNode
+            if (component.parent.type !== 'COMPONENT_SET') {
+              const parentName = component.parent.name
+              let components = standaloneComponents.get(parentName)
+              if (!components) {
+                components = []
+                standaloneComponents.set(parentName, components)
+              }
+              components.push(component)
             }
-            standaloneComponents.get(parentName)?.push(component)
           }
-        }
-        return false
-      })
+          return false
+        })
+      }
     }
     return false
   })
@@ -67,7 +82,7 @@ export const findAllComponentSetsOnPage = (): {
   return {
     componentSets,
     standaloneComponentSets,
-    selectedComponents,
+    selectedComponents: [],
   }
 }
 

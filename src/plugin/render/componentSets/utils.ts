@@ -122,6 +122,7 @@ function renderTest({
     }
     return acc
   }, {})
+
   if (isComponentNode(componentSet)) {
     const cell = createFrame(
       {
