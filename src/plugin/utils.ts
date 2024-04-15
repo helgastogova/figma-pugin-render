@@ -2,15 +2,33 @@ type CustomComponentSet = {
   name: string
   children: ComponentNode[]
 }
-
 function addChildrenComponents(node: SceneNode, selectedComponents: Set<ComponentNode | ComponentSetNode>) {
   if (node.type === 'COMPONENT' || node.type === 'COMPONENT_SET') {
     selectedComponents.add(node as ComponentNode | ComponentSetNode)
-  } else if ('children' in node) {
-    node.children.forEach((child) => {
+  } else {
+    node?.children?.forEach((child) => {
       addChildrenComponents(child, selectedComponents)
     })
   }
+}
+
+function collectStandaloneComponents(
+  nodes: ReadonlyArray<SceneNode>,
+  standaloneComponents: Map<string, ComponentNode[]>,
+) {
+  nodes.forEach((node) => {
+    if (
+      node.type === 'COMPONENT' &&
+      node.parent &&
+      node.parent.type !== 'COMPONENT_SET' &&
+      node.parent.type !== 'COMPONENT'
+    ) {
+      const parentName = node.parent.name
+      const components = standaloneComponents.get(parentName) ?? []
+      components.push(node)
+      standaloneComponents.set(parentName, components)
+    }
+  })
 }
 
 export const findAllComponentsAndSets = (): {
@@ -18,59 +36,24 @@ export const findAllComponentsAndSets = (): {
   standaloneComponentSets: CustomComponentSet[]
   selectedComponents: Array<ComponentNode | ComponentSetNode>
 } => {
-  const componentSets: ComponentSetNode[] = []
-  const standaloneComponents = new Map<string, ComponentNode[]>()
-  const selectedComponents: Set<ComponentNode | ComponentSetNode> = new Set() // Инициализируем Set для выбранных компонентов
-
+  const selectedComponents: Set<ComponentNode | ComponentSetNode> = new Set()
   figma.currentPage.selection.forEach((node) => {
     addChildrenComponents(node, selectedComponents)
   })
 
-  if (selectedComponents.size)
+  if (selectedComponents.size) {
     return {
       componentSets: [],
       standaloneComponentSets: [],
       selectedComponents: Array.from(selectedComponents),
     }
+  }
 
-  figma.root.findAll((node) => {
-    if (node.type === 'COMPONENT_SET') {
-      componentSets.push(node as ComponentSetNode)
-    } else if (node.type === 'COMPONENT') {
-      const component = node as ComponentNode
-
-      if (['COMPONENT_SET', 'COMPONENT'].includes(component.parent.type)) {
-        const parentName = component.parent.name
-        let components = standaloneComponents.get(parentName)
-        if (!components) {
-          components = []
-          standaloneComponents.set(parentName, components)
-        }
-        components.push(component)
-      }
-    } else if (node.type !== 'COMPONENT' && node.type !== 'COMPONENT_SET') {
-      if ('findAll' in node && typeof node.findAll === 'function') {
-        node.findAll((childNode) => {
-          if (childNode.type === 'COMPONENT_SET') {
-            componentSets.push(childNode as ComponentSetNode)
-          } else if (childNode.type === 'COMPONENT') {
-            const component = childNode as ComponentNode
-            if (component.parent.type !== 'COMPONENT_SET') {
-              const parentName = component.parent.name
-              let components = standaloneComponents.get(parentName)
-              if (!components) {
-                components = []
-                standaloneComponents.set(parentName, components)
-              }
-              components.push(component)
-            }
-          }
-          return false
-        })
-      }
-    }
-    return false
-  })
+  const componentSets: ComponentSetNode[] = figma.root.findAllWithCriteria({
+    types: ['COMPONENT_SET'],
+  }) as ComponentSetNode[]
+  const standaloneComponents = new Map<string, ComponentNode[]>()
+  collectStandaloneComponents(figma.root.findAllWithCriteria({ types: ['COMPONENT'] }), standaloneComponents)
 
   const standaloneComponentSets: CustomComponentSet[] = Array.from(standaloneComponents.entries()).map(
     ([name, components]) => ({
@@ -82,7 +65,7 @@ export const findAllComponentsAndSets = (): {
   return {
     componentSets,
     standaloneComponentSets,
-    selectedComponents: [],
+    selectedComponents: Array.from(selectedComponents),
   }
 }
 

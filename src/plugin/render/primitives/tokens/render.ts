@@ -167,16 +167,21 @@ const renderDemo = ({
         }),
       )
 
-      if (description) {
-        textWrapper.appendChild(
-          createText({
-            characters: `Description: ${description}`,
-            fontSize: 18,
-            fontName: { family: 'Roboto', style: 'Regular' },
-            textAutoResize: 'WIDTH_AND_HEIGHT',
-          }),
-        )
-      }
+      if (!description) return
+
+      const descriptionText = createText({
+        characters: `Description: ${description}`,
+        fontSize: 18,
+        fontName: { family: 'Roboto', style: 'Regular' },
+        fontColor: '#555555',
+      })
+
+      textWrapper.layoutMode = 'VERTICAL'
+      textWrapper.layoutAlign = 'STRETCH'
+      textWrapper.appendChild(descriptionText)
+
+      descriptionText.layoutSizingHorizontal = 'FILL'
+      descriptionText.layoutSizingVertical = 'HUG'
 
       break
     case 'FLOAT':

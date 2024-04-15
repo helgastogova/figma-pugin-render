@@ -16,6 +16,22 @@ export const generateTokens = async (page: PageNode): Promise<void> => {
     return
   }
 
+  const modesFrame = createFrame(
+    {
+      name: `Collections`,
+      direction: 'HORIZONTAL',
+      horizontalAlign: 'MIN',
+      verticalAlign: 'MIN',
+      itemSpacing: 50,
+      borderRadius: 24,
+      verticalPadding: 50,
+      horizontalPadding: 50,
+      backgroundColor: '#FFFFFF',
+    },
+    page,
+    'right',
+  )
+
   // TODO: add mode support
   collections.forEach((collection) => {
     collection.modes.forEach((mode) => {
@@ -31,9 +47,8 @@ export const generateTokens = async (page: PageNode): Promise<void> => {
           borderRadius: 24,
           verticalPadding: 50,
           horizontalPadding: 50,
-          backgroundColor: '#FFFFFF',
         },
-        page,
+        modesFrame,
         'right',
       )
 

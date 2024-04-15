@@ -103,7 +103,7 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
               : [...componentSets, ...(standaloneComponentSets as any)],
             renderOnlySelectedComponents,
           }),
-          //handleRenderingComponentSets(demoPage, []),
+          // console.log('handleRenderingComponentSets'),
         ])
           .catch((error) => {
             figma.ui.postMessage({ type: 'error', message: 'Failed to render demo' })

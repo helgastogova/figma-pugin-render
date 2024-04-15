@@ -73,16 +73,21 @@ export const renderTextStyles = async (textStyles: TextStyleData, frame: FrameNo
           }),
         )
 
-        fontLine.appendChild(
-          figma.createText({
-            characters: `Description: ${description}`,
-            fontSize: 16,
-            fontColor: '#555555',
-            layoutSizingVertical: 'HUG',
-            layoutSizingHorizontal: 'FILL',
-            textAutoResize: 'WIDTH_AND_HEIGHT',
-          }),
-        )
+        if (!description) return
+
+        const descriptionText = createText({
+          characters: `Description: ${description}`,
+          fontSize: 18,
+          fontName: { family: 'Roboto', style: 'Regular' },
+          fontColor: '#555555',
+        })
+
+        fontLine.layoutMode = 'VERTICAL'
+        fontLine.layoutAlign = 'STRETCH'
+        fontLine.appendChild(descriptionText)
+
+        descriptionText.layoutSizingHorizontal = 'FILL'
+        descriptionText.layoutSizingVertical = 'HUG'
       })
     })
 }
