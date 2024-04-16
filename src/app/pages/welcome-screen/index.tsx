@@ -45,7 +45,7 @@ const WelcomeScreen = () => {
         data: { type },
       } = event.data.pluginMessage
       if (type === 'components') {
-        if (data.selectedComponents.length) {
+        if (data.hasActiveSelection) {
           setComponentSets(data.selectedComponents)
           setHasSelectedComponents(true)
         } else {
@@ -91,7 +91,13 @@ const WelcomeScreen = () => {
               </Text>
             ) : (
               <div>
-                {hasSelectedComponents && <div>We found these components/components sets in your selection: </div>}
+                {hasSelectedComponents && (
+                  <div>
+                    {componentSetsArray.length > 0
+                      ? 'We found these components/components sets in your selection: '
+                      : 'We have no found any components/components sets in your selection'}
+                  </div>
+                )}
                 {currentRender
                   ? currentRender
                   : componentSetsArray?.map((item, i) => {
@@ -111,7 +117,7 @@ const WelcomeScreen = () => {
           <Button onClick={onCancel} type="secondary">
             Cancel
           </Button>
-          <Button onClick={onCreate} type="primary">
+          <Button desibled={componentSetsArray.length === 0} onClick={onCreate} type="primary">
             Create
           </Button>
           {/* <Button onClick={onAutolayout} type="primary">

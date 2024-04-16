@@ -60,6 +60,7 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
     figma.ui.postMessage({
       data: {
         type: 'components',
+        hasActiveSelection: hasActiveSelection(),
         componentSets: componentSetsDataPartial,
         selectedComponents: selectedComponentsDataPartial,
         standaloneComponentSets: standaloneComponentSetsDataPartial,
@@ -74,7 +75,7 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
   if (msg.type === 'render-demo') {
     try {
       let demoPage
-      if (!selectedComponents.length) {
+      if (!hasActiveSelection()) {
         demoPage = getDemoPage()
         figma.currentPage = demoPage
       } else {
@@ -93,7 +94,7 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
 
         await loadFonts(fontNames)
 
-        const renderOnlySelectedComponents = !!selectedComponents.length
+        const renderOnlySelectedComponents = hasActiveSelection()
 
         await Promise.all([
           handleRenderingComponentSets({

@@ -59,7 +59,7 @@ export const findAllComponentsAndSets = (): {
     addChildrenComponents(node, selectedComponents)
   })
 
-  if (selectedComponents.size) {
+  if (hasActiveSelection()) {
     return {
       componentSets: [],
       standaloneComponentSets: [],

@@ -23,3 +23,13 @@
     border-color: var(--color-primary8);
   }
 }
+
+.desibled {
+  background-color: var(--color-primary2);
+  color: var(--color-primary4);
+  cursor: not-allowed;
+
+  &:hover {
+    background-color: var(--color-primary2);
+  }
+}

@@ -8,13 +8,14 @@ interface ComponentProps {
   children?: JSX.Element | string
   type?: 'secondary' | 'primary'
   className?: string
+  desibled?: boolean
 }
 
-const Button = ({ onClick, children, type = 'primary', className }: ComponentProps) => {
+const Button = ({ onClick, children, type = 'primary', className, desibled }: ComponentProps) => {
   if (!children) return null
 
   return (
-    <button onClick={onClick} className={cx(s.base, s[type], className)}>
+    <button onClick={onClick} className={cx(s.base, s[type], className, desibled && s.desibled)}>
       {children}
     </button>
   )
