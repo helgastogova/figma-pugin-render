@@ -1,6 +1,6 @@
 import { generateVariables } from './render/primitives'
 import { CreateUIMessageType } from './types'
-import { findAllComponentsAndSets, getDemoPage } from './utils'
+import { findAllComponentsAndSets, getDemoPage, hasActiveSelection } from './utils'
 import { handleRenderingComponentSets } from './render/showcases'
 import { generateTokens } from './render/primitives/tokens'
 import { applyAutoLayoutToSelection } from './autolayout'
@@ -9,7 +9,7 @@ import { applyAutoLayoutToSelection } from './autolayout'
 // 1. titles with library colors
 // 2. group block
 // 3. more than 3 props
-// 4. выделение фрейма с компонентами
+// 4. выделение фрейма с компонентами если они инстнасы
 
 async function loadFonts(fontNames: FontName[]) {
   const loadPromises = fontNames.map((fontName) =>
