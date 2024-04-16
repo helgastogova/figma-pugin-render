@@ -1,7 +1,7 @@
 import { generateVariables } from './render/primitives'
 import { CreateUIMessageType } from './types'
 import { findAllComponentsAndSets, getDemoPage } from './utils'
-import { handleRenderingComponentSets } from './render/componentSets'
+import { handleRenderingComponentSets } from './render/showcases'
 import { generateTokens } from './render/primitives/tokens'
 import { applyAutoLayoutToSelection } from './autolayout'
 //TODO
