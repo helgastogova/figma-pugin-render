@@ -311,8 +311,13 @@ export const renderDemo = async ({
 
   const entries = Object.entries(multipleVariants)
 
+  console.log('multipleVariants', multipleVariants)
+  console.log('entries', entries)
+
   const lastTwoSets = entries.slice(-2)
   const tableHeaders = lastTwoSets.map(([key, set]) => [key, ...Array.from(set)])
+
+  // separate nestedCombinations – first and others
 
   const rootFrame = createFrame(
     {
