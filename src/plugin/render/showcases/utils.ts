@@ -180,7 +180,7 @@ function renderTest({
           fontColor: '#777',
           textAlignHorizontal: 'CENTER',
           layoutAlign: 'STRETCH',
-          fontSize: 28 - 4 * depthLevel,
+          fontSize: 28 - 4 * depthLevel, // every next level font size is smaller
         }),
       )
     }

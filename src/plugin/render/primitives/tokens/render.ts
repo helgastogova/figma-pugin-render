@@ -1,5 +1,5 @@
 import { createFrame, createText } from '@src/plugin/helpers'
-import { rgbToHex, isRgb, isRgba } from '@src/plugin/helpers/colors'
+import { rgbToHex, hexToRgbA, isRgb, isRgba } from '@src/plugin/helpers/colors'
 
 type VariableScopeWithPrimitive = VariableScope | 'PRIMITIVE' | 'COLOR' | 'DEFAULT_FLOAT' | 'DEFAULT_COLOR'
 
@@ -274,21 +274,46 @@ const createBlock = ({
 
   switch (scope) {
     case 'ALL_SCOPES':
-    case 'DEFAULT_FLOAT':
-    case 'GAP':
     case 'STROKE_FLOAT':
     case 'TEXT_CONTENT':
     case 'EFFECT_FLOAT':
-    case 'WIDTH_HEIGHT':
       wrapper.appendChild(
         createText({
-          characters: `${value}`,
+          // characters: `${value}_${scope}`,
+          characters: value,
           fontSize: 52,
           fontName: { family: 'Roboto', style: 'Bold' },
           fontColor: '#B2B0B0',
           textAlignHorizontal: 'CENTER',
         }),
       )
+      break
+    case 'WIDTH_HEIGHT':
+    case 'DEFAULT_FLOAT':
+    case 'GAP':
+      const gap = createFrame(
+        {
+          name: `${scope}: ${value}`,
+          direction: 'HORIZONTAL',
+          horizontalAlign: 'CENTER',
+          verticalAlign: 'MIN',
+          itemSpacing: 16,
+          verticalPadding: 8,
+          minHeight: value,
+          minWidth: 100,
+          horizontalPadding: 8,
+          backgroundColor: '#e1a6d81a',
+        },
+        wrapper,
+      )
+
+      gap.strokes = [{ type: 'SOLID', color: { r: 0.88, g: 0.65, b: 0.84 }, opacity: 0.7 }]
+      gap.resize(100, value as number)
+      gap.strokeRightWeight = 0
+      gap.strokeLeftWeight = 0
+      gap.strokeTopWeight = 1
+      gap.strokeBottomWeight = 1
+
       break
     case 'CORNER_RADIUS':
       Object.assign(wrapper, {
