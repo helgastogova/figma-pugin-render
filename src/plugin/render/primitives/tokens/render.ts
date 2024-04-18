@@ -27,6 +27,9 @@ const getHumanScopeName = (scope: VariableScopeWithPrimitive): string => {
   return scope
 }
 
+// нужна функция которая заменяет все / на , и добавляет пробел после ,
+const replaceSlash = (str: string) => str.replace(/\//g, ', ')
+
 export const renderGroupsRecursive = ({
   frame,
   groups,
@@ -121,12 +124,14 @@ const renderDemo = ({
               {
                 name: 'Scope elements',
                 direction: 'HORIZONTAL',
-                horizontalAlign: 'MIN',
-                verticalAlign: 'MIN',
+                horizontalAlign: 'CENTER',
+                verticalAlign: 'CENTER',
                 autoWidth: true,
                 autoHeight: true,
                 itemSpacing: 16,
                 borderRadius: 16,
+                minHeight: 100,
+                minWidth: 100,
                 // backgroundColor,
               },
               frameForItems,
@@ -429,6 +434,8 @@ const createColorCase = ({
         })
         break
       case 'TEXT_FILL':
+        colorBlock.resize(100, 100)
+
         colorBlock.appendChild(
           createText({
             characters: 'YO',
