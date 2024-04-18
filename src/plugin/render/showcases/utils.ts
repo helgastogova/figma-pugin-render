@@ -101,6 +101,7 @@ function renderTest({
   frameName,
   tableRows,
   backgroundColor,
+  entriesLength,
 }: {
   componentSet: ComponentSetNode
   nestedCombinations: { [key: string]: any }
@@ -111,9 +112,11 @@ function renderTest({
   frameName?: string
   tableRows: string[]
   backgroundColor?: string
+  entriesLength?: number
 }) {
   const depthLevel = currentPath.length / 2
   const maxDepth = getMaxDepth(nestedCombinations)
+  console.log('maxDepth', maxDepth, entriesLength)
 
   const isLastOrPenultimateLevel = depthLevel >= maxDepth - 1
   const properties = currentPath?.reduce((acc, val, index, array) => {
@@ -169,7 +172,7 @@ function renderTest({
       })
     }
 
-    if (!isLastOrPenultimateLevel && frameName && depthLevel > 0) {
+    if (depthLevel > 0 && depthLevel <= entriesLength - 2 && frameName && entriesLength > 2) {
       parentFrame.appendChild(
         createText({
           characters: frameName,
@@ -177,6 +180,7 @@ function renderTest({
           fontColor: '#777',
           textAlignHorizontal: 'CENTER',
           layoutAlign: 'STRETCH',
+          fontSize: 28 - 4 * depthLevel,
         }),
       )
     }
@@ -227,7 +231,8 @@ function renderTest({
       const frame = createFrame(
         {
           name: frameName,
-          direction: isLastOrPenultimateLevel || maxDepth <= 2 || currentPath.length > 3 ? 'HORIZONTAL' : 'VERTICAL', // подумать над этим условием там
+          //direction: isLastOrPenultimateLevel || maxDepth <= 2 || currentPath.length > 3 ? 'HORIZONTAL' : 'VERTICAL', // подумать над этим условием там
+          direction: entriesLength - depthLevel <= 1 ? 'HORIZONTAL' : 'VERTICAL',
           horizontalAlign: 'CENTER',
           verticalAlign: 'MIN',
           itemSpacing: 50,
@@ -236,7 +241,7 @@ function renderTest({
         parentFrame,
       )
 
-      if (isLastOrPenultimateLevel) {
+      if (isLastOrPenultimateLevel && depthLevel > entriesLength - 2) {
         const labelFrame = createFrame(
           {
             name: frameName.split('=')[0],
@@ -265,6 +270,7 @@ function renderTest({
           frameName: `${propName}=${propValue}`,
           tableRows,
           backgroundColor,
+          entriesLength,
         })
       })
     })
@@ -310,9 +316,6 @@ export const renderDemo = async ({
   const nestedCombinations = generateNestedPropCombinations(multipleVariants)
 
   const entries = Object.entries(multipleVariants)
-
-  console.log('multipleVariants', multipleVariants)
-  console.log('entries', entries)
 
   const lastTwoSets = entries.slice(-2)
   const tableHeaders = lastTwoSets.map(([key, set]) => [key, ...Array.from(set)])
@@ -364,5 +367,6 @@ export const renderDemo = async ({
     frameName: componentSet.name,
     tableRows: tableHeaders[0] ?? [],
     backgroundColor,
+    entriesLength: entries.length,
   })
 }
