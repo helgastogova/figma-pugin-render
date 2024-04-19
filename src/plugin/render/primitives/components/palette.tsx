@@ -3,7 +3,7 @@ import { ColorStyleData } from '../getLocalStyles'
 import { rgbToHex } from '@src/plugin/helpers/colors'
 
 interface CreatePaletteProps {
-  style: PaintStyle // Используйте BaseStyle вместо PaintStyle
+  style: PaintStyle
   frame: FrameNode | PageNode
 }
 
@@ -56,7 +56,8 @@ export const createPalette = ({ style, frame }: CreatePaletteProps): void => {
     paletteWrapper,
   )
 
-  const hex = rgbToHex(style?.paints[0]?.color) ?? ''
+  const hex = style?.paints[0]?.type === 'SOLID' ? rgbToHex(style.paints[0].color) : ''
+
   hex &&
     textWrapper.appendChild(
       createText({

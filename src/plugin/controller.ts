@@ -3,13 +3,10 @@ import { CreateUIMessageType } from './types'
 import { findAllComponentsAndSets, getDemoPage, hasActiveSelection } from './utils'
 import { handleRenderingComponentSets } from './render/showcases'
 import { generateTokens } from './render/primitives/tokens'
-import { applyAutoLayoutToSelection } from './autolayout'
 //TODO
 
 // 1. titles with library colors
 // 2. group block
-// 3. more than 3 props
-// 4. выделение фрейма с компонентами если они инстнасы
 
 async function loadFonts(fontNames: FontName[]) {
   const loadPromises = fontNames.map((fontName) =>
@@ -49,13 +46,6 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
     }
   })
 
-  // console.log('selectedComponents', {
-  //   type: 'components',
-  //   componentSets: componentSetsDataPartial,
-  //   selectedComponents: selectedComponentsDataPartial,
-  //   standaloneComponentSets: standaloneComponentSetsDataPartial,
-  // })
-
   if (msg.type === 'request-components') {
     figma.ui.postMessage({
       data: {
@@ -66,10 +56,6 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
         standaloneComponentSets: standaloneComponentSetsDataPartial,
       },
     })
-  }
-
-  if (msg.type === 'autolayout') {
-    applyAutoLayoutToSelection()
   }
 
   if (msg.type === 'render-demo') {
@@ -112,7 +98,7 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
             throw error
           })
           .then(async () => {
-            if (selectedComponents.length) return
+            // if (selectedComponents.length) return
 
             await generateVariables(demoPage)
             await generateTokens(demoPage)

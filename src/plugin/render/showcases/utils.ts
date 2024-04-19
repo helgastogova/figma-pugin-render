@@ -116,7 +116,6 @@ function renderTest({
 }) {
   const depthLevel = currentPath.length / 2
   const maxDepth = getMaxDepth(nestedCombinations)
-  console.log('maxDepth', maxDepth, entriesLength)
 
   const isLastOrPenultimateLevel = depthLevel >= maxDepth - 1
   const properties = currentPath?.reduce((acc, val, index, array) => {
@@ -141,10 +140,9 @@ function renderTest({
       },
       parentFrame,
     )
-    if (!isComponentNode(componentSet)) return
 
-    const instance = componentSet.createInstance()
-    instance.name = componentSet.name
+    const componentNode = componentSet as ComponentNode
+    const instance = componentNode.createInstance()
     cell.appendChild(instance)
   } else {
     // component
@@ -171,16 +169,14 @@ function renderTest({
         cell.appendChild(instance)
       })
     }
-
     if (depthLevel > 0 && depthLevel <= entriesLength - 2 && frameName && entriesLength > 2) {
       parentFrame.appendChild(
         createText({
           characters: frameName,
-          fontSize: 18,
+          fontSize: 28 - 4 * depthLevel,
           fontColor: '#777',
           textAlignHorizontal: 'CENTER',
           layoutAlign: 'STRETCH',
-          fontSize: 28 - 4 * depthLevel, // every next level font size is smaller
         }),
       )
     }

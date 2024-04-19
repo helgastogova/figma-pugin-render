@@ -1,5 +1,5 @@
 import { createFrame, createText } from '@src/plugin/helpers'
-import { rgbToHex, hexToRgbA, isRgb, isRgba } from '@src/plugin/helpers/colors'
+import { rgbToHex, isRgb, isRgba } from '@src/plugin/helpers/colors'
 
 type VariableScopeWithPrimitive = VariableScope | 'PRIMITIVE' | 'COLOR' | 'DEFAULT_FLOAT' | 'DEFAULT_COLOR'
 
@@ -26,9 +26,6 @@ const getHumanScopeName = (scope: VariableScopeWithPrimitive): string => {
 
   return scope
 }
-
-// нужна функция которая заменяет все / на , и добавляет пробел после ,
-const replaceSlash = (str: string) => str.replace(/\//g, ', ')
 
 export const renderGroupsRecursive = ({
   frame,

@@ -14,7 +14,9 @@ function buildVariableTree(parts: string[], variable: Variable, currentMap: Map<
   group.get(variableName).push(variable)
 }
 
-export const groupVariablesByNames = (modes: VariableMode[]): Map<string, Map<string, Variable[]>> => {
+export const groupVariablesByNames = (
+  modes: { modeId: string; name: string; variables: Variable[] }[],
+): Map<string, Map<string, Variable[]>> => {
   const groupedVariables = new Map<string, Map<string, Variable[]>>()
 
   modes.forEach((mode) => {

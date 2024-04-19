@@ -16,7 +16,7 @@ const isVariableAlias = (value: VariableValue): value is VariableAlias =>
 
 const fetchVariablesForModes = async (
   variableIds: string[],
-  modes: Mode[],
+  modes: { modeId: string; name: string }[],
   defaultModeId: string,
 ): Promise<ModeWithVariables> => {
   const modesWithVars: ModeWithVariables = modes.reduce((acc, mode) => {

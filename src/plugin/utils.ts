@@ -1,4 +1,5 @@
 type CustomComponentSet = {
+  id: string
   name: string
   children: ComponentNode[]
 }
