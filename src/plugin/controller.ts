@@ -3,6 +3,8 @@ import { CreateUIMessageType } from './types'
 import { findAllComponentsAndSets, getDemoPage, hasActiveSelection } from './utils'
 import { handleRenderingComponentSets } from './render/showcases'
 import { generateTokens } from './render/primitives/tokens'
+
+import { renderAI } from './ai/ai-render'
 //TODO
 
 // 1. titles with library colors
@@ -83,13 +85,14 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
         const renderOnlySelectedComponents = hasActiveSelection()
 
         await Promise.all([
-          handleRenderingComponentSets({
-            page: renderOnlySelectedComponents ? figma.currentPage : demoPage,
-            componentSets: renderOnlySelectedComponents
-              ? selectedComponents
-              : [...componentSets, ...(standaloneComponentSets as any)],
-            renderOnlySelectedComponents,
-          }),
+          renderAI(demoPage),
+          // handleRenderingComponentSets({
+          //   page: renderOnlySelectedComponents ? figma.currentPage : demoPage,
+          //   componentSets: renderOnlySelectedComponents
+          //     ? selectedComponents
+          //     : [...componentSets, ...(standaloneComponentSets as any)],
+          //   renderOnlySelectedComponents,
+          // }),
           // console.log('handleRenderingComponentSets'),
         ])
           .catch((error) => {
@@ -98,7 +101,8 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
             throw error
           })
           .then(async () => {
-            // if (selectedComponents.length) return
+            return
+            if (selectedComponents.length) return
 
             await generateVariables(demoPage)
             await generateTokens(demoPage)
