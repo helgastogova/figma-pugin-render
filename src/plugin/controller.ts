@@ -26,25 +26,25 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
 
   const componentSetsDataPartial = componentSets.map((componentSet) => {
     return {
-      id: componentSet.id,
+      // id: componentSet.id,
       name: componentSet.name,
-      numberOfComponents: componentSet.children.length,
+      // numberOfComponents: componentSet.children.length,
     }
   })
 
   const selectedComponentsDataPartial = selectedComponents.map((component) => {
     return {
-      id: component.id,
+      // id: component.id,
       name: component.name,
-      numberOfComponents: component.children.length,
+      // numberOfComponents: component.children.length,
     }
   })
 
   const standaloneComponentSetsDataPartial = standaloneComponentSets.map((componentSet) => {
     return {
-      id: componentSet.id,
+      // id: componentSet.id,
       name: componentSet.name,
-      numberOfComponents: componentSet.children.length,
+      // numberOfComponents: componentSet.children.length,
     }
   })
 
@@ -59,6 +59,11 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
       },
     })
   }
+
+  // if (msg.type === 'generated') {
+  //   console.log('Generated:', msg.data.structure)
+  //   renderAI(figma.currentPage, msg.data)
+  // }
 
   if (msg.type === 'render-demo') {
     try {

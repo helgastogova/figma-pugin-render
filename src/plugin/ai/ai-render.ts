@@ -1,301 +1,147 @@
 const ai = {
-  MainPage: {
-    type: 'frame',
-    name: 'Main Page',
-    width: 1280,
-    height: 'auto',
-    direction: 'VERTICAL',
-    horizontalPadding: 20,
-    verticalPadding: 20,
-    itemSpacing: 10,
-    backgroundColor: '#F0F0F0',
-    Header: {
+  structure: {
+    MainPage: {
       type: 'frame',
-      name: 'Header',
       width: 1280,
-      height: 100,
-      backgroundColor: '#FFFFFF',
-      direction: 'HORIZONTAL',
-      horizontalAlign: 'SPACE_BETWEEN',
-      verticalAlign: 'CENTER',
-      horizontalPadding: 15,
-      verticalPadding: 10,
-      itemSpacing: 10,
-      Logo: {
-        type: 'component',
-        name: 'Logo',
-      },
-      Search: {
-        type: 'component',
-        name: 'Search',
-      },
-      Menu: {
+      height: 'auto',
+      direction: 'VERTICAL',
+      verticalPadding: 20,
+      horizontalPadding: 20,
+      horizontalAlign: 'CENTER',
+      verticalAlign: 'TOP',
+      gap: 20,
+      Header: {
         type: 'frame',
-        name: 'Navigation Menu',
-        width: 500,
+        width: 1280,
         height: 100,
+        backgroundColor: '#FFFFFF',
         direction: 'HORIZONTAL',
-        itemSpacing: 5,
+        gap: 10,
+        Logo: {
+          type: 'component',
+          name: 'Logo',
+        },
         MenuItems: {
           type: 'component',
           name: 'Menu Items',
         },
       },
-      Link: {
-        type: 'component',
-        name: 'Link',
-        label: 'Profile',
+      MainContent: {
+        type: 'frame',
+        width: 1280,
+        height: 'auto',
+        direction: 'VERTICAL',
+        gap: 15,
+        CompanyCards: {
+          type: 'component',
+          name: 'Company Cards',
+        },
+        MediaBlocks: {
+          type: 'component',
+          name: 'Media',
+        },
+        Accordion: {
+          type: 'component',
+          name: 'Accordeon',
+        },
+        CommunityTags: {
+          type: 'component',
+          name: 'Community Tags',
+        },
+      },
+      Sidebar: {
+        type: 'frame',
+        width: 280,
+        height: 'auto',
+        direction: 'VERTICAL',
+        gap: 10,
+        InfoBlock: {
+          type: 'component',
+          name: 'Title + Description block',
+        },
+        Chips: {
+          type: 'component',
+          name: 'Chips',
+        },
+        DropdownMenu: {
+          type: 'component',
+          name: 'Dropdown Menu Elements',
+        },
+      },
+      Footer: {
+        type: 'frame',
+        width: 1280,
+        height: 50,
+        backgroundColor: '#F0F0F0',
+        direction: 'HORIZONTAL',
+        gap: 10,
+        Links: {
+          type: 'component',
+          name: 'Link',
+        },
+        LogoEmailTransition: {
+          type: 'component',
+          name: 'Logo Email Transition',
+        },
       },
     },
-    HeroSection: {
+    ProfilePage: {
       type: 'frame',
-      name: 'Hero Section',
-      direction: 'VERTICAL',
-      width: 1280,
-      height: 300,
-      horizontalPadding: 20,
-      verticalPadding: 20,
-      backgroundColor: '#E0E0E0',
-      Title: {
-        type: 'text',
-        name: 'Headings',
-        textContent: 'Empowering Community Innovation',
-      },
-      Subtitle: {
-        type: 'text',
-        name: 'Subtitle',
-        textContent:
-          'Welcome to our community! Explore, connect, and grow with us as we build a brighter future together.',
-      },
-    },
-    MainContent: {
-      type: 'frame',
-      name: 'Main Content',
       width: 1280,
       height: 'auto',
       direction: 'VERTICAL',
-      horizontalPadding: 15,
-      verticalPadding: 15,
-      itemSpacing: 15,
-      'Company Cards': {
-        type: 'component',
-        name: 'Company Cards',
-      },
-      MediaBlocks: {
-        type: 'component',
-        name: 'Media',
-      },
-      Accordion: {
-        type: 'component',
-        name: 'Accordeon',
-      },
-      CommunityTags: {
-        type: 'component',
-        name: 'Community Tags',
-      },
-      CommunityText: {
-        type: 'text',
-        textContent:
-          'Our community thrives on collaboration and innovation. Here, you can find the latest projects and initiatives to get involved with.',
-      },
-    },
-    Footer: {
-      type: 'frame',
-      name: 'Footer',
-      width: 1280,
-      height: 50,
-      backgroundColor: '#D0D0D0',
-      direction: 'HORIZONTAL',
-      horizontalAlign: 'SPACE_BETWEEN',
-      verticalAlign: 'CENTER',
-      horizontalPadding: 20,
-      verticalPadding: 10,
-      itemSpacing: 10,
-      ContactLink: {
-        type: 'component',
-        name: 'Link',
-        label: 'Contact Us',
-      },
-      LogoEmailTransition: {
-        type: 'component',
-        name: 'Logo Email Transition',
-      },
-      FooterText: {
-        type: 'text',
-        textContent: '© 2024 Founder Community. All rights reserved.',
-      },
-    },
-  },
-  CommunityPage: {
-    type: 'frame',
-    name: 'Community Page',
-    width: 1200,
-    height: 'auto',
-    direction: 'HORIZONTAL',
-    horizontalPadding: 20,
-    verticalPadding: 20,
-    itemSpacing: 20,
-    MainSection: {
-      type: 'frame',
-      name: 'Main Section',
-      direction: 'VERTICAL',
-      width: 900,
-      height: 'auto',
-      horizontalPadding: 20,
-      verticalPadding: 20,
-      itemSpacing: 20,
+      gap: 20,
       Header: {
         type: 'frame',
-        name: 'Header',
+        width: 1280,
+        height: 100,
         direction: 'HORIZONTAL',
-        horizontalAlign: 'MIN',
-        itemSpacing: 10,
+        gap: 10,
         Logo: {
           type: 'component',
           name: 'Logo',
         },
-        Search: {
-          type: 'component',
-          name: 'Search',
+        Menu: {
+          type: 'frame',
+          width: 400,
+          height: 100,
+          direction: 'HORIZONTAL',
+          gap: 5,
+          MenuItems: {
+            type: 'component',
+            name: 'Menu Items',
+          },
         },
-        Profile: {
+      },
+      MainContent: {
+        type: 'frame',
+        width: 1280,
+        height: 'auto',
+        direction: 'VERTICAL',
+        gap: 15,
+        ProfileBlock: {
           type: 'component',
           name: 'Profile',
         },
-      },
-      PostFeed: {
-        type: 'frame',
-        name: 'Post Feed',
-        direction: 'VERTICAL',
-        itemSpacing: 10,
-        PostItem: {
-          type: 'frame',
-          name: 'Post Item',
-          direction: 'VERTICAL',
-          itemSpacing: 5,
-          PostHeader: {
-            type: 'frame',
-            name: 'Post Header',
-            direction: 'HORIZONTAL',
-            horizontalAlign: 'MIN',
-            itemSpacing: 5,
-            Avatar: {
-              type: 'component',
-              name: 'Profile',
-            },
-            PostInfo: {
-              type: 'text',
-              textContent: 'Blessing Mikauru - Ovoda AI, billing solution...',
-            },
-          },
-          PostContent: {
-            type: 'text',
-            textContent: 'Over the past couple of weeks, I have largely been...',
-          },
-          Tags: {
-            type: 'component',
-            name: 'Chips',
-          },
-          PostActions: {
-            type: 'frame',
-            name: 'Post Actions',
-            direction: 'HORIZONTAL',
-            itemSpacing: 5,
-            LikeButton: {
-              type: 'component',
-              name: 'Icon Only Buttons',
-            },
-            CommentButton: {
-              type: 'component',
-              name: 'Icon Only Buttons',
-            },
-          },
-        },
-      },
-    },
-    PostFeed: {
-      type: 'frame',
-      name: 'Post Feed',
-      direction: 'VERTICAL',
-      itemSpacing: 16,
-      backgroundColor: '#FFFFFF',
-      horizontalPadding: 16,
-      verticalPadding: 16,
-      PostItem: {
-        type: 'frame',
-        name: 'Post Item',
-        direction: 'VERTICAL',
-        itemSpacing: 12,
-        horizontalPadding: 16,
-        verticalPadding: 16,
-        backgroundColor: '#F0F0F0',
-        PostHeader: {
-          type: 'frame',
-          name: 'Post Header',
-          direction: 'HORIZONTAL',
-          horizontalAlign: 'MIN',
-          itemSpacing: 12,
-          Avatar: {
-            type: 'component',
-            name: 'Profile',
-          },
-          PostInfo: {
-            type: 'text',
-            textContent: 'Blessing Mikauru - Ovoda AI, billing solution...',
-          },
-        },
-        PostContent: {
-          type: 'text',
-          textContent: 'Over the past couple of weeks, I have largely been...',
-        },
-        Tags: {
+        SocialMediaIcons: {
           type: 'component',
-          name: 'Chips',
+          name: 'Icon Only Buttons',
         },
-        PostActions: {
-          type: 'frame',
-          name: 'Post Actions',
-          direction: 'HORIZONTAL',
-          itemSpacing: 8,
-          LikeButton: {
-            type: 'component',
-            name: 'Icon Only Buttons',
-          },
-          CommentButton: {
-            type: 'component',
-            name: 'Icon Only Buttons',
-          },
+        Description: {
+          type: 'component',
+          name: 'Txt Block',
         },
       },
-    },
-
-    Sidebar: {
-      type: 'frame',
-      name: 'Sidebar',
-      direction: 'VERTICAL',
-      width: 300,
-      height: 'auto',
-      horizontalPadding: 24,
-      verticalPadding: 24,
-      itemSpacing: 24,
-      backgroundColor: '#FFFFFF',
-      Events: {
+      Footer: {
         type: 'frame',
-        name: 'Events',
-        direction: 'VERTICAL',
-        itemSpacing: 16,
-        backgroundColor: '#E8E8E8',
-        horizontalPadding: 16,
-        verticalPadding: 16,
-        EventItem: {
-          type: 'text',
-          textContent: '"NO VC" ODF Showcase...',
-        },
+        width: 1280,
+        height: 50,
+        direction: 'HORIZONTAL',
+        gap: 10,
       },
     },
   },
 }
-
 import { createFrame, createText } from '@src/plugin/helpers'
 
 const findInstance = (name: string): InstanceNode | undefined => {
@@ -319,6 +165,7 @@ const findInstance = (name: string): InstanceNode | undefined => {
 
 const renderBlocks = (node: any, key = '', parentElement: any) => {
   let newElement
+  console.log('Rendering:', node, key, parentElement)
   switch (node.type) {
     case 'text':
       parentElement.appendChild(createText({ name: key, characters: node.textContent }))
@@ -367,8 +214,10 @@ const renderBlocks = (node: any, key = '', parentElement: any) => {
 }
 
 export const renderAI = async (element) => {
-  Object.keys(ai).forEach((page) => {
+  const data = ai.structure
+  console.log('Rendering AI:', data)
+  Object.keys(data).forEach((page) => {
     console.log(`Rendering page: ${page}`)
-    renderBlocks(ai[page], page, element)
+    renderBlocks(data[page], page, element)
   })
 }
