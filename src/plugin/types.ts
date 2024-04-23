@@ -2,5 +2,10 @@ export type UIMessageType = 'render-demo' | 'cancel' | 'request-user-info' | 're
 
 export interface CreateUIMessageType {
   type: UIMessageType
-  message: string
+  data?: {
+    generateOnNewPage?: boolean
+    generatePrimitives?: boolean
+    generateTokens?: boolean
+    selectedToRenderComponents?: Array<ComponentNode | ComponentSetNode>
+  }
 }

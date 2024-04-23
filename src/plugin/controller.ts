@@ -1,58 +1,42 @@
-import { generateVariables } from './render/primitives'
+import { renderPrimitives } from './render/primitives'
 import { CreateUIMessageType } from './types'
-import { findAllComponentsAndSets, getDemoPage, hasActiveSelection } from './utils'
+import { findAllComponentsAndSets, getDemoPage, hasActiveSelection, loadFonts } from './utils'
 import { handleRenderingComponentSets } from './render/showcases'
-import { generateTokens } from './render/primitives/tokens'
+import { renderTokens } from './render/primitives/tokens'
 
 // import { renderAI } from './ai/ai-render'
 //TODO
 
 // 1. titles with library colors
 // 2. group block
+// забирать цвет если изменили
 
-async function loadFonts(fontNames: FontName[]) {
-  const loadPromises = fontNames.map((fontName) =>
-    figma.loadFontAsync(fontName).catch((error) => {
-      console.error(`Error loading font ${fontName.family} ${fontName.style}:`, error)
-    }),
-  )
-  await Promise.all(loadPromises)
-}
-
-figma.showUI(__html__, { width: 400, height: 450, title: 'Showcase render', themeColors: false })
+figma.showUI(__html__, { width: 768, height: 500, title: 'Showcase render', themeColors: false })
 
 figma.ui.onmessage = async (msg: CreateUIMessageType) => {
-  const { selectedComponents, componentSets, standaloneComponentSets } = findAllComponentsAndSets()
+  const userHasActiveSelection = hasActiveSelection()
 
-  const componentSetsDataPartial = componentSets.map((componentSet) => {
-    return {
-      id: componentSet.id,
-      name: componentSet.name,
-      numberOfComponents: componentSet.children.length,
-    }
-  })
-
-  const selectedComponentsDataPartial = selectedComponents.map((component) => {
-    return {
-      id: component.id,
-      name: component.name,
-      numberOfComponents: component.children.length,
-    }
-  })
-
-  const standaloneComponentSetsDataPartial = standaloneComponentSets.map((componentSet) => {
-    return {
-      id: componentSet.id,
-      name: componentSet.name,
-      numberOfComponents: componentSet.children.length,
-    }
-  })
+  const {
+    selectedComponents,
+    selectedComponentsDataPartial,
+    componentSets,
+    componentSetsDataPartial,
+    standaloneComponentSets,
+    standaloneComponentSetsDataPartial,
+  } = findAllComponentsAndSets()
 
   if (msg.type === 'request-components') {
+    console.log('request-components', {
+      type: 'components',
+      hasActiveSelection: userHasActiveSelection,
+      componentSets: componentSetsDataPartial,
+      selectedComponents: selectedComponentsDataPartial,
+      standaloneComponentSets: standaloneComponentSetsDataPartial,
+    })
     figma.ui.postMessage({
       data: {
         type: 'components',
-        hasActiveSelection: hasActiveSelection(),
+        hasActiveSelection: userHasActiveSelection,
         componentSets: componentSetsDataPartial,
         selectedComponents: selectedComponentsDataPartial,
         standaloneComponentSets: standaloneComponentSetsDataPartial,
@@ -62,36 +46,55 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
 
   if (msg.type === 'render-demo') {
     try {
-      let demoPage
-      if (!hasActiveSelection()) {
+      console.log('msg', msg)
+      // components, that user selected to render from the list in the plugin
+      const {
+        data: { selectedToRenderComponents, generatePrimitives, generateTokens, generateOnNewPage },
+      } = msg
+
+      console.log(
+        'selectedToRenderComponents',
+        selectedToRenderComponents,
+        generatePrimitives,
+        generateTokens,
+        generateOnNewPage,
+      )
+
+      // lets determine what page we need to render on
+
+      let demoPage: PageNode
+
+      if (generateOnNewPage) {
+        // if user wants to generate on a new page, we will create a new page
         demoPage = getDemoPage()
         figma.currentPage = demoPage
       } else {
+        // if user wants to generate on the current page, we will use the current page
         demoPage = figma.currentPage
       }
 
       try {
+        // dealing with fonts
         const textStyles = figma.getLocalTextStyles()
         const fontNames = textStyles.map((style) => style.fontName).filter((fontName) => fontName) as FontName[]
-
         fontNames.push(
           { family: 'Roboto', style: 'Regular' },
           { family: 'Roboto', style: 'Bold' },
           { family: 'Inter', style: 'Regular' },
         )
-
         await loadFonts(fontNames)
-
-        const renderOnlySelectedComponents = hasActiveSelection()
+        // dealing with fonts
 
         await Promise.all([
           // renderAI(demoPage),
           handleRenderingComponentSets({
-            page: renderOnlySelectedComponents ? figma.currentPage : demoPage,
-            componentSets: renderOnlySelectedComponents
-              ? selectedComponents
-              : [...componentSets, ...(standaloneComponentSets as any)],
-            renderOnlySelectedComponents,
+            page: generateOnNewPage ? demoPage : figma.currentPage,
+            componentSets: userHasActiveSelection
+              ? selectedComponents.filter((component) => selectedToRenderComponents.some((i) => i.id === component.id))
+              : [...componentSets, ...(standaloneComponentSets as any)].filter((component) =>
+                  selectedToRenderComponents.some((i) => i.id === component.id),
+                ),
+            renderOnPlace: !generateOnNewPage,
           }),
           // console.log('handleRenderingComponentSets'),
         ])
@@ -101,10 +104,8 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
             throw error
           })
           .then(async () => {
-            if (selectedComponents.length) return
-
-            await generateVariables(demoPage)
-            await generateTokens(demoPage)
+            if (generatePrimitives) await renderPrimitives(demoPage)
+            if (generateTokens) await renderTokens(demoPage)
             figma.ui.postMessage({ type: 'success', message: 'Demo rendered successfully.' })
           })
           .catch((error) => {

@@ -5,7 +5,7 @@ import { renderEffectStyles } from './components/effects'
 
 import { createFrame } from '../../helpers'
 
-export const generateVariables = async (page: PageNode): Promise<void> => {
+export const renderPrimitives = async (page: PageNode): Promise<void> => {
   const frame = createFrame(
     {
       name: 'Primitives / Variables',

@@ -6,11 +6,11 @@ import { colorStylesWithThemes, colorStylesWithoutThemes } from '../../helpers/p
 export const handleRenderingComponentSets = async ({
   page: demoPage,
   componentSets,
-  renderOnlySelectedComponents,
+  renderOnPlace,
 }: {
   page: PageNode
   componentSets: ComponentSetNode[]
-  renderOnlySelectedComponents?: boolean
+  renderOnPlace?: boolean
 }) => {
   const localCollections = await figma.variables.getLocalVariableCollectionsAsync()
   const tokensCollection = localCollections.find(
@@ -38,7 +38,7 @@ export const handleRenderingComponentSets = async ({
 
     let renderOnPlaceFrame
 
-    if (renderOnlySelectedComponents) {
+    if (renderOnPlace) {
       renderOnPlaceFrame = createFrame(
         {
           name: 'Showcase render',
@@ -67,7 +67,7 @@ export const handleRenderingComponentSets = async ({
           horizontalPadding: 30,
           borderRadius: 24,
         },
-        renderOnlySelectedComponents ? renderOnPlaceFrame : demoPage,
+        renderOnPlace ? renderOnPlaceFrame : demoPage,
         'right',
       )
       frame.setExplicitVariableModeForCollection(tokensCollection.id, mode.modeId) //TODO:  but that the one we have for setting the mode

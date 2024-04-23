@@ -1,15 +1,20 @@
 import React, { useState } from 'react'
-
-import { Button, Text, Layout } from '@ui'
+import { ComponentsList } from './components/components-list'
+import { Button, Text, Layout, Checkbox } from '@ui'
+import { Loader } from './components/loader'
 
 import s from './welcome-screen.module.css'
 
 const WelcomeScreen = () => {
-  const [componentSetsArray, setComponentSets] = useState([])
+  const [componentsArray, setComponentsArray] = useState([])
   const [hasSelectedComponents, setHasSelectedComponents] = useState(false)
   const [currentRender, setCurrentRender] = useState('')
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
+  const [selectedToRenderComponents, setSelectedToRenderComponents] = useState([])
+  const [generateOnNewPage, setGenerateOnNewPage] = useState(true)
+  const [generatePrimitives, setGeneratePrimitives] = useState(false)
+  const [generateTokens, setGenerateTokens] = useState(false)
 
   const onCancel = () => {
     parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
@@ -20,6 +25,7 @@ const WelcomeScreen = () => {
       {
         pluginMessage: {
           type: 'render-demo',
+          data: { generateOnNewPage, generatePrimitives, generateTokens, selectedToRenderComponents },
         },
       },
       '*',
@@ -35,10 +41,12 @@ const WelcomeScreen = () => {
       } = event.data.pluginMessage
       if (type === 'components') {
         if (data.hasActiveSelection) {
-          setComponentSets(data.selectedComponents)
+          setComponentsArray(data.selectedComponents)
+          setSelectedToRenderComponents(data.selectedComponents)
           setHasSelectedComponents(true)
         } else {
-          setComponentSets([...data.componentSets, ...data.standaloneComponentSets])
+          setComponentsArray([...data.componentSets, ...data.standaloneComponentSets])
+          setSelectedToRenderComponents([...data.componentSets, ...data.standaloneComponentSets])
           setHasSelectedComponents(false)
         }
         setLoading(false)
@@ -69,53 +77,68 @@ const WelcomeScreen = () => {
     <Layout centered className={s.layout}>
       <div>
         {creating ? (
-          <Text centered as="h1" variant="heading/large">
-            Creating...
-          </Text>
+          <>
+            <Loader />
+            <Text centered as="h1" variant="heading/large">
+              Creating...
+            </Text>
+          </>
         ) : (
           <>
             {loading ? (
-              <Text centered as="h1" variant="heading/large">
-                Loading...
-              </Text>
+              <Loader />
             ) : (
-              <div>
-                {hasSelectedComponents && (
-                  <div>
-                    {componentSetsArray.length > 0
-                      ? 'We found these components/components sets in your selection: '
-                      : 'We have no found any components/components sets in your selection'}
-                  </div>
-                )}
-                {currentRender
-                  ? currentRender
-                  : componentSetsArray?.map((item, i) => {
-                      return (
-                        <div key={`${item.id}_${i}`}>
-                          {i + 1}) {item.name}
-                        </div>
-                      )
-                    })}
-              </div>
+              <ComponentsList
+                hasSelectedComponents={hasSelectedComponents}
+                componentsArray={componentsArray}
+                currentRender={currentRender}
+                onCheckboxChange={setSelectedToRenderComponents}
+                selectedToRenderComponents={selectedToRenderComponents}
+              />
             )}
           </>
         )}
       </div>
       {!loading && !creating && (
         <div className={s.buttonContainer}>
-          <Button onClick={onCancel} type="secondary">
-            Cancel
-          </Button>
-          <Button desibled={componentSetsArray.length === 0} onClick={onCreate} type="primary">
-            Create
-          </Button>
-          {/* <Button onClick={onAutolayout} type="primary">
-            AUTOLAYOUT
-          </Button> */}
+          <div>
+            <Checkbox
+              label="Generate on new page"
+              checked={generateOnNewPage}
+              onChange={() => setGenerateOnNewPage(!generateOnNewPage)}
+            />
+            <Checkbox
+              label="Generate Primitives"
+              checked={generatePrimitives}
+              onChange={() => setGeneratePrimitives(!generatePrimitives)}
+            />
+            <Checkbox
+              label="Generate Tockens"
+              checked={generateTokens}
+              onChange={() => setGenerateTokens(!generateTokens)}
+            />
+          </div>
+          <div>
+            <Button onClick={onCancel} type="secondary">
+              Cancel
+            </Button>
+
+            <Button desibled={selectedToRenderComponents?.length === 0} onClick={onCreate} type="primary">
+              {getButtonLabel(selectedToRenderComponents, componentsArray)}
+            </Button>
+          </div>
         </div>
       )}
     </Layout>
   )
+}
+
+const getButtonLabel = (selectedToRenderComponents, componentsArray) => {
+  if (selectedToRenderComponents?.length === componentsArray?.length)
+    return `Generate all (${selectedToRenderComponents?.length})`
+  if (selectedToRenderComponents?.length === 0) return 'Select components to generate'
+
+  return `Generate ${selectedToRenderComponents?.length} components`
 }
 
 export default WelcomeScreen

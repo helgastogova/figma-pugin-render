@@ -4,6 +4,15 @@ type CustomComponentSet = {
   children: ComponentNode[]
 }
 
+export async function loadFonts(fontNames: FontName[]) {
+  const loadPromises = fontNames.map((fontName) =>
+    figma.loadFontAsync(fontName).catch((error) => {
+      console.error(`Error loading font ${fontName.family} ${fontName.style}:`, error)
+    }),
+  )
+  await Promise.all(loadPromises)
+}
+
 export function hasActiveSelection(): boolean {
   return figma.currentPage.selection.length > 0
 }
@@ -52,8 +61,11 @@ function collectStandaloneComponents(
 
 export const findAllComponentsAndSets = (): {
   componentSets: ComponentSetNode[]
+  componentSetsDataPartial: Array<{ id: string; name: string; numberOfComponents: number }>
   standaloneComponentSets: CustomComponentSet[]
+  standaloneComponentSetsDataPartial: Array<{ id: string; name: string; numberOfComponents: number }>
   selectedComponents: Array<ComponentNode | ComponentSetNode>
+  selectedComponentsDataPartial: Array<{ id: string; name: string; numberOfComponents: number }>
 } => {
   const selectedComponents: Set<ComponentNode | ComponentSetNode> = new Set()
   figma.currentPage.selection.forEach((node) => {
@@ -63,8 +75,17 @@ export const findAllComponentsAndSets = (): {
   if (hasActiveSelection()) {
     return {
       componentSets: [],
+      componentSetsDataPartial: [],
       standaloneComponentSets: [],
+      standaloneComponentSetsDataPartial: [],
       selectedComponents: Array.from(selectedComponents),
+      selectedComponentsDataPartial: Array.from(selectedComponents).map((component) => {
+        return {
+          id: component.id,
+          name: component.name,
+          numberOfComponents: component.children.length,
+        }
+      }),
     }
   }
 
@@ -81,10 +102,37 @@ export const findAllComponentsAndSets = (): {
     }),
   )
 
+  const componentSetsDataPartial = componentSets.map((componentSet) => {
+    return {
+      id: componentSet.id,
+      name: componentSet.name,
+      numberOfComponents: componentSet.children.length,
+    }
+  })
+
+  const selectedComponentsDataPartial = Array.from(selectedComponents).map((component) => {
+    return {
+      id: component.id,
+      name: component.name,
+      numberOfComponents: component.children.length,
+    }
+  })
+
+  const standaloneComponentSetsDataPartial = Array.from(standaloneComponentSets).map((componentSet) => {
+    return {
+      id: componentSet.id,
+      name: componentSet.name,
+      numberOfComponents: componentSet.children.length,
+    }
+  })
+
   return {
     componentSets,
+    componentSetsDataPartial,
     standaloneComponentSets,
+    standaloneComponentSetsDataPartial,
     selectedComponents: Array.from(selectedComponents),
+    selectedComponentsDataPartial,
   }
 }
 

@@ -301,7 +301,7 @@ const createBlock = ({
           verticalAlign: 'MIN',
           itemSpacing: 16,
           verticalPadding: 8,
-          minHeight: value,
+          minHeight: +value,
           minWidth: 100,
           horizontalPadding: 8,
           backgroundColor: '#e1a6d81a',

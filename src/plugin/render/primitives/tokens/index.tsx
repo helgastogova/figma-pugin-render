@@ -3,7 +3,7 @@ import { getCollection } from './getCollection'
 import { groupVariablesByNames } from './processData'
 import { renderGroupsRecursive } from './render'
 
-export const generateTokens = async (page: PageNode): Promise<void> => {
+export const renderTokens = async (page: PageNode): Promise<void> => {
   const collections = await getCollection()
 
   if (collections.length === 0) {
@@ -67,11 +67,6 @@ export const generateTokens = async (page: PageNode): Promise<void> => {
         },
         modeFrame,
       )
-
-      // Object.assign(modeFrame, {
-      //   strokes: [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }],
-      //   strokeWeight: 5,
-      // })
 
       const groupedVariables = groupVariablesByNames([mode])
 

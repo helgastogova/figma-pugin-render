@@ -7,6 +7,7 @@ interface ModeWithVariables {
       value: VariableValue
       type: VariableResolvedDataType
       scopes: VariableScope[]
+      description?: string
     }>
   }
 }
@@ -39,7 +40,7 @@ const fetchVariablesForModes = async (
       if (isVariableAlias(value)) {
         const alias = await figma.variables.getVariableByIdAsync(value.id)
         if (!alias) continue
-        aliasValue = alias.valuesByMode[defaultModeId]
+        aliasValue = alias.valuesByMode[defaultModeId] as VariableAlias
       }
 
       modesWithVars[mode.modeId].variables.push({
@@ -55,7 +56,7 @@ const fetchVariablesForModes = async (
   return modesWithVars
 }
 
-export const getCollection = async (): Promise<Collection> => {
+export const getCollection = async (): Promise<VariableCollection[] | undefined> => {
   const variableCollections = await figma.variables.getLocalVariableCollectionsAsync()
   if (!variableCollections?.length) return
 
@@ -68,8 +69,19 @@ export const getCollection = async (): Promise<Collection> => {
     const modesWithVars = await fetchVariablesForModes(collection.variableIds, collection.modes, defaultModeId)
 
     collections.push({
+      id: collection.id,
       name: collection.name,
-      modes: Object.values(modesWithVars),
+      hiddenFromPublishing: collection.hiddenFromPublishing,
+      getPublishStatusAsync: collection.getPublishStatusAsync,
+      remote: collection.remote,
+      // Add other properties from VariableCollection if needed
+      modes: collection.modes.map((mode) => {
+        return {
+          modeId: mode.modeId,
+          name: mode.name,
+          variables: modesWithVars[mode.modeId].variables,
+        }
+      }),
     })
   }
 
