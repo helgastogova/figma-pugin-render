@@ -3,29 +3,32 @@ import { createColorStyles } from '../../helpers/colors'
 import { createFrame } from '../../helpers'
 import { colorStylesWithThemes, colorStylesWithoutThemes } from '../../helpers/palette'
 
-export const handleRenderingComponentSets = async ({
+export const renderShowcases = async ({
   page: demoPage,
-  componentSets,
+  components,
   renderOnPlace,
 }: {
   page: PageNode
-  componentSets: ComponentSetNode[]
+  components: ComponentSetNode[] | ComponentNode[]
   renderOnPlace?: boolean
 }) => {
+  //defaultVariant
+  //description
+  //Link
   const localCollections = await figma.variables.getLocalVariableCollectionsAsync()
   const tokensCollection = localCollections.find(
     (collection) => collection.name === 'Tokens' && !collection.hiddenFromPublishing,
   )
 
-  const renderComponentSetsInBatches = async (
-    componentSets: ComponentSetNode[],
+  const renderComponentsInBatches = async (
+    components: ComponentSetNode[] | ComponentNode[],
     frame: FrameNode | PageNode,
     modeName: string,
   ) => {
-    for (let i = 0; i < componentSets.length; i++) {
+    for (let i = 0; i < components.length; i++) {
       await renderDemo({
         demoPage,
-        componentSet: componentSets[i],
+        component: components[i],
         parentFrame: frame,
         backgroundColor: modeName === 'Dark' ? '#251F1F' : '#E9E8E8',
       })
@@ -41,7 +44,10 @@ export const handleRenderingComponentSets = async ({
     if (renderOnPlace) {
       renderOnPlaceFrame = createFrame(
         {
-          name: 'Showcase render',
+          name:
+            components.length < 2
+              ? `Showcase render ${components[0]?.name ?? ''}`
+              : `Showcase render for ${components.length} components`,
           direction: 'HORIZONTAL',
           horizontalAlign: 'CENTER',
           verticalAlign: 'MIN',
@@ -71,7 +77,7 @@ export const handleRenderingComponentSets = async ({
         'right',
       )
       frame.setExplicitVariableModeForCollection(tokensCollection.id, mode.modeId) //TODO:  but that the one we have for setting the mode
-      await renderComponentSetsInBatches(componentSets, frame, mode.name)
+      await renderComponentsInBatches(components, frame, mode.name)
     }
   } else {
     createColorStyles(colorStylesWithoutThemes)
@@ -89,6 +95,6 @@ export const handleRenderingComponentSets = async ({
       demoPage,
       'right',
     )
-    await renderComponentSetsInBatches(componentSets, frame, 'Light')
+    await renderComponentsInBatches(components, frame, 'Light')
   }
 }

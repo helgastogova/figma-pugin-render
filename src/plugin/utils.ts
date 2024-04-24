@@ -1,4 +1,4 @@
-type CustomComponentSet = {
+type CustomComponentNode = {
   id?: string
   name: string
   children: ComponentNode[]
@@ -62,13 +62,14 @@ function collectStandaloneComponents(
 export const findAllComponentsAndSets = (): {
   componentSets: ComponentSetNode[]
   componentSetsDataPartial: Array<{ id: string; name: string; numberOfComponents: number }>
-  standaloneComponentSets: CustomComponentSet[]
+  standaloneComponentSets: CustomComponentNode[]
   standaloneComponentSetsDataPartial: Array<{ id: string; name: string; numberOfComponents: number }>
   selectedComponents: Array<ComponentNode | ComponentSetNode>
   selectedComponentsDataPartial: Array<{ id: string; name: string; numberOfComponents: number }>
 } => {
   const selectedComponents: Set<ComponentNode | ComponentSetNode> = new Set()
   figma.currentPage.selection.forEach((node) => {
+    console.log('node', node)
     addChildrenComponents(node, selectedComponents)
   })
 
@@ -95,7 +96,7 @@ export const findAllComponentsAndSets = (): {
   const standaloneComponents = new Map<string, ComponentNode[]>()
   collectStandaloneComponents(figma.root.findAllWithCriteria({ types: ['COMPONENT'] }), standaloneComponents)
 
-  const standaloneComponentSets: CustomComponentSet[] = Array.from(standaloneComponents.entries()).map(
+  const standaloneComponentSets: CustomComponentNode[] = Array.from(standaloneComponents.entries()).map(
     ([name, components]) => ({
       name,
       children: components,

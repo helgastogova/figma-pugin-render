@@ -1,12 +1,10 @@
 import { renderPrimitives } from './render/primitives'
 import { CreateUIMessageType } from './types'
 import { findAllComponentsAndSets, getDemoPage, hasActiveSelection, loadFonts } from './utils'
-import { handleRenderingComponentSets } from './render/showcases'
+import { renderShowcases } from './render/showcases'
 import { renderTokens } from './render/primitives/tokens'
 
-// import { renderAI } from './ai/ai-render'
 //TODO
-
 // 1. titles with library colors
 // 2. group block
 // забирать цвет если изменили
@@ -46,9 +44,7 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
       } = msg
 
       // lets determine what page we need to render on
-
       let demoPage: PageNode
-
       if (generateOnNewPage) {
         // if user wants to generate on a new page, we will create a new page
         demoPage = getDemoPage()
@@ -71,17 +67,15 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
         // dealing with fonts
 
         await Promise.all([
-          // renderAI(demoPage),
-          handleRenderingComponentSets({
+          renderShowcases({
             page: generateOnNewPage ? demoPage : figma.currentPage,
-            componentSets: userHasActiveSelection
+            components: userHasActiveSelection
               ? selectedComponents.filter((component) => selectedToRenderComponents.some((i) => i.id === component.id))
               : [...componentSets, ...(standaloneComponentSets as any)].filter((component) =>
                   selectedToRenderComponents.some((i) => i.id === component.id),
                 ),
             renderOnPlace: !generateOnNewPage,
           }),
-          // console.log('handleRenderingComponentSets'),
         ])
           .catch((error) => {
             figma.ui.postMessage({ type: 'error', message: 'Failed to render demo' })

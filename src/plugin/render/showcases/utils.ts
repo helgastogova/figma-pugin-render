@@ -39,10 +39,10 @@ interface VariantsResult {
   multipleVariants: Record<string, Set<string>>
 }
 
-const collectPropsVariants = (componentSet: ComponentSetNode): VariantsResult => {
+const collectPropsVariants = (component: ComponentNode | ComponentSetNode): VariantsResult => {
   const allPropsVariants: Record<string, Set<string>> = {}
 
-  componentSet.children.forEach((component) => {
+  component.children.forEach((component) => {
     const props = parseComponentProps(component.name)
     Object.entries(props).forEach(([key, value]) => {
       if (!allPropsVariants[key]) {
@@ -78,13 +78,13 @@ function isComponentNode(node: SceneNode): node is ComponentNode {
 }
 
 function findComponentByProps({
-  componentSet,
+  component,
   properties,
 }: {
-  componentSet: ComponentSetNode
+  component: ComponentSetNode
   properties: Record<string, string>
 }): ComponentNode | undefined {
-  return componentSet.children.find((node): node is ComponentNode => {
+  return component.children.find((node): node is ComponentNode => {
     if (!isComponentNode(node)) return false
     const componentProps = parseComponentProps(node.name)
     return Object.entries(properties).every(([key, value]) => componentProps[key] === value)
@@ -92,7 +92,7 @@ function findComponentByProps({
 }
 
 function renderTest({
-  componentSet,
+  component,
   nestedCombinations,
   parentFrame,
   currentPath = [],
@@ -103,7 +103,7 @@ function renderTest({
   backgroundColor,
   entriesLength,
 }: {
-  componentSet: ComponentSetNode
+  component: ComponentNode | ComponentSetNode
   nestedCombinations: { [key: string]: any }
   parentFrame: FrameNode
   currentPath: string[]
@@ -125,7 +125,7 @@ function renderTest({
     return acc
   }, {})
 
-  if (isComponentNode(componentSet)) {
+  if (isComponentNode(component)) {
     const cell = createFrame(
       {
         name: 'Component variants',
@@ -141,12 +141,12 @@ function renderTest({
       parentFrame,
     )
 
-    const componentNode = componentSet as ComponentNode
+    const componentNode = component as ComponentNode
     const instance = componentNode.createInstance()
     cell.appendChild(instance)
   } else {
     // component
-    if (maxDepth === 0 && depthLevel === 0 && componentSet.children.length !== 0) {
+    if (maxDepth === 0 && depthLevel === 0 && component.children.length !== 0) {
       const cell = createFrame(
         {
           name: 'Component variants',
@@ -161,11 +161,11 @@ function renderTest({
         },
         parentFrame,
       )
-      componentSet.children.forEach((component) => {
-        if (!isComponentNode(component)) return
+      component.children.forEach((item) => {
+        if (!isComponentNode(item)) return
 
-        const instance = component.createInstance()
-        instance.name = component.name
+        const instance = item.createInstance()
+        instance.name = item.name
         cell.appendChild(instance)
       })
     }
@@ -189,7 +189,7 @@ function renderTest({
       const newPath = [...currentPath, propName]
 
       if (propName === 'node') {
-        const component = findComponentByProps({ componentSet, properties })
+        const item = findComponentByProps({ component, properties })
         const cell = createFrame(
           {
             direction: 'VERTICAL',
@@ -205,11 +205,11 @@ function renderTest({
           parentFrame,
         )
 
-        if (component) {
-          const instance = component.createInstance()
+        if (item) {
+          const instance = item.createInstance()
 
           instance.name = name
-          cell.name = `${name ?? componentSet.name}`
+          cell.name = `${name ?? component.name}`
           cell.appendChild(instance)
           parentFrame.appendChild(cell)
         } else {
@@ -257,7 +257,7 @@ function renderTest({
 
       Object.entries(propValues).forEach(([propValue, nestedCombinations]) => {
         renderTest({
-          componentSet,
+          component,
           nestedCombinations,
           parentFrame: frame,
           currentPath: [...newPath, propValue],
@@ -274,19 +274,19 @@ function renderTest({
 }
 interface RenderDemoProps {
   demoPage: PageNode
-  componentSet: ComponentSetNode
+  component: ComponentSetNode | ComponentNode
   parentFrame?: FrameNode | PageNode
   backgroundColor?: string
 }
 
 export const renderDemo = async ({
   demoPage,
-  componentSet,
+  component,
   parentFrame,
   backgroundColor,
 }: RenderDemoProps): Promise<void> => {
-  if (!componentSet) {
-    console.error('Component Set not found')
+  if (!component) {
+    console.error('Component not found')
     return
   }
 
@@ -295,9 +295,9 @@ export const renderDemo = async ({
     return
   }
 
-  const { minWidth_, minHeight } = componentSet?.children?.reduce(
-    (acc, component) => {
-      const { width, height } = component
+  const { minWidth_, minHeight } = component?.children?.reduce(
+    (acc, item) => {
+      const { width, height } = item
       return {
         minWidth_: Math.max(acc.minWidth_, width ?? 0),
         minHeight: Math.max(acc.minHeight, height ?? 0),
@@ -308,7 +308,7 @@ export const renderDemo = async ({
 
   const minWidth = minWidth_ < 100 ? 100 : minWidth_
 
-  const { multipleVariants } = collectPropsVariants(componentSet)
+  const { multipleVariants } = collectPropsVariants(component)
   const nestedCombinations = generateNestedPropCombinations(multipleVariants)
 
   const entries = Object.entries(multipleVariants)
@@ -320,7 +320,7 @@ export const renderDemo = async ({
 
   const rootFrame = createFrame(
     {
-      name: `Demo for ${componentSet.name}`,
+      name: `Demo for ${component.name}`,
       direction: 'VERTICAL',
       horizontalAlign: 'CENTER',
       verticalAlign: 'MIN',
@@ -333,10 +333,10 @@ export const renderDemo = async ({
     parentFrame ?? demoPage,
   )
 
-  rootFrame.appendChild(getDemoTitle(componentSet.name))
+  rootFrame.appendChild(getDemoTitle(component.name))
   const rootInsideFrame = createFrame(
     {
-      name: `Demo for ${componentSet.name}`,
+      name: `Demo for ${component.name}`,
       direction: 'VERTICAL',
       horizontalAlign: 'CENTER',
       verticalAlign: 'MIN',
@@ -354,13 +354,13 @@ export const renderDemo = async ({
   if (showHeadersArray) rootInsideFrame.appendChild(createTableHead(showHeadersArray, minWidth))
 
   renderTest({
-    componentSet,
+    component,
     nestedCombinations,
     parentFrame: rootInsideFrame,
     currentPath: [],
     minWidth,
     minHeight,
-    frameName: componentSet.name,
+    frameName: component.name,
     tableRows: tableHeaders[0] ?? [],
     backgroundColor,
     entriesLength: entries.length,
