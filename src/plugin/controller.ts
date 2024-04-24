@@ -26,13 +26,6 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
   } = findAllComponentsAndSets()
 
   if (msg.type === 'request-components') {
-    console.log('request-components', {
-      type: 'components',
-      hasActiveSelection: userHasActiveSelection,
-      componentSets: componentSetsDataPartial,
-      selectedComponents: selectedComponentsDataPartial,
-      standaloneComponentSets: standaloneComponentSetsDataPartial,
-    })
     figma.ui.postMessage({
       data: {
         type: 'components',
@@ -51,14 +44,6 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
       const {
         data: { selectedToRenderComponents, generatePrimitives, generateTokens, generateOnNewPage },
       } = msg
-
-      console.log(
-        'selectedToRenderComponents',
-        selectedToRenderComponents,
-        generatePrimitives,
-        generateTokens,
-        generateOnNewPage,
-      )
 
       // lets determine what page we need to render on
 

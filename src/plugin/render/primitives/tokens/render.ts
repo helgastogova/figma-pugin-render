@@ -40,12 +40,15 @@ export const renderGroupsRecursive = ({
   depth?: number
   topGroupName?: string
 }) => {
-  if (Array.isArray(groups) && groups.length < 2) {
-    for (const variable of groups) {
-      renderDemo({ frame, variable, mode, topGroupName })
+  if (Array.isArray(groups)) {
+    if (groups.length < 2) {
+      for (const variable of groups) {
+        renderDemo({ frame, variable, mode })
+      }
     }
   } else {
-    for (const [groupName, subGroups] of groups) {
+    for (const [groupName, subGroups] of groups.entries()) {
+      // Use .entries() for Maps
       const subFrame = createFrame(
         {
           name: `${groupName}`,
@@ -59,7 +62,7 @@ export const renderGroupsRecursive = ({
         frame,
       )
 
-      !Array.isArray(subGroups) &&
+      if (!Array.isArray(subGroups)) {
         subFrame.appendChild(
           createText({
             characters: `${groupName}`,
@@ -67,6 +70,7 @@ export const renderGroupsRecursive = ({
             fontName: { family: 'Roboto', style: 'Regular' },
           }),
         )
+      }
 
       renderGroupsRecursive({ frame: subFrame, groups: subGroups, mode, depth: depth + 1, topGroupName })
     }
@@ -82,8 +86,8 @@ const renderDemo = ({
   variable: {
     hidden?: boolean
     name: string
-    value: VariableValue
-    type: VariableDataType
+    value?: VariableValue // check ?
+    type?: VariableDataType // check ?
     scopes: VariableScopeWithPrimitive[]
     description?: string
   }
@@ -282,7 +286,7 @@ const createBlock = ({
       wrapper.appendChild(
         createText({
           // characters: `${value}_${scope}`,
-          characters: value,
+          characters: value.toString(),
           fontSize: 52,
           fontName: { family: 'Roboto', style: 'Bold' },
           fontColor: '#B2B0B0',
@@ -354,7 +358,7 @@ const createColorCase = ({
   frame: FrameNode
   name: string
   mode: { name: string; modeId: string }
-  value: RGBA | RGB
+  value: RGBA | RGB | string
   scope?: VariableScopeWithPrimitive
 }) => {
   if (!isRgb(value as RGBA | RGB)) return
@@ -390,11 +394,13 @@ const createColorCase = ({
   )
 
   if (['DEFAULT_COLOR', 'ALL_SCOPES'].includes(scope)) {
-    Object.assign(colorBlock, {
-      strokeWeight: 1,
-      strokes: [{ type: 'SOLID', color: { r: 0.9, g: 0.9, b: 0.9 } }],
-      fills: [{ type: 'SOLID', color: { r: value.r, g: value.g, b: value.b }, opacity: isRgba(value) ? value.a : 1 }],
-    })
+    if (isRgba(value)) {
+      Object.assign(colorBlock, {
+        strokeWeight: 1,
+        strokes: [{ type: 'SOLID', color: { r: 0.9, g: 0.9, b: 0.9 } }],
+        fills: [{ type: 'SOLID', color: { r: value.r, g: value.g, b: value.b }, opacity: isRgba(value) ? value.a : 1 }],
+      })
+    }
   } else {
     switch (scope) {
       case 'ALL_FILLS':
@@ -402,20 +408,25 @@ const createColorCase = ({
       case 'SHAPE_FILL':
       case 'EFFECT_COLOR':
       case 'COLOR': // for general colors (primitives)
-        Object.assign(colorBlock, {
-          strokeWeight: 1,
-          strokes: [{ type: 'SOLID', color: { r: 0.7, g: 0.7, b: 0.7 } }],
-          fills: [
-            { type: 'SOLID', color: { r: value.r, g: value.g, b: value.b }, opacity: isRgba(value) ? value.a : 1 },
-          ],
-        })
+        if (isRgba(value)) {
+          Object.assign(colorBlock, {
+            strokeWeight: 1,
+            strokes: [{ type: 'SOLID', color: { r: 0.7, g: 0.7, b: 0.7 } }],
+            fills: [
+              { type: 'SOLID', color: { r: value.r, g: value.g, b: value.b }, opacity: isRgba(value) ? value.a : 1 },
+            ],
+          })
+        }
 
         break
       case 'STROKE_COLOR':
-        Object.assign(colorBlock, {
-          strokeWeight: 3,
-          strokes: [{ type: 'SOLID', color: { r: value.r, g: value.g, b: value.b } }],
-        })
+        if (isRgb(value)) {
+          Object.assign(colorBlock, {
+            strokeWeight: 3,
+            strokes: [{ type: 'SOLID', color: { r: value.r, g: value.g, b: value.b } }],
+          })
+        }
+
         break
         Object.assign(colorBlock, {
           effects: [

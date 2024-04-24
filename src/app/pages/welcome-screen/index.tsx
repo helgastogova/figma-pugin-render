@@ -123,8 +123,12 @@ const WelcomeScreen = () => {
               Cancel
             </Button>
 
-            <Button desibled={selectedToRenderComponents?.length === 0} onClick={onCreate} type="primary">
-              {getButtonLabel(selectedToRenderComponents, componentsArray)}
+            <Button
+              desibled={selectedToRenderComponents?.length === 0 && !generatePrimitives && !generateTokens}
+              onClick={onCreate}
+              type="primary"
+            >
+              {getButtonLabel(selectedToRenderComponents, componentsArray, generateTokens, generatePrimitives)}
             </Button>
           </div>
         </div>
@@ -133,11 +137,16 @@ const WelcomeScreen = () => {
   )
 }
 
-const getButtonLabel = (selectedToRenderComponents, componentsArray) => {
+const getButtonLabel = (selectedToRenderComponents, componentsArray, generateTokens, generatePrimitives) => {
   if (selectedToRenderComponents?.length === componentsArray?.length)
     return `Generate all (${selectedToRenderComponents?.length})`
-  if (selectedToRenderComponents?.length === 0) return 'Select components to generate'
 
+  if (generatePrimitives && generateTokens) return 'Generate Primitives and Tokens'
+  if (generatePrimitives && !generateTokens) return 'Generate Primitives'
+  if (generateTokens && !generatePrimitives) return 'Generate Tokens'
+
+  if (selectedToRenderComponents?.length === 0 && !generateTokens && !generatePrimitives)
+    return 'Select components to generate'
   return `Generate ${selectedToRenderComponents?.length} components`
 }
 
