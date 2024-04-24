@@ -1,5 +1,4 @@
 function buildVariableTree(parts: string[], variable: Variable, currentMap: Map<string, any>): void {
-  // Используем 'root' для элементов без разделения
   const groupName = parts.length > 1 ? parts.slice(0, -1).join('/') : 'root'
   const variableName = parts[parts.length - 1]
 
@@ -15,12 +14,12 @@ function buildVariableTree(parts: string[], variable: Variable, currentMap: Map<
 }
 
 export const groupVariablesByNames = (
-  modes: { modeId: string; name: string; variables: Variable[] }[],
+  modes: { modeId: string; name: string; variables?: Variable[] }[],
 ): Map<string, Map<string, Variable[]>> => {
   const groupedVariables = new Map<string, Map<string, Variable[]>>()
 
   modes.forEach((mode) => {
-    mode.variables.forEach((variable) => {
+    ;(mode.variables || []).forEach((variable) => {
       const parts = variable.name.includes('/') ? variable.name.split('/') : ['root', variable.name]
       buildVariableTree(parts, variable, groupedVariables)
     })

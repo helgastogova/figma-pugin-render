@@ -48,7 +48,6 @@ export const renderGroupsRecursive = ({
     }
   } else {
     for (const [groupName, subGroups] of groups.entries()) {
-      // Use .entries() for Maps
       const subFrame = createFrame(
         {
           name: `${groupName}`,

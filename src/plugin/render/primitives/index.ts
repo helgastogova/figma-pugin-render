@@ -6,21 +6,6 @@ import { renderEffectStyles } from './components/effects'
 import { createFrame } from '../../helpers'
 
 export const renderPrimitives = async (page: PageNode): Promise<void> => {
-  const frame = createFrame(
-    {
-      name: 'Primitives / Variables',
-      direction: 'HORIZONTAL',
-      horizontalAlign: 'MIN',
-      verticalAlign: 'MIN',
-      itemSpacing: 50,
-      verticalPadding: 30,
-      horizontalPadding: 30,
-      borderRadius: 24,
-      backgroundColor: '#ffffff',
-    },
-    page,
-    'right',
-  )
   const stylesPromises = {
     colorStyles: getLocalStyles('color'),
     textStyles: getLocalStyles('text'),
@@ -29,6 +14,22 @@ export const renderPrimitives = async (page: PageNode): Promise<void> => {
 
   await Promise.all([stylesPromises.colorStyles, stylesPromises.textStyles, stylesPromises.effectStyles]).then(
     ([colorStyles, textStyles, effectStyles]) => {
+      if (!colorStyles.styles.length && !textStyles.styles.length && !effectStyles.styles.length) return
+      const frame = createFrame(
+        {
+          name: 'Primitives / Variables',
+          direction: 'HORIZONTAL',
+          horizontalAlign: 'MIN',
+          verticalAlign: 'MIN',
+          itemSpacing: 50,
+          verticalPadding: 30,
+          horizontalPadding: 30,
+          borderRadius: 24,
+          backgroundColor: '#ffffff',
+        },
+        page,
+        'right',
+      )
       colorStyles.styles.length && renderColorStyles(colorStyles as ColorStyleData, frame)
       textStyles.styles.length && renderTextStyles(textStyles as TextStyleData, frame)
       effectStyles.styles.length && renderEffectStyles(effectStyles as EffectStyleData, frame)

@@ -3,8 +3,10 @@ import { getCollection } from './getCollection'
 import { groupVariablesByNames } from './processData'
 import { renderGroupsRecursive } from './render'
 
+type ModeInCollection = { modeId: string; name: string; variables?: Variable[] }
+
 export const renderTokens = async (page: PageNode): Promise<void> => {
-  const collections = await getCollection()
+  const collections: VariableCollection[] = await getCollection()
 
   if (collections.length === 0) {
     const noTokensText = createText({
@@ -34,7 +36,7 @@ export const renderTokens = async (page: PageNode): Promise<void> => {
 
   // TODO: add mode support
   collections.forEach((collection) => {
-    collection.modes.forEach((mode) => {
+    collection.modes.forEach((mode: ModeInCollection) => {
       const modeFrame = createFrame(
         {
           name: `Collection ${collection.name} for the ${mode.name} mode`,

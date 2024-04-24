@@ -1,7 +1,7 @@
 // простой компонент checkbox
 
 import React from 'react'
-import { Text } from '@ui'
+import Text from '../text'
 import s from './checkbox.module.css'
 
 const Checkbox = ({ label, checked, onChange }) => {

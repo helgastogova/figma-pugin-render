@@ -69,12 +69,12 @@ export const getCollection = async (): Promise<VariableCollection[] | undefined>
     const modesWithVars = await fetchVariablesForModes(collection.variableIds, collection.modes, defaultModeId)
 
     collections.push({
+      ...collection,
       id: collection.id,
       name: collection.name,
       hiddenFromPublishing: collection.hiddenFromPublishing,
       getPublishStatusAsync: collection.getPublishStatusAsync,
       remote: collection.remote,
-      // Add other properties from VariableCollection if needed
       modes: collection.modes.map((mode) => {
         return {
           modeId: mode.modeId,

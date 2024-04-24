@@ -77,7 +77,7 @@ export const handleRenderingComponentSets = async ({
     createColorStyles(colorStylesWithoutThemes)
     const frame = createFrame(
       {
-        name: 'Components Sets render',
+        name: 'Showcase render',
         direction: 'VERTICAL',
         horizontalAlign: 'CENTER',
         verticalAlign: 'MIN',
