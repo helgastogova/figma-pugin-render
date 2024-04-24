@@ -12,9 +12,6 @@ export const renderShowcases = async ({
   components: ComponentSetNode[] | ComponentNode[]
   renderOnPlace?: boolean
 }) => {
-  //defaultVariant
-  //description
-  //Link
   const localCollections = await figma.variables.getLocalVariableCollectionsAsync()
   const tokensCollection = localCollections.find(
     (collection) => collection.name === 'Tokens' && !collection.hiddenFromPublishing,

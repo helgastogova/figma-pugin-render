@@ -302,10 +302,7 @@ const findInstance = (name: string): InstanceNode | undefined => {
   const componentOrSet = figma.root.findOne((n) => n.name === name)
 
   if (componentOrSet) {
-    console.log(`Found: ${componentOrSet.name}`, componentOrSet, componentOrSet.type)
-
     if (componentOrSet.type === 'INSTANCE') return componentOrSet
-
     if (componentOrSet.type === 'COMPONENT_SET') {
       const component = componentOrSet?.children[0]
       if (component?.type === 'COMPONENT') {
@@ -315,6 +312,7 @@ const findInstance = (name: string): InstanceNode | undefined => {
       return componentOrSet.createInstance()
     }
   }
+  return undefined
 }
 
 const renderBlocks = (node: any, key = '', parentElement: any) => {
@@ -345,7 +343,6 @@ const renderBlocks = (node: any, key = '', parentElement: any) => {
       if (node.label) {
         component?.children.forEach((child) => {
           if (child.type === 'TEXT') {
-            console.log('Changing text', child, node.label)
             child.characters = node.label
           }
         })
@@ -368,7 +365,6 @@ const renderBlocks = (node: any, key = '', parentElement: any) => {
 
 export const renderAI = async (element) => {
   Object.keys(ai).forEach((page) => {
-    console.log(`Rendering page: ${page}`)
     renderBlocks(ai[page], page, element)
   })
 }

@@ -69,7 +69,6 @@ export const findAllComponentsAndSets = (): {
 } => {
   const selectedComponents: Set<ComponentNode | ComponentSetNode> = new Set()
   figma.currentPage.selection.forEach((node) => {
-    console.log('node', node)
     addChildrenComponents(node, selectedComponents)
   })
 

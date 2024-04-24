@@ -37,7 +37,6 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
 
   if (msg.type === 'render-demo') {
     try {
-      console.log('msg', msg)
       // components, that user selected to render from the list in the plugin
       const {
         data: { selectedToRenderComponents, generatePrimitives, generateTokens, generateOnNewPage },
