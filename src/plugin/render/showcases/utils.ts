@@ -84,6 +84,7 @@ const collectPropsVariants = (component: ComponentNode | ComponentSetNode): Vari
         multipleVariants[key] = values
       }
     })
+
     return { singleVariants, multipleVariants }
   } else {
     const { singleVariants, multipleVariants } = getPropsFromComponentProps
@@ -366,9 +367,12 @@ export const renderDemo = async ({
   const minWidth = minWidth_ < 100 ? 100 : minWidth_
 
   const { multipleVariants } = collectPropsVariants(component)
-  const nestedCombinations = generateNestedPropCombinations(multipleVariants)
+  const { size, ...rest } = multipleVariants
+  const newOrderVariants = size && rest ? { size, ...rest } : multipleVariants
 
-  const entries = Object.entries(multipleVariants)
+  const nestedCombinations = generateNestedPropCombinations(newOrderVariants)
+
+  const entries = Object.entries(newOrderVariants)
 
   const lastTwoSets = entries.slice(-2)
   const tableHeaders = lastTwoSets.map(([key, set]) => [key, ...Array.from(set)])
@@ -430,9 +434,7 @@ export const renderDemo = async ({
         direction: 'VERTICAL',
         horizontalAlign: 'MIN',
         verticalAlign: 'MIN',
-        verticalPadding: 20,
         layoutAlign: 'STRETCH',
-        itemSpacing: 20,
       },
       rootInsideFrame,
     )
