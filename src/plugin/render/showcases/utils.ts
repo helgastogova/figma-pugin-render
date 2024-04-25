@@ -1,6 +1,6 @@
 import { createFrame, createText, getDemoTitle } from '../../helpers'
 import { createTableHead } from '../../helpers/table'
-
+import { getCurrentDateTime } from '@src/plugin/utils'
 interface NestedCombinations {
   [key: string]: any
 }
@@ -36,6 +36,7 @@ const generateNestedPropCombinations = (variants: Record<string, string[]>): any
 interface VariantsResult {
   singleVariants: Record<string, string[]>
   multipleVariants: Record<string, string[]>
+  errorsInThisComponent: boolean
 }
 
 const parseComponentProps = (name: string): Record<string, string> =>
@@ -75,20 +76,18 @@ const collectPropsVariants = (component: ComponentNode | ComponentSetNode): Vari
       })
     })
     Object.entries(allPropsVariants).forEach(([key, values]) => {
-      // if (key.startsWith('INSTANCE/')) {
-      //   instanceSwapVariants[key] = values
-      // } else
-      if (values.length < 2) {
+      if (key.startsWith('INSTANCE/')) {
+        instanceSwapVariants[key] = values
+      } else if (values.length < 2) {
         singleVariants[key] = values
       } else {
         multipleVariants[key] = values
       }
     })
 
-    return { singleVariants, multipleVariants }
+    return { singleVariants, multipleVariants, errorsInThisComponent: true }
   } else {
-    const { singleVariants, multipleVariants } = getPropsFromComponentProps
-    return { singleVariants, multipleVariants }
+    return getPropsFromComponentProps
   }
 }
 
@@ -101,6 +100,8 @@ export const getComponentProperties = (component: ComponentNode | ComponentSetNo
     } else if ('componentPropertyDefinitions' in component) {
       definitions = component.componentPropertyDefinitions
     }
+
+    // console.log('definitions', definitions)
 
     const singleVariants: Record<string, string[]> = {}
     const multipleVariants: Record<string, string[]> = {}
@@ -121,14 +122,15 @@ export const getComponentProperties = (component: ComponentNode | ComponentSetNo
           singleVariants[name] = [item.defaultValue.toString()]
           break
         // case 'INSTANCE_SWAP':
-        //   props[`INSTANCE/${name}`] = item.preferredValues
+        //   // singleVariants[`INSTANCE/${name}`] = item.preferredValues
+        //   singleVariants[`INSTANCE/${name}`] = [item.preferredValues
         //   break
 
         default:
           break
       }
     })
-    return { singleVariants, multipleVariants }
+    return { singleVariants, multipleVariants, errorsInThisComponent: false }
   } catch (e) {
     // console.error('Error while getting component properties', e)
     return null
@@ -366,18 +368,20 @@ export const renderDemo = async ({
 
   const minWidth = minWidth_ < 100 ? 100 : minWidth_
 
-  const { multipleVariants } = collectPropsVariants(component)
-  const { size, ...rest } = multipleVariants
-  const newOrderVariants = size && rest ? { size, ...rest } : multipleVariants
+  const { multipleVariants, singleVariants, errorsInThisComponent } = collectPropsVariants(component)
 
-  const sortedEntries = Object.entries(newOrderVariants).sort((a, b) => a[1].length - b[1].length)
+  const { size, sizes, ...restVariants } = multipleVariants
 
-  const sortedVariants = sortedEntries.reduce((obj, [key, value]) => {
+  const sortedVariantsEntries = Object.entries(restVariants).sort((a, b) => a[1].length - b[1].length)
+
+  const sortedVariants = sortedVariantsEntries.reduce((obj, [key, value]) => {
     obj[key] = value
     return obj
   }, {})
-  console.log('sortedVariants', multipleVariants, sortedVariants)
-  const nestedCombinations = generateNestedPropCombinations(sortedVariants)
+
+  const finalVariants = size ? { size, ...sortedVariants } : sizes ? { sizes, ...sortedVariants } : sortedVariants
+
+  const nestedCombinations = generateNestedPropCombinations(finalVariants)
 
   const entries = Object.entries(sortedVariants)
 
@@ -401,7 +405,7 @@ export const renderDemo = async ({
     parentFrame ?? demoPage,
   )
 
-  rootFrame.appendChild(getDemoTitle(component.name))
+  rootFrame.appendChild(getDemoTitle(component.name, true))
   const rootInsideFrame = createFrame(
     {
       name: `Demo for ${component.name}`,
@@ -409,8 +413,6 @@ export const renderDemo = async ({
       horizontalAlign: 'CENTER',
       verticalAlign: 'MIN',
       itemSpacing: 50,
-      verticalPadding: 30,
-      horizontalPadding: 30,
       borderRadius: 24,
     },
     demoPage,
@@ -420,6 +422,23 @@ export const renderDemo = async ({
   const showHeadersArray = tableHeaders[1] ?? tableHeaders[0]
 
   if (showHeadersArray) rootInsideFrame.appendChild(createTableHead(showHeadersArray, minWidth))
+
+  // const tasks = Object.entries(singleVariants).map(async ([key, value]) => {
+  //   if (key.startsWith('INSTANCE/')) {
+  //     const swapComponents = await Promise.all(
+  //       value.map(async (swapComponent) => {
+  //         try {
+  //           const swapComponentNode = await figma.importComponentByKeyAsync(swapComponent.key)
+  //           console.log('swapComponentNode', swapComponentNode)
+  //         } catch (e) {
+  //           console.error('Error while importing component', e)
+  //         }
+  //       }),
+  //     )
+  //     console.log('swapComponents', swapComponents)
+  //   }
+  // })
+  // await Promise.all(tasks)
 
   renderTest({
     component,
@@ -434,14 +453,57 @@ export const renderDemo = async ({
     entriesLength: entries.length,
   })
 
-  if (component.description) {
-    const descriptionFrame = createFrame(
+  if (Object.keys(singleVariants).length > 0) {
+    const singleVariantsFrame = createFrame(
       {
         name: 'Single properties list',
         direction: 'VERTICAL',
         horizontalAlign: 'MIN',
         verticalAlign: 'MIN',
         layoutAlign: 'STRETCH',
+        verticalPadding: 20,
+        horizontalPadding: 20,
+        backgroundColor: '#F9FAFB',
+        borderRadius: 8,
+        itemSpacing: 20,
+      },
+      rootInsideFrame,
+    )
+
+    const variantsText = Object.entries(singleVariants)
+      .map(([key, [value]]) => `${key}: ${value}`)
+      .join(', ')
+
+    singleVariantsFrame.appendChild(
+      createText({
+        characters: `Single value properties:`,
+        fontSize: 18,
+        fontName: { family: 'Roboto', style: 'Regular' },
+        fontColor: '#000000',
+      }),
+    )
+    singleVariantsFrame.appendChild(
+      createText({
+        characters: variantsText,
+        fontSize: 18,
+        fontName: { family: 'Roboto', style: 'Regular' },
+        fontColor: '#555555',
+      }),
+    )
+  }
+
+  if (component.description) {
+    const descriptionFrame = createFrame(
+      {
+        name: 'Description',
+        direction: 'VERTICAL',
+        horizontalAlign: 'MIN',
+        verticalAlign: 'MIN',
+        layoutAlign: 'STRETCH',
+        verticalPadding: 20,
+        horizontalPadding: 20,
+        backgroundColor: '#F9FAFB',
+        borderRadius: 8,
       },
       rootInsideFrame,
     )
@@ -459,4 +521,39 @@ export const renderDemo = async ({
     descriptionText.layoutSizingHorizontal = 'FILL'
     descriptionText.layoutSizingVertical = 'HUG'
   }
+
+  if (errorsInThisComponent) {
+    const errorFrame = createFrame(
+      {
+        name: 'Errors',
+        direction: 'VERTICAL',
+        horizontalAlign: 'MIN',
+        verticalAlign: 'MIN',
+        layoutAlign: 'STRETCH',
+      },
+      rootInsideFrame,
+    )
+    const errorText = createText({
+      characters: 'Errors in this component! Please, check the properties!',
+      fontSize: 18,
+      fontName: { family: 'Roboto', style: 'Regular' },
+      fontColor: '#D20E0E',
+    })
+
+    errorFrame.layoutMode = 'VERTICAL'
+    errorFrame.layoutAlign = 'STRETCH'
+    errorFrame.appendChild(errorText)
+
+    errorText.layoutSizingHorizontal = 'FILL'
+    errorText.layoutSizingVertical = 'HUG'
+  }
+
+  rootInsideFrame.appendChild(
+    createText({
+      characters: `Last updated on ${getCurrentDateTime('short')}`,
+      fontSize: 14,
+      fontColor: '#6B7280',
+      fontName: { family: 'Roboto', style: 'Regular' },
+    }),
+  )
 }

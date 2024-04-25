@@ -80,9 +80,10 @@ export const getDemoTitle = (text: string): FrameNode => {
   const blocksFrame = createFrame({
     name: `Title / ${text}`,
     direction: 'HORIZONTAL',
-    horizontalAlign: 'MIN',
+    horizontalAlign: 'MAX',
+    layoutAlign: 'STRETCH',
     verticalAlign: 'MIN',
-    verticalPadding: 16,
+    verticalPadding: 8,
   })
 
   blocksFrame.appendChild(
@@ -189,17 +190,14 @@ export async function isPublished(styles) {
   let numOfPublishedStyles: number = 0
   let publishedStatus: string
 
-  //check to see if each style is published
   for await (const item of styles) {
     const style = figma.getStyleById(item.id)
     const published = await style.getPublishStatusAsync()
 
-    //increase the count of published styles
     if (published === 'CURRENT') {
       numOfPublishedStyles++
     }
   }
-
   //determine if all styles are published, some, or none
   if (numOfPublishedStyles === numOfStyles) {
     publishedStatus = 'all'
