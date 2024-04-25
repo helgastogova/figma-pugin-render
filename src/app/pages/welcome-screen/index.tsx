@@ -142,9 +142,9 @@ const getButtonLabel = (selectedToRenderComponents, componentsArray, generateTok
     return `Generate all (${selectedToRenderComponents?.length})`
 
   if (selectedToRenderComponents?.length === 0) {
-    if (generatePrimitives && generateTokens) return 'Generate Primitives and Tokens'
+    if (generatePrimitives && generateTokens) return 'Generate Primitives and Local variables'
     if (generatePrimitives && !generateTokens) return 'Generate Primitives'
-    if (generateTokens && !generatePrimitives) return 'Generate Tokens'
+    if (generateTokens && !generatePrimitives) return 'Local variables'
     return 'Select components to generate'
   }
 

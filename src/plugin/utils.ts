@@ -23,19 +23,34 @@ function addChildrenComponents(node: SceneNode, selectedComponents: Set<Componen
     const mainComponent = instanceNode.mainComponent
 
     if (mainComponent) {
-      if (mainComponent.parent && mainComponent.parent.type === 'COMPONENT_SET') {
-        selectedComponents.add(mainComponent.parent as ComponentSetNode)
-      } else {
-        selectedComponents.add(mainComponent)
-      }
+      addComponentOrParentSet(mainComponent, selectedComponents)
     }
   } else if (node.type === 'COMPONENT' || node.type === 'COMPONENT_SET') {
-    selectedComponents.add(node as ComponentNode | ComponentSetNode)
+    addComponentOrParentSet(node, selectedComponents)
   } else if ('children' in node) {
-    if (Array.isArray(node.children)) {
-      node.children.forEach((child) => {
-        addChildrenComponents(child, selectedComponents)
-      })
+    node.children.forEach((child) => {
+      addChildrenComponents(child, selectedComponents)
+    })
+  }
+}
+
+function addComponentOrParentSet(node: SceneNode, set: Set<ComponentNode | ComponentSetNode>) {
+  let parent = node.parent
+  let added = false
+
+  while (parent && parent.type !== 'PAGE') {
+    if (parent.type === 'COMPONENT_SET') {
+      set.add(parent as ComponentSetNode)
+      added = true
+      break
+    }
+    parent = parent.parent
+  }
+
+  // Если родительский компонентный набор не найден, добавляем исходный узел
+  if (!added) {
+    if (node.type === 'COMPONENT' || node.type === 'COMPONENT_SET') {
+      set.add(node as ComponentNode | ComponentSetNode)
     }
   }
 }
