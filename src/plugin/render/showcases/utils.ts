@@ -370,9 +370,16 @@ export const renderDemo = async ({
   const { size, ...rest } = multipleVariants
   const newOrderVariants = size && rest ? { size, ...rest } : multipleVariants
 
-  const nestedCombinations = generateNestedPropCombinations(newOrderVariants)
+  const sortedEntries = Object.entries(newOrderVariants).sort((a, b) => a[1].length - b[1].length)
 
-  const entries = Object.entries(newOrderVariants)
+  const sortedVariants = sortedEntries.reduce((obj, [key, value]) => {
+    obj[key] = value
+    return obj
+  }, {})
+  console.log('sortedVariants', multipleVariants, sortedVariants)
+  const nestedCombinations = generateNestedPropCombinations(sortedVariants)
+
+  const entries = Object.entries(sortedVariants)
 
   const lastTwoSets = entries.slice(-2)
   const tableHeaders = lastTwoSets.map(([key, set]) => [key, ...Array.from(set)])
