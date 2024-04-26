@@ -76,9 +76,10 @@ const collectPropsVariants = (component: ComponentNode | ComponentSetNode): Vari
       })
     })
     Object.entries(allPropsVariants).forEach(([key, values]) => {
-      if (key.startsWith('INSTANCE/')) {
-        instanceSwapVariants[key] = values
-      } else if (values.length < 2) {
+      // if (key.startsWith('INSTANCE/')) {
+      //   instanceSwapVariants[key] = values
+      // } else
+      if (values.length < 2) {
         singleVariants[key] = values
       } else {
         multipleVariants[key] = values
@@ -367,22 +368,36 @@ export const renderDemo = async ({
   )
 
   const minWidth = minWidth_ < 100 ? 100 : minWidth_
+  interface Variants {
+    [key: string]: Set<string> | string[]
+  }
+
+  function convertVariantsToRecord(variants: Variants): Record<string, string[]> {
+    const record: Record<string, string[]> = {}
+    for (const key in variants) {
+      const value = variants[key]
+      record[key] = Array.isArray(value) ? value : Array.from(value)
+    }
+    return record
+  }
 
   const { multipleVariants, singleVariants, errorsInThisComponent } = collectPropsVariants(component)
 
-  const { size, sizes, ...restVariants } = multipleVariants
+  // If multipleVariants is of the type Variants, explicitly type it
+  const { size, sizes, ...restVariants }: { size?: string; sizes?: string[]; [key: string]: any } = multipleVariants
 
   const sortedVariantsEntries = Object.entries(restVariants).sort((a, b) => a[1].length - b[1].length)
 
-  const sortedVariants = sortedVariantsEntries.reduce((obj, [key, value]) => {
+  const sortedVariants: Variants = sortedVariantsEntries.reduce((obj, [key, value]) => {
     obj[key] = value
     return obj
-  }, {})
+  }, {} as Variants)
 
   const finalVariants = size ? { size, ...sortedVariants } : sizes ? { sizes, ...sortedVariants } : sortedVariants
 
-  const nestedCombinations = generateNestedPropCombinations(finalVariants)
-
+  // Convert Variants or {size: string} to Record<string, string[]> before passing to the function
+  const recordVariants = convertVariantsToRecord(finalVariants as Variants)
+  const nestedCombinations = generateNestedPropCombinations(recordVariants)
   const entries = Object.entries(sortedVariants)
 
   const lastTwoSets = entries.slice(-2)
@@ -405,7 +420,7 @@ export const renderDemo = async ({
     parentFrame ?? demoPage,
   )
 
-  rootFrame.appendChild(getDemoTitle(component.name, true))
+  rootFrame.appendChild(getDemoTitle(component.name))
   const rootInsideFrame = createFrame(
     {
       name: `Demo for ${component.name}`,

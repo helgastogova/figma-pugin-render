@@ -150,7 +150,7 @@ export const findAllComponentsAndSets = (): {
     selectedComponentsDataPartial,
   }
 }
-export const getCurrentDateTime = (type?: 'long' | 'short' = 'long'): string => {
+export const getCurrentDateTime = (type: 'long' | 'short' = 'long'): string => {
   const currentDate = new Date()
 
   const year = currentDate.getFullYear()
