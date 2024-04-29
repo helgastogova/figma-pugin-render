@@ -27,7 +27,7 @@ export const renderShowcases = async ({
         demoPage,
         component: components[i],
         parentFrame: frame,
-        backgroundColor: modeName === 'Dark' ? '#251F1F' : '#E9E8E8',
+        backgroundColor: modeName === 'Dark' ? colorStylesWithThemes[1].value : colorStylesWithThemes[0].value,
       })
       await new Promise((resolve) => setTimeout(resolve, 100))
     }

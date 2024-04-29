@@ -12,7 +12,7 @@ const WelcomeScreen = () => {
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [selectedToRenderComponents, setSelectedToRenderComponents] = useState([])
-  const [generateOnNewPage, setGenerateOnNewPage] = useState(true)
+  const [generateOnNewPage, setGenerateOnNewPage] = useState(false)
   // const [generatePrimitives, setGeneratePrimitives] = useState(false)
   // const [generateTokens, setGenerateTokens] = useState(false)
 

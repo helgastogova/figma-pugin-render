@@ -1,7 +1,12 @@
-export type ColorType = string
-export type RGBColorType = { r: number; g: number; b: number }
+import { rgbToHex } from '@src/plugin/helpers/colors'
 
-export const colorStylesWithThemes: ColorStylesType[] = [
+export interface ColorStylesType {
+  name: string
+  value: string
+  description: string
+}
+
+export const colorStylesWithThemes: ColorStylesType[] = preprocessColorStyles([
   {
     name: '_DemoPage-lightBackgroundForComponentsDemo',
     value: '#E9E8E8',
@@ -12,18 +17,24 @@ export const colorStylesWithThemes: ColorStylesType[] = [
     value: '#251F1F',
     description: 'Used as a dark background for component demos. Do not use in main design.',
   },
-]
+])
 
-export const colorStylesWithoutThemes: ColorStylesType[] = [
+export const colorStylesWithoutThemes: ColorStylesType[] = preprocessColorStyles([
   {
     name: '_DemoPage-lightBackgroundForComponentsDemo',
     value: '#E9E8E8',
     description: 'Used as a light background for component demos. Do not use in main design.',
   },
-]
+])
 
-export interface ColorStylesType {
-  name: string
-  value: string
-  description: string
+function preprocessColorStyles(styles: ColorStylesType[]): ColorStylesType[] {
+  const existingStyles = figma.getLocalPaintStyles()
+  return styles.map((style) => {
+    const existingStyle = existingStyles.find((s) => s.name === style.name)
+    if (existingStyle) {
+      const currentColor = existingStyle.paints[0] as SolidPaint
+      style.value = rgbToHex(currentColor.color)
+    }
+    return style
+  })
 }
