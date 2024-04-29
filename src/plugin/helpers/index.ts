@@ -76,7 +76,7 @@ export const createLayoutBlocks = () => {
   blocksFrame.appendChild(createOneColumnBlock())
 }
 
-export const getDemoTitle = (text: string): FrameNode => {
+export const getDemoTitle = (text: string): TextNode => {
   return createText({
     characters: text,
     fontSize: 42,

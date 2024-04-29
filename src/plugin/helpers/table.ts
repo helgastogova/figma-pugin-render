@@ -2,14 +2,14 @@ import { createFrame, createText } from '../helpers'
 
 export const createTableHead = (headings: string[], minWidth?: number) => {
   const tr = createFrame({
-    name: 'header',
+    name: 'Header',
     direction: 'HORIZONTAL',
     itemSpacing: 50,
   })
 
   headings.forEach((items, index) => {
     const th = createFrame({
-      name: 'cell',
+      name: 'Cell',
       itemSpacing: 0,
       direction: 'HORIZONTAL',
       horizontalAlign: 'CENTER',

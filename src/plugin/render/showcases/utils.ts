@@ -421,11 +421,23 @@ export const renderDemo = async ({
   )
 
   rootFrame.appendChild(getDemoTitle(component.name))
-
+  const rootInsideFrame = createFrame(
+    {
+      //name: component.name,
+      name: 'Table',
+      direction: 'VERTICAL',
+      horizontalAlign: 'CENTER',
+      verticalAlign: 'MIN',
+      itemSpacing: 50,
+      borderRadius: 24,
+    },
+    demoPage,
+  )
+  rootFrame.appendChild(rootInsideFrame)
   if (lastTwoSets.length > 1) tableHeaders[1][0] = `${tableHeaders[0][0]} / ${tableHeaders[1][0]}`
   const showHeadersArray = tableHeaders[1] ?? tableHeaders[0]
 
-  if (showHeadersArray) rootFrame.appendChild(createTableHead(showHeadersArray, minWidth))
+  if (showHeadersArray) rootInsideFrame.appendChild(createTableHead(showHeadersArray, minWidth))
 
   // const tasks = Object.entries(singleVariants).map(async ([key, value]) => {
   //   if (key.startsWith('INSTANCE/')) {
@@ -447,7 +459,7 @@ export const renderDemo = async ({
   renderTest({
     component,
     nestedCombinations,
-    parentFrame: rootFrame,
+    parentFrame: rootInsideFrame,
     currentPath: [],
     minWidth,
     minHeight,
