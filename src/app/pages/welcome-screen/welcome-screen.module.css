@@ -8,7 +8,7 @@
   display: flex;
   justify-content: space-between;
   flex-direction: column;
-  padding-bottom: 180px;
+  padding-bottom: 100px;
 }
 
 .buttonContainer {
@@ -27,5 +27,9 @@
 }
 
 .title {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
+}
+
+.settings {
+  margin-left: -4px;
 }

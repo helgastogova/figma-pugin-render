@@ -36,14 +36,14 @@ export const ComponentsList = ({
   }
 
   return (
-    <div>
+    <div className={s.root}>
       <Text as="div" variant="heading/medium" color="black" className={s.title}>
         {componentsArray.length > 0
           ? `We found the following components in your ${label}:`
           : `No components were found in your ${label}.`}
       </Text>
 
-      <div>
+      <div className={s.list}>
         <Checkbox
           label="Select all"
           checked={selected.length === componentsArray.length}

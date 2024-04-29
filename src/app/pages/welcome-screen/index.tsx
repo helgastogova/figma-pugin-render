@@ -101,13 +101,13 @@ const WelcomeScreen = () => {
       </div>
       {!loading && !creating && (
         <div className={s.buttonContainer}>
-          <div>
+          <div className={s.settings}>
             <Checkbox
               label="Generate on new page"
               checked={generateOnNewPage}
               onChange={() => setGenerateOnNewPage(!generateOnNewPage)}
             />
-            <Checkbox
+            {/*  <Checkbox
               label="Generate Primitives"
               checked={generatePrimitives}
               onChange={() => setGeneratePrimitives(!generatePrimitives)}
@@ -116,7 +116,7 @@ const WelcomeScreen = () => {
               label="Generate Tockens"
               checked={generateTokens}
               onChange={() => setGenerateTokens(!generateTokens)}
-            />
+            /> */}
           </div>
           <div>
             <Button onClick={onCancel} type="secondary">
@@ -145,10 +145,10 @@ const getButtonLabel = (selectedToRenderComponents, componentsArray, generateTok
     if (generatePrimitives && generateTokens) return 'Generate Primitives and Local variables'
     if (generatePrimitives && !generateTokens) return 'Generate Primitives'
     if (generateTokens && !generatePrimitives) return 'Local variables'
-    return 'Select components to generate'
+    return 'Select some components'
   }
 
-  return `Generate ${selectedToRenderComponents?.length} components`
+  return `Generate ${selectedToRenderComponents?.length} ${selectedToRenderComponents?.length > 1 ? 'components' : 'component'}`
 }
 
 export default WelcomeScreen

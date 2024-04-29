@@ -9,7 +9,7 @@ import { renderTokens } from './render/primitives/tokens'
 // 2. group block
 // забирать цвет если изменили
 
-figma.showUI(__html__, { width: 768, height: 500, title: 'Showcase render', themeColors: false })
+figma.showUI(__html__, { width: 768, height: 500, title: 'Components documentation', themeColors: false })
 
 figma.ui.onmessage = async (msg: CreateUIMessageType) => {
   const userHasActiveSelection = hasActiveSelection()

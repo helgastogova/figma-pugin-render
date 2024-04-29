@@ -43,8 +43,8 @@ export const renderShowcases = async ({
         {
           name:
             components.length < 2
-              ? `Showcase render ${components[0]?.name ?? ''}`
-              : `Showcase render for ${components.length} components`,
+              ? `${components[0]?.name ?? ''} documentation`
+              : `documentation for ${components.length} components`,
           direction: 'HORIZONTAL',
           horizontalAlign: 'CENTER',
           verticalAlign: 'MIN',
@@ -80,7 +80,7 @@ export const renderShowcases = async ({
     createColorStyles(colorStylesWithoutThemes)
     const frame = createFrame(
       {
-        name: 'Showcase render',
+        name: 'Documentation',
         direction: 'VERTICAL',
         horizontalAlign: 'CENTER',
         verticalAlign: 'MIN',
