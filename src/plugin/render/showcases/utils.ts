@@ -381,7 +381,8 @@ export const renderDemo = async ({
     return record
   }
 
-  const { multipleVariants, singleVariants, errorsInThisComponent } = collectPropsVariants(component)
+  const { multipleVariants, singleVariants } = collectPropsVariants(component)
+  // errorsInThisComponent
 
   // If multipleVariants is of the type Variants, explicitly type it
   const { size, sizes, ...restVariants }: { size?: string; sizes?: string[]; [key: string]: any } = multipleVariants
@@ -538,31 +539,31 @@ export const renderDemo = async ({
     descriptionText.layoutSizingVertical = 'HUG'
   }
 
-  if (errorsInThisComponent) {
-    const errorFrame = createFrame(
-      {
-        name: 'Errors',
-        direction: 'VERTICAL',
-        horizontalAlign: 'MIN',
-        verticalAlign: 'MIN',
-        layoutAlign: 'STRETCH',
-      },
-      rootFrame,
-    )
-    const errorText = createText({
-      characters: 'Errors in this component! Please, check the properties!',
-      fontSize: 18,
-      fontName: { family: 'Roboto', style: 'Regular' },
-      fontColor: '#D20E0E',
-    })
+  // if (errorsInThisComponent) {
+  //   const errorFrame = createFrame(
+  //     {
+  //       name: 'Errors',
+  //       direction: 'VERTICAL',
+  //       horizontalAlign: 'MIN',
+  //       verticalAlign: 'MIN',
+  //       layoutAlign: 'STRETCH',
+  //     },
+  //     rootFrame,
+  //   )
+  //   const errorText = createText({
+  //     characters: 'Errors in this component! Please, check the properties!',
+  //     fontSize: 18,
+  //     fontName: { family: 'Roboto', style: 'Regular' },
+  //     fontColor: '#D20E0E',
+  //   })
 
-    errorFrame.layoutMode = 'VERTICAL'
-    errorFrame.layoutAlign = 'STRETCH'
-    errorFrame.appendChild(errorText)
+  //   errorFrame.layoutMode = 'VERTICAL'
+  //   errorFrame.layoutAlign = 'STRETCH'
+  //   errorFrame.appendChild(errorText)
 
-    errorText.layoutSizingHorizontal = 'FILL'
-    errorText.layoutSizingVertical = 'HUG'
-  }
+  //   errorText.layoutSizingHorizontal = 'FILL'
+  //   errorText.layoutSizingVertical = 'HUG'
+  // }
 
   rootFrame.appendChild(
     createText({
