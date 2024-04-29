@@ -77,25 +77,12 @@ export const createLayoutBlocks = () => {
 }
 
 export const getDemoTitle = (text: string): FrameNode => {
-  const blocksFrame = createFrame({
-    name: `Title / ${text}`,
-    direction: 'HORIZONTAL',
-    horizontalAlign: 'MAX',
-    layoutAlign: 'STRETCH',
-    verticalAlign: 'MIN',
-    verticalPadding: 8,
+  return createText({
+    characters: text,
+    fontSize: 42,
+    fontColor: '#000000',
+    fontName: { family: 'Roboto', style: 'Regular' },
   })
-
-  blocksFrame.appendChild(
-    createText({
-      characters: text,
-      fontSize: 42,
-      fontColor: '#000000',
-      fontName: { family: 'Roboto', style: 'Regular' },
-    }),
-  )
-
-  return blocksFrame
 }
 
 interface CreateTextProps {

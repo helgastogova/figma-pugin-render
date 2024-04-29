@@ -407,7 +407,7 @@ export const renderDemo = async ({
 
   const rootFrame = createFrame(
     {
-      name: `Demo for ${component.name}`,
+      name: component.name,
       direction: 'VERTICAL',
       horizontalAlign: 'CENTER',
       verticalAlign: 'MIN',
@@ -421,22 +421,11 @@ export const renderDemo = async ({
   )
 
   rootFrame.appendChild(getDemoTitle(component.name))
-  const rootInsideFrame = createFrame(
-    {
-      name: `Demo for ${component.name}`,
-      direction: 'VERTICAL',
-      horizontalAlign: 'CENTER',
-      verticalAlign: 'MIN',
-      itemSpacing: 50,
-      borderRadius: 24,
-    },
-    demoPage,
-  )
-  rootFrame.appendChild(rootInsideFrame)
+
   if (lastTwoSets.length > 1) tableHeaders[1][0] = `${tableHeaders[0][0]} / ${tableHeaders[1][0]}`
   const showHeadersArray = tableHeaders[1] ?? tableHeaders[0]
 
-  if (showHeadersArray) rootInsideFrame.appendChild(createTableHead(showHeadersArray, minWidth))
+  if (showHeadersArray) rootFrame.appendChild(createTableHead(showHeadersArray, minWidth))
 
   // const tasks = Object.entries(singleVariants).map(async ([key, value]) => {
   //   if (key.startsWith('INSTANCE/')) {
@@ -458,7 +447,7 @@ export const renderDemo = async ({
   renderTest({
     component,
     nestedCombinations,
-    parentFrame: rootInsideFrame,
+    parentFrame: rootFrame,
     currentPath: [],
     minWidth,
     minHeight,
@@ -482,7 +471,7 @@ export const renderDemo = async ({
         borderRadius: 8,
         itemSpacing: 20,
       },
-      rootInsideFrame,
+      rootFrame,
     )
 
     const variantsText = Object.entries(singleVariants)
@@ -520,7 +509,7 @@ export const renderDemo = async ({
         backgroundColor: '#F9FAFB',
         borderRadius: 8,
       },
-      rootInsideFrame,
+      rootFrame,
     )
     const descriptionText = createText({
       characters: `Description: ${component.description}`,
@@ -546,7 +535,7 @@ export const renderDemo = async ({
         verticalAlign: 'MIN',
         layoutAlign: 'STRETCH',
       },
-      rootInsideFrame,
+      rootFrame,
     )
     const errorText = createText({
       characters: 'Errors in this component! Please, check the properties!',
@@ -563,7 +552,7 @@ export const renderDemo = async ({
     errorText.layoutSizingVertical = 'HUG'
   }
 
-  rootInsideFrame.appendChild(
+  rootFrame.appendChild(
     createText({
       characters: `Last updated on ${getCurrentDateTime('short')}`,
       fontSize: 14,

@@ -13,8 +13,11 @@ const WelcomeScreen = () => {
   const [creating, setCreating] = useState(false)
   const [selectedToRenderComponents, setSelectedToRenderComponents] = useState([])
   const [generateOnNewPage, setGenerateOnNewPage] = useState(true)
-  const [generatePrimitives, setGeneratePrimitives] = useState(false)
-  const [generateTokens, setGenerateTokens] = useState(false)
+  // const [generatePrimitives, setGeneratePrimitives] = useState(false)
+  // const [generateTokens, setGenerateTokens] = useState(false)
+
+  const generatePrimitives = false
+  const generateTokens = false
 
   const onCancel = () => {
     parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
