@@ -29,12 +29,15 @@ export const colorStylesWithoutThemes: ColorStylesType[] = preprocessColorStyles
 
 function preprocessColorStyles(styles: ColorStylesType[]): ColorStylesType[] {
   const existingStyles = figma.getLocalPaintStyles()
+
   return styles.map((style) => {
     const existingStyle = existingStyles.find((s) => s.name === style.name)
+
     if (existingStyle) {
       const currentColor = existingStyle.paints[0] as SolidPaint
       style.value = rgbToHex(currentColor.color)
     }
+
     return style
   })
 }

@@ -9,7 +9,7 @@ export const renderShowcases = async ({
   renderOnPlace,
 }: {
   page: PageNode
-  components: ComponentSetNode[] | ComponentNode[]
+  components: Array<ComponentNode | ComponentSetNode>
   renderOnPlace?: boolean
 }) => {
   const localCollections = await figma.variables.getLocalVariableCollectionsAsync()
@@ -18,7 +18,7 @@ export const renderShowcases = async ({
   )
 
   const renderComponentsInBatches = async (
-    components: ComponentSetNode[] | ComponentNode[],
+    components: Array<ComponentNode | ComponentSetNode>,
     frame: FrameNode | PageNode,
     modeName: string,
   ) => {

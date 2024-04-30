@@ -92,6 +92,7 @@ const renderDemo = ({
   }
   mode: { name: string; modeId: string }
 }) => {
+  // TODO: do we need to use mode bg here?
   // const backgroundColor =
   //   mode.name.toLowerCase() === 'dark' ? '#251F1F' : mode.name.toLowerCase() === 'light' ? '#E9E8E8' : '#FFFFFF'
 
@@ -259,6 +260,7 @@ const createBlock = ({
   value: VariableValue
   scope?: VariableScopeWithPrimitive
 }) => {
+  // TODO: do we need to use mode bg here?
   // const backgroundColor =
   //   mode.name.toLowerCase() === 'dark' ? '#251F1F' : mode.name.toLowerCase() === 'light' ? '#E9E8E8' : '#FFFFFF'
 
@@ -284,7 +286,6 @@ const createBlock = ({
     case 'EFFECT_FLOAT':
       wrapper.appendChild(
         createText({
-          // characters: `${value}_${scope}`,
           characters: value.toString(),
           fontSize: 52,
           fontName: { family: 'Roboto', style: 'Bold' },
@@ -349,8 +350,7 @@ const createBlock = ({
 
 const createColorCase = ({
   frame,
-  // mode,
-  // name,
+
   value,
   scope,
 }: {
@@ -364,7 +364,7 @@ const createColorCase = ({
 
   const color = rgbToHex(value as RGBA | RGB) ?? ''
   if (!color) return
-
+  // TODO: do we need to use mode bg/font here?
   // const fontColor =
   //   mode.name.toLowerCase() === 'dark' ? '#E9E8E8' : mode.name.toLowerCase() === 'light' ? '#251F1F' : '#000000'
 

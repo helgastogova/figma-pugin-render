@@ -34,7 +34,6 @@ export const renderTokens = async (page: PageNode): Promise<void> => {
     'right',
   )
 
-  // TODO: add mode support
   collections.forEach((collection) => {
     collection.modes.forEach((mode: ModeInCollection) => {
       const modeFrame = createFrame(

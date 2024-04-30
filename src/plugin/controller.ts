@@ -6,50 +6,39 @@ import { renderTokens } from './render/primitives/tokens'
 
 //TODO
 // 1. titles with library colors
-// 2. group block
-// забирать цвет если изменили
+// 2. group blocks ??
 
 figma.showUI(__html__, { width: 768, height: 500, title: 'Components documentation', themeColors: false })
 
 figma.ui.onmessage = async (msg: CreateUIMessageType) => {
   const userHasActiveSelection = hasActiveSelection()
 
-  const {
-    selectedComponents,
-    selectedComponentsDataPartial,
-    componentSets,
-    componentSetsDataPartial,
-    standaloneComponentSets,
-    standaloneComponentSetsDataPartial,
-  } = findAllComponentsAndSets()
+  const { selectedComponents, selectedComponentsDataPartial, componentsList, componentsListPartial } =
+    findAllComponentsAndSets()
 
   if (msg.type === 'request-components') {
     figma.ui.postMessage({
       data: {
         type: 'components',
         hasActiveSelection: userHasActiveSelection,
-        componentSets: componentSetsDataPartial,
+        componentsList: componentsListPartial,
         selectedComponents: selectedComponentsDataPartial,
-        standaloneComponentSets: standaloneComponentSetsDataPartial,
       },
     })
   }
 
   if (msg.type === 'render-demo') {
     try {
-      // components, that user selected to render from the list in the plugin
       const {
         data: { selectedToRenderComponents, generatePrimitives, generateTokens, generateOnNewPage },
       } = msg
 
-      // lets determine what page we need to render on
       let demoPage: PageNode
+
       if (generateOnNewPage) {
-        // if user wants to generate on a new page, we will create a new page
         demoPage = getDemoPage()
         figma.currentPage = demoPage
       } else {
-        // if user wants to generate on the current page, we will use the current page
         demoPage = figma.currentPage
       }
 
@@ -70,9 +59,7 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
             page: generateOnNewPage ? demoPage : figma.currentPage,
             components: userHasActiveSelection
               ? selectedComponents.filter((component) => selectedToRenderComponents.some((i) => i.id === component.id))
-              : [...componentSets, ...(standaloneComponentSets as any)].filter((component) =>
-                  selectedToRenderComponents.some((i) => i.id === component.id),
-                ),
+              : componentsList.filter((component) => selectedToRenderComponents.some((i) => i.id === component.id)),
             renderOnPlace: !generateOnNewPage,
           }),
         ])

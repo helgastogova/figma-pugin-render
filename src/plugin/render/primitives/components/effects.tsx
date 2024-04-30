@@ -1,4 +1,4 @@
-import { createFrame, createText, getDemoTitle } from '../../../helpers'
+import { createFrame, createText, getDemoTitle } from '@src/plugin/helpers'
 import { EffectStyleData } from '../getLocalStyles'
 
 interface CreateEffectProps {

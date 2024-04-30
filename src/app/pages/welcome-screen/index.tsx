@@ -48,8 +48,8 @@ const WelcomeScreen = () => {
           setSelectedToRenderComponents(data.selectedComponents)
           setHasSelectedComponents(true)
         } else {
-          setComponentsArray([...data.componentSets, ...data.standaloneComponentSets])
-          setSelectedToRenderComponents([...data.componentSets, ...data.standaloneComponentSets])
+          setComponentsArray(data.componentsList)
+          setSelectedToRenderComponents(data.componentsList)
           setHasSelectedComponents(false)
         }
         setLoading(false)

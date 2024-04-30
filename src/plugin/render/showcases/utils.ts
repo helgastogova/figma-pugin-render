@@ -5,6 +5,12 @@ interface NestedCombinations {
   [key: string]: any
 }
 
+/**
+ * Calculates the maximum depth of a nested combinations object.
+ *
+ * @param nestedCombinations - The nested combinations object.
+ * @returns The maximum depth of the nested combinations object.
+ */
 function getMaxDepth(nestedCombinations: NestedCombinations): number {
   return Object.values(nestedCombinations).reduce((max: number, child: NestedCombinations | string) => {
     return typeof child === 'object' && child !== null && !child.hasOwnProperty('node')
@@ -13,6 +19,12 @@ function getMaxDepth(nestedCombinations: NestedCombinations): number {
   }, 0)
 }
 
+/**
+ * Generates all possible combinations of nested properties.
+ *
+ * @param variants - The variants object.
+ * @returns The nested properties combinations.
+ */
 const generateNestedPropCombinations = (variants: Record<string, string[]>): any => {
   const keys = Object.keys(variants)
 
@@ -39,6 +51,11 @@ interface VariantsResult {
   errorsInThisComponent: boolean
 }
 
+/**
+ * Parses a string of component props and returns an object with key-value pairs.
+ * @param name - The string of component props to parse.
+ * @returns An object with key-value pairs representing the parsed component props.
+ */
 const parseComponentProps = (name: string): Record<string, string> =>
   name.split(', ').reduce((acc, part) => {
     const [key, value] = part.split('=')
@@ -76,6 +93,7 @@ const collectPropsVariants = (component: ComponentNode | ComponentSetNode): Vari
       })
     })
     Object.entries(allPropsVariants).forEach(([key, values]) => {
+      // TODO: is that possible to show instances in the showcases? Do we really need to publish library?
       // if (key.startsWith('INSTANCE/')) {
       //   instanceSwapVariants[key] = values
       // } else
@@ -92,6 +110,13 @@ const collectPropsVariants = (component: ComponentNode | ComponentSetNode): Vari
   }
 }
 
+/**
+ * Retrieves the component properties for a given component.
+ *
+ * @param component - The component node or component set node.
+ * @returns An object containing the single variants, multiple variants, and an indicator of errors in the component.
+ *          Returns null if an error occurs during retrieval.
+ */
 export const getComponentProperties = (component: ComponentNode | ComponentSetNode): VariantsResult | null => {
   try {
     let definitions: ComponentPropertyDefinitions
@@ -101,8 +126,6 @@ export const getComponentProperties = (component: ComponentNode | ComponentSetNo
     } else if ('componentPropertyDefinitions' in component) {
       definitions = component.componentPropertyDefinitions
     }
-
-    // console.log('definitions', definitions)
 
     const singleVariants: Record<string, string[]> = {}
     const multipleVariants: Record<string, string[]> = {}
@@ -123,7 +146,7 @@ export const getComponentProperties = (component: ComponentNode | ComponentSetNo
           singleVariants[name] = [item.defaultValue.toString()]
           break
         // case 'INSTANCE_SWAP':
-        //   // singleVariants[`INSTANCE/${name}`] = item.preferredValues
+        //   singleVariants[`INSTANCE/${name}`] = item.preferredValues
         //   singleVariants[`INSTANCE/${name}`] = [item.preferredValues
         //   break
 
@@ -133,7 +156,6 @@ export const getComponentProperties = (component: ComponentNode | ComponentSetNo
     })
     return { singleVariants, multipleVariants, errorsInThisComponent: false }
   } catch (e) {
-    // console.error('Error while getting component properties', e)
     return null
   }
 }
@@ -146,8 +168,10 @@ function findComponentByProps({
   properties: Record<string, string>
 }): ComponentNode | undefined {
   return component.children.find((node): node is ComponentNode => {
-    if (!isComponentNode(node)) return false
+    if (!isComponentNode(node)) return
+
     const componentProps = parseComponentProps(node.name)
+
     return Object.entries(properties).every(([key, value]) => componentProps[key] === value)
   })
 }
@@ -355,7 +379,6 @@ export const renderDemo = async ({
     console.error('Could not create page for rendering showcases')
     return
   }
-
   const { minWidth_, minHeight } = component?.children?.reduce(
     (acc, item) => {
       const { width, height } = item
@@ -446,13 +469,11 @@ export const renderDemo = async ({
   //       value.map(async (swapComponent) => {
   //         try {
   //           const swapComponentNode = await figma.importComponentByKeyAsync(swapComponent.key)
-  //           console.log('swapComponentNode', swapComponentNode)
   //         } catch (e) {
   //           console.error('Error while importing component', e)
   //         }
   //       }),
   //     )
-  //     console.log('swapComponents', swapComponents)
   //   }
   // })
   // await Promise.all(tasks)

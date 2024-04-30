@@ -83,7 +83,6 @@ export function assembleStylesArray(styles) {
       type: style.type,
       paints: style.paints ?? [],
       item: style,
-      // TODO: тут вообще то разные типы
     }
 
     if (item.name.includes('_') || item.name.includes('.')) {
@@ -101,6 +100,6 @@ export function assembleStylesArray(styles) {
   })
 
   const keys = reformatedArray.map((o) => o.key)
-  const filteredArray = reformatedArray.filter(({ key }, index) => !keys.includes(key, index + 1))
-  return filteredArray
+
+  return reformatedArray.filter(({ key }, index) => !keys.includes(key, index + 1))
 }

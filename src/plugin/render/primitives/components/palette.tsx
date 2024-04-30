@@ -1,4 +1,4 @@
-import { createFrame, createText, getDemoTitle } from '../../../helpers'
+import { createFrame, createText, getDemoTitle } from '@src/plugin/helpers'
 import { ColorStyleData } from '../getLocalStyles'
 import { rgbToHex } from '@src/plugin/helpers/colors'
 

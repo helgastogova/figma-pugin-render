@@ -16,6 +16,7 @@ export const createFrame = (
 
   if (renderArea === 'center') {
     const selectedArea = figma.currentPage.selection[0]
+
     if (selectedArea) {
       frame.x = selectedArea.x + selectedArea.width + 100
       frame.y = selectedArea.y
@@ -43,37 +44,6 @@ export const createFrame = (
   currentPage.appendChild(frame)
 
   return frame
-}
-
-const createOneColumnBlock = () => {
-  const oneColumnBlock = createFrame({
-    name: 'One Column Block',
-    direction: 'VERTICAL',
-    horizontalAlign: 'MIN',
-    verticalAlign: 'MIN',
-    autoWidth: true,
-    autoHeight: true,
-  })
-
-  return oneColumnBlock
-}
-
-export const createLayoutBlocks = () => {
-  const blocksFrame = createFrame({
-    name: 'Blocks',
-    direction: 'HORIZONTAL',
-    horizontalAlign: 'MIN',
-    verticalAlign: 'MIN',
-    verticalPadding: 16,
-    horizontalPadding: 16,
-    itemSpacing: 16,
-    borderRadius: 8,
-  })
-
-  blocksFrame.resize(1280, 832)
-
-  figma.currentPage.appendChild(blocksFrame)
-  blocksFrame.appendChild(createOneColumnBlock())
 }
 
 export const getDemoTitle = (text: string): TextNode => {
@@ -141,37 +111,6 @@ export function findAllComponents(node: BaseNode, components: ComponentNode[] = 
   return components
 }
 
-export function findComponentByName(name: string, node: BaseNode): ComponentNode | null {
-  if (node.name === name) {
-    return node as ComponentNode
-  }
-
-  if ('children' in node) {
-    for (const child of node.children) {
-      const found = findComponentByName(name, child)
-      if (found) return found
-    }
-  }
-  return null
-}
-
-//
-export const hasChildren = (node: BaseNode): node is BaseNode & ChildrenMixin => Boolean(node['children'])
-
-interface MinimalEffectMixin {
-  effects: ReadonlyArray<Effect> | PluginAPI['mixed']
-  effectStyleId: string | PluginAPI['mixed']
-}
-
-export const hasEffects = (node: SceneNode): node is SceneNode & MinimalEffectMixin => Boolean(node['effectStyleId'])
-export const hasStrokes = (node: SceneNode): node is SceneNode & MinimalStrokesMixin => Boolean(node['strokes'])
-export const hasStrokeStyle = (node: SceneNode): node is SceneNode & MinimalStrokesMixin =>
-  Boolean(node['strokeStyleId'])
-
-export const hasFills = (node: SceneNode): node is SceneNode & MinimalFillsMixin => Boolean(node['fills'])
-
-export const hasFillStyles = (node: SceneNode): node is SceneNode & MinimalFillsMixin => Boolean(node['fillStyleId'])
-
 export async function isPublished(styles) {
   const numOfStyles: number = styles.length
   let numOfPublishedStyles: number = 0
@@ -185,7 +124,6 @@ export async function isPublished(styles) {
       numOfPublishedStyles++
     }
   }
-  //determine if all styles are published, some, or none
   if (numOfPublishedStyles === numOfStyles) {
     publishedStatus = 'all'
   } else if (numOfPublishedStyles >= 1 && numOfPublishedStyles < numOfStyles) {
@@ -194,6 +132,5 @@ export async function isPublished(styles) {
     publishedStatus = 'none'
   }
 
-  //return the results
   return publishedStatus
 }

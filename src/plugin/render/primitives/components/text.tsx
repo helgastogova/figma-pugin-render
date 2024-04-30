@@ -1,4 +1,4 @@
-import { createFrame, createText, getDemoTitle } from '../../../helpers'
+import { createFrame, createText, getDemoTitle } from '@src/plugin/helpers'
 import { TextStyleData } from '../getLocalStyles'
 
 export const renderTextStyles = async (textStyles: TextStyleData, frame: FrameNode): Promise<void> => {
@@ -98,10 +98,6 @@ const getLineHeight = (lineHeight: LineHeight): string => {
   }
 
   const lineHeightValue = Math.round(lineHeight.value * 100) / 100
-  if (lineHeight.unit === 'PIXELS') {
-    // до целого числа
 
-    return `${lineHeightValue}px`
-  }
-  return `${lineHeightValue}%`
+  return lineHeight.unit === 'PIXELS' ? `${lineHeightValue}px` : `${lineHeightValue}%`
 }
