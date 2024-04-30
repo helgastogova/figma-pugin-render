@@ -9,13 +9,18 @@ export async function loadFonts(fontNames: FontName[]) {
 
 export const hasActiveSelection = (): boolean => figma.currentPage.selection.length > 0
 
-function addChildrenComponents(node: SceneNode, selectedComponents: Set<ComponentNode | ComponentSetNode>) {
+async function addChildrenComponents(node: SceneNode, selectedComponents: Set<ComponentNode | ComponentSetNode>) {
   if (node.type === 'INSTANCE') {
     const instanceNode = node as InstanceNode
-    const mainComponent = instanceNode.mainComponent
-
-    if (mainComponent) {
-      addComponentOrParentSet(mainComponent, selectedComponents)
+    let mainComponent
+    try {
+      mainComponent = await instanceNode.getMainComponentAsync()
+    } catch (error) {
+      console.error('Error getting main component:', error)
+    } finally {
+      if (mainComponent) {
+        addComponentOrParentSet(mainComponent, selectedComponents)
+      }
     }
   } else if (node.type === 'COMPONENT' || node.type === 'COMPONENT_SET') {
     addComponentOrParentSet(node, selectedComponents)
@@ -47,19 +52,17 @@ function addComponentOrParentSet(node: SceneNode, set: Set<ComponentNode | Compo
 }
 
 const getNumberOfComponents = (component: ComponentNode | ComponentSetNode): number => {
-  if (component.type === 'COMPONENT') {
-    return 1
-  }
+  if (component.type === 'COMPONENT') return 1
 
   return (component as ComponentSetNode).children.length
 }
 
-export const findAllComponentsAndSets = (): {
+export const findAllComponentsAndSets = async (): Promise<{
   componentsList: Array<ComponentNode | ComponentSetNode>
   componentsListPartial: Array<{ id: string; name: string; numberOfComponents: number }>
   selectedComponents: Array<ComponentNode | ComponentSetNode>
   selectedComponentsDataPartial: Array<{ id: string; name: string; numberOfComponents: number }>
-} => {
+}> => {
   if (hasActiveSelection()) {
     const selectedComponents: Set<ComponentNode | ComponentSetNode> = new Set()
 
@@ -82,10 +85,15 @@ export const findAllComponentsAndSets = (): {
   }
 
   const standaloneComponents: Set<ComponentNode | ComponentSetNode> = new Set()
-
-  figma.root.findAllWithCriteria({ types: ['COMPONENT'] }).forEach((node) => {
-    addChildrenComponents(node, standaloneComponents)
-  })
+  try {
+    await figma.loadAllPagesAsync()
+  } catch (error) {
+    console.error('Error loading font Roboto Regular:', error)
+  } finally {
+    figma.root.findAllWithCriteria({ types: ['COMPONENT'] }).forEach((node) => {
+      addChildrenComponents(node, standaloneComponents)
+    })
+  }
 
   const componentsList = [...Array.from(standaloneComponents.values())]
 
@@ -135,8 +143,9 @@ export const getCurrentDateTime = (type: 'long' | 'short' = 'long'): string => {
     : `${month} ${day}, ${year} at ${hours}:${minutes}`
 }
 
-export const getDemoPage = (): PageNode => {
+export const getDemoPage = async (): Promise<PageNode> => {
   const timestamp = getCurrentDateTime()
+  await figma.loadAllPagesAsync()
   const page =
     (figma.root.findOne((node) => node.name === `Showcases render [Generated at ${timestamp}]`) as PageNode) ??
     figma.createPage()

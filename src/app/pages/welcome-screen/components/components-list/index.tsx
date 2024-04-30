@@ -42,37 +42,38 @@ export const ComponentsList = ({
           ? `We found the following components in your ${label}:`
           : `No components were found in your ${label}.`}
       </Text>
-
-      <div className={s.list}>
-        <Checkbox
-          label="Select all"
-          checked={selected.length === componentsArray.length}
-          onChange={() => {
-            setSelected(selected.length === componentsArray.length ? [] : componentsArray)
-            onCheckboxChange(selected.length === componentsArray.length ? [] : componentsArray)
-          }}
-        />
-        <div className={s.componentsList}>
-          {componentsArray.map((item, i) => (
-            <Checkbox
-              key={`${item.id}_${i}`}
-              label={
-                <>
-                  {item.name}
-                  <Text variant="body/base" color="grey" className={s.numberOfComponents}>
-                    {' '}
-                    {item.numberOfComponents}
-                  </Text>
-                </>
-              }
-              checked={selected.includes(item)}
-              onChange={() => {
-                handleCheckboxChange(item, selected.includes(item))
-              }}
-            />
-          ))}
+      {componentsArray.length > 0 && (
+        <div className={s.list}>
+          <Checkbox
+            label="Select all"
+            checked={selected.length === componentsArray.length}
+            onChange={() => {
+              setSelected(selected.length === componentsArray.length ? [] : componentsArray)
+              onCheckboxChange(selected.length === componentsArray.length ? [] : componentsArray)
+            }}
+          />
+          <div className={s.componentsList}>
+            {componentsArray.map((item, i) => (
+              <Checkbox
+                key={`${item.id}_${i}`}
+                label={
+                  <>
+                    {item.name}
+                    <Text variant="body/base" color="grey" className={s.numberOfComponents}>
+                      {' '}
+                      {item.numberOfComponents}
+                    </Text>
+                  </>
+                }
+                checked={selected.includes(item)}
+                onChange={() => {
+                  handleCheckboxChange(item, selected.includes(item))
+                }}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

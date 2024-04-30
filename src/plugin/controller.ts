@@ -1,8 +1,7 @@
-import { renderPrimitives } from './render/primitives'
 import { CreateUIMessageType } from './types'
 import { findAllComponentsAndSets, getDemoPage, hasActiveSelection, loadFonts } from './utils'
 import { renderShowcases } from './render/showcases'
-import { renderTokens } from './render/primitives/tokens'
+import { GlobalContext } from './context'
 
 //TODO
 // 1. titles with library colors
@@ -11,10 +10,16 @@ import { renderTokens } from './render/primitives/tokens'
 figma.showUI(__html__, { width: 768, height: 500, title: 'Components documentation', themeColors: false })
 
 figma.ui.onmessage = async (msg: CreateUIMessageType) => {
+  try {
+    const loadedPaintStyles = await figma.getLocalPaintStylesAsync()
+    GlobalContext.setPaintStyles(loadedPaintStyles)
+  } catch (error) {
+    console.error('Error loading paint styles:', error)
+  }
   const userHasActiveSelection = hasActiveSelection()
 
   const { selectedComponents, selectedComponentsDataPartial, componentsList, componentsListPartial } =
-    findAllComponentsAndSets()
+    await findAllComponentsAndSets()
 
   if (msg.type === 'request-components') {
     figma.ui.postMessage({
@@ -30,21 +35,21 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
   if (msg.type === 'render-demo') {
     try {
       const {
-        data: { selectedToRenderComponents, generatePrimitives, generateTokens, generateOnNewPage },
+        data: { selectedToRenderComponents, generateOnNewPage },
       } = msg
 
       let demoPage: PageNode
 
       if (generateOnNewPage) {
-        demoPage = getDemoPage()
-        figma.currentPage = demoPage
+        demoPage = await getDemoPage()
+        await figma.setCurrentPageAsync(demoPage)
       } else {
         demoPage = figma.currentPage
       }
 
       try {
         // dealing with fonts
-        const textStyles = figma.getLocalTextStyles()
+        const textStyles = await figma.getLocalTextStylesAsync()
         const fontNames = textStyles.map((style) => style.fontName).filter((fontName) => fontName) as FontName[]
         fontNames.push(
           { family: 'Roboto', style: 'Regular' },
@@ -52,7 +57,6 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
           { family: 'Inter', style: 'Regular' },
         )
         await loadFonts(fontNames)
-        // dealing with fonts
 
         await Promise.all([
           renderShowcases({
@@ -69,8 +73,6 @@ figma.ui.onmessage = async (msg: CreateUIMessageType) => {
             throw error
           })
           .then(async () => {
-            if (generatePrimitives) await renderPrimitives(demoPage)
-            if (generateTokens) await renderTokens(demoPage)
             figma.ui.postMessage({ type: 'success', message: 'Demo rendered successfully.' })
           })
           .catch((error) => {

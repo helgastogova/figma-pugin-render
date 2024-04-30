@@ -59,7 +59,7 @@ export const renderTextStyles = async (textStyles: TextStyleData, frame: FrameNo
         fontLine.appendChild(
           createText({
             characters: item.name,
-            textStyleId: item.id,
+            // textStyleId: item.id,
           }),
         )
 

@@ -63,7 +63,7 @@ interface CreateTextProps {
   fontName?: { family: string; style: string }
   textAlignHorizontal?: 'LEFT' | 'CENTER' | 'RIGHT' | 'JUSTIFIED'
   textAlignVertical?: 'TOP' | 'CENTER' | 'BOTTOM'
-  textStyleId?: string
+  // textStyleId?: string
   textAutoResize?: 'NONE' | 'WIDTH_AND_HEIGHT' | 'HEIGHT'
   layoutAlign?: 'STRETCH' | 'INHERIT'
 }
@@ -75,7 +75,7 @@ export const createText = ({
   textAlignHorizontal = 'LEFT',
   fontName,
   textAlignVertical = 'TOP',
-  textStyleId = '',
+  // textStyleId = '',
   textAutoResize = 'WIDTH_AND_HEIGHT',
   layoutAlign = 'INHERIT',
 }: CreateTextProps): TextNode => {
@@ -87,10 +87,11 @@ export const createText = ({
     fontSize,
     textAlignHorizontal,
     textAlignVertical,
-    textStyleId,
     layoutAlign,
   })
   text.textAutoResize = textAutoResize
+
+  //await text.setTextStyleIdAsync(textStyleId)
 
   findAndSetStyle(fontColor, text)
 

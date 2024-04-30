@@ -1,9 +1,11 @@
 {
   "name": "Components documentation",
-  "id": "00000000",
+  "id": "1367131076759979208",
   "api": "1.0.0",
   "main": "dist/code.js",
   "ui": "dist/index.html",
   "editorType": ["figma"],
-  "permissions": ["currentuser"]
+  "permissions": ["currentuser"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": { "allowedDomains": ["https://fonts.googleapis.com", "https://fonts.gstatic.com"] }
 }

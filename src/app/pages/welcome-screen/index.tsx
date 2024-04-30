@@ -81,8 +81,7 @@ const WelcomeScreen = () => {
       <div>
         {creating ? (
           <>
-            <Loader />
-            <Text centered as="h1" variant="heading/large">
+            <Text className={s.loadingText} centered as="h1" variant="heading/large">
               Creating...
             </Text>
           </>
@@ -90,7 +89,9 @@ const WelcomeScreen = () => {
           <>
             {loading ? (
               // <Loader />
-              <div>Loading...</div>
+              <Text className={s.loadingText} centered as="h1" variant="heading/large">
+                Loading...
+              </Text>
             ) : (
               <ComponentsList
                 hasSelectedComponents={hasSelectedComponents}

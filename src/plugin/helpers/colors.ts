@@ -1,3 +1,4 @@
+import { GlobalContext } from '@src/plugin/context'
 type Paint = SolidPaint | GradientPaint | ImagePaint | VideoPaint
 
 export function hexToRgbA(hex: string): { r: number; g: number; b: number; a?: number } {
@@ -43,10 +44,10 @@ export function rgbToHex(value: RGB | RGBA): string | undefined {
 }
 
 export async function createColorStyles(styles) {
-  const existingStyles = figma.getLocalPaintStyles()
+  const paintStyles = GlobalContext.getPaintStyles()
 
   styles.forEach(({ name, value, description }) => {
-    const existingStyle = existingStyles.find((style) => style.name === name)
+    const existingStyle = paintStyles.find((style) => style.name === name)
 
     if (!existingStyle) {
       const style = figma.createPaintStyle()
@@ -107,18 +108,33 @@ export function hexColorMatch(style: PaintStyle, hex: string): boolean {
 
   return false
 }
+export function findAndSetStyle(
+  color?: string,
+  element?: ComponentNode | RectangleNode | TextNode | FrameNode,
+): Promise<void> {
+  return new Promise(async (resolve, reject) => {
+    if (!color || !element) {
+      resolve()
+      return
+    }
 
-export function findAndSetStyle(color?: string, element?: ComponentNode | RectangleNode | TextNode | FrameNode): void {
-  if (!color || !element) return
+    const styles = GlobalContext.getPaintStyles()
+    const style = styles?.find((style) => hexColorMatch(style, color))
 
-  const style = figma.getLocalPaintStyles().find((style) => hexColorMatch(style, color))
-
-  if (style) {
-    element.fillStyleId = style.id
-  } else {
-    const fills: Paint[] = createPaints(color)
-    element.fills = fills
-  }
+    if (style) {
+      try {
+        await element.setFillStyleIdAsync(style.id)
+        resolve()
+      } catch (error) {
+        console.error('Failed to set fill style:', error)
+        reject(error)
+      }
+    } else {
+      const fills: Paint[] = createPaints(color)
+      element.fills = fills
+      resolve()
+    }
+  })
 }
 
 export function parseColor(color: string): RGB | RGBA {

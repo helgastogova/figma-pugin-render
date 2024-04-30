@@ -1,7 +1,8 @@
 import { renderDemo } from './utils'
-import { createColorStyles } from '../../helpers/colors'
-import { createFrame } from '../../helpers'
-import { colorStylesWithThemes, colorStylesWithoutThemes } from '../../helpers/palette'
+import { createColorStyles } from '@src/plugin/helpers/colors'
+import { createFrame } from '@src/plugin/helpers'
+import { colorStylesWithThemes_, colorStylesWithoutThemes_, preprocessColorStyles } from '@src/plugin/helpers/palette'
+import { GlobalContext } from '@src/plugin/context'
 
 export const renderShowcases = async ({
   page: demoPage,
@@ -13,9 +14,11 @@ export const renderShowcases = async ({
   renderOnPlace?: boolean
 }) => {
   const localCollections = await figma.variables.getLocalVariableCollectionsAsync()
-  const tokensCollection = localCollections.find(
-    (collection) => collection.name === 'Tokens' && !collection.hiddenFromPublishing,
-  )
+  const tokensCollection = localCollections.find((collection) => !collection.hiddenFromPublishing)
+
+  const existingStyles = GlobalContext.getPaintStyles()
+  const colorStylesWithThemes = preprocessColorStyles(existingStyles, colorStylesWithThemes_)
+  const colorStylesWithoutThemes = preprocessColorStyles(existingStyles, colorStylesWithoutThemes_)
 
   const renderComponentsInBatches = async (
     components: Array<ComponentNode | ComponentSetNode>,
@@ -34,7 +37,7 @@ export const renderShowcases = async ({
   }
 
   if (tokensCollection && tokensCollection.modes.length > 0) {
-    createColorStyles(colorStylesWithThemes)
+    // createColorStyles(colorStylesWithThemes)
 
     let renderOnPlaceFrame
 
@@ -73,7 +76,8 @@ export const renderShowcases = async ({
         renderOnPlace ? renderOnPlaceFrame : demoPage,
         'right',
       )
-      frame.setExplicitVariableModeForCollection(tokensCollection.id, mode.modeId) //TODO:  but that the one we have for setting the mode
+      frame.setExplicitVariableModeForCollection(tokensCollection, mode.modeId)
+
       await renderComponentsInBatches(components, frame, mode.name)
     }
   } else {

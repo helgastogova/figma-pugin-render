@@ -26,21 +26,22 @@ export type GridStyleData = StyleData & {
 
 async function getStylesByType(type: 'color' | 'text' | 'effect'): Promise<BaseStyle[]> {
   const styleMethods = {
-    color: figma.getLocalPaintStyles,
-    text: figma.getLocalTextStyles,
-    effect: figma.getLocalEffectStyles,
-    grid: figma.getLocalGridStyles,
+    color: async () => await figma.getLocalPaintStylesAsync(),
+    text: () => Promise.resolve(figma.getLocalTextStyles()),
+    effect: () => Promise.resolve(figma.getLocalEffectStyles()),
+    grid: () => Promise.resolve(figma.getLocalGridStyles()),
   }
-  const styles = styleMethods[type]()
+
+  const styles = await styleMethods[type]()
 
   return styles.length > 0 ? styles : []
 }
 
 export async function getLocalStyles(
-  type: 'color' | 'text' | 'effect', // | 'grid',
+  type: 'color' | 'text' | 'effect', // | 'grid'
 ): Promise<ColorStyleData | TextStyleData | EffectStyleData> {
   const styles = await getStylesByType(type)
-  const cleanedStyleData = assembleStylesArray(styles)
+  const cleanedStyleData = assembleStylesArray(await styles)
   const publishedStatus = await isPublished(cleanedStyleData)
 
   return {
