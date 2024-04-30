@@ -17,8 +17,20 @@ export const renderShowcases = async ({
   const tokensCollection = localCollections.find((collection) => !collection.hiddenFromPublishing)
 
   const existingStyles = GlobalContext.getPaintStyles()
+
   const colorStylesWithThemes = preprocessColorStyles(existingStyles, colorStylesWithThemes_)
   const colorStylesWithoutThemes = preprocessColorStyles(existingStyles, colorStylesWithoutThemes_)
+  createColorStyles(
+    tokensCollection?.modes.length > 0 ? colorStylesWithThemes : colorStylesWithoutThemes,
+    existingStyles,
+  )
+
+  try {
+    const loadedPaintStyles = await figma.getLocalPaintStylesAsync()
+    GlobalContext.setPaintStyles(loadedPaintStyles)
+  } catch (error) {
+    console.error('Error loading paint styles:', error)
+  }
 
   const renderComponentsInBatches = async (
     components: Array<ComponentNode | ComponentSetNode>,
@@ -36,9 +48,7 @@ export const renderShowcases = async ({
     }
   }
 
-  if (tokensCollection && tokensCollection.modes.length > 0) {
-    // createColorStyles(colorStylesWithThemes)
-
+  if (tokensCollection?.modes.length > 0) {
     let renderOnPlaceFrame
 
     if (renderOnPlace) {
@@ -81,7 +91,6 @@ export const renderShowcases = async ({
       await renderComponentsInBatches(components, frame, mode.name)
     }
   } else {
-    createColorStyles(colorStylesWithoutThemes)
     const frame = createFrame(
       {
         name: 'Documentation',

@@ -43,11 +43,9 @@ export function rgbToHex(value: RGB | RGBA): string | undefined {
   return `#${toHex(value.r)}${toHex(value.g)}${toHex(value.b)}`
 }
 
-export async function createColorStyles(styles) {
-  const paintStyles = GlobalContext.getPaintStyles()
-
+export async function createColorStyles(styles: PaintStyle[], existingStyles?: PaintStyle[]) {
   styles.forEach(({ name, value, description }) => {
-    const existingStyle = paintStyles.find((style) => style.name === name)
+    const existingStyle = existingStyles?.find((style) => style.name === name)
 
     if (!existingStyle) {
       const style = figma.createPaintStyle()
@@ -118,7 +116,7 @@ export function findAndSetStyle(
       return
     }
 
-    const styles = GlobalContext.getPaintStyles()
+    const styles = GlobalContext.getPaintStyles() // почему то тут пусто
     const style = styles?.find((style) => hexColorMatch(style, color))
 
     if (style) {
@@ -128,6 +126,8 @@ export function findAndSetStyle(
       } catch (error) {
         console.error('Failed to set fill style:', error)
         reject(error)
+      } finally {
+        resolve()
       }
     } else {
       const fills: Paint[] = createPaints(color)
