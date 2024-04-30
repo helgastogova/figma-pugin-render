@@ -1,8 +1,8 @@
 {
   "type": "module",
-  "name": "figma-plugin-render-components-sets",
+  "name": "figma-plugin-components-documentation",
   "version": "1.0.0",
-  "description": "Figma plugin for Showcases render",
+  "description": "This Figma plugin allows you to generate documentation for components in Figma, making it easier to understand and use them in your projects",
   "license": "ISC",
   "scripts": {
     "dev": "PORT=5000 rollup -c -w",

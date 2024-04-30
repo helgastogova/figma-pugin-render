@@ -52,9 +52,10 @@ export const ComponentsList = ({
             onCheckboxChange(selected.length === componentsArray.length ? [] : componentsArray)
           }}
         />
-        {componentsArray.map((item, i) => (
-          <div key={`${item.id}_${i}`}>
+        <div className={s.componentsList}>
+          {componentsArray.map((item, i) => (
             <Checkbox
+              key={`${item.id}_${i}`}
               label={
                 <>
                   {item.name}
@@ -62,7 +63,6 @@ export const ComponentsList = ({
                     {' '}
                     {item.numberOfComponents}
                   </Text>
-                  {/* {item.id} - {item.name} ({item.numberOfComponents}) */}
                 </>
               }
               checked={selected.includes(item)}
@@ -70,8 +70,8 @@ export const ComponentsList = ({
                 handleCheckboxChange(item, selected.includes(item))
               }}
             />
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   )

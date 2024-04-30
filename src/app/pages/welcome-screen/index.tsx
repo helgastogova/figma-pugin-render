@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { ComponentsList } from './components/components-list'
 import { Button, Text, Layout, Checkbox } from '@ui'
-import { Loader } from './components/loader'
+// import { Loader } from './components/loader'
 
 import s from './welcome-screen.module.css'
 
@@ -89,7 +89,8 @@ const WelcomeScreen = () => {
         ) : (
           <>
             {loading ? (
-              <Loader />
+              // <Loader />
+              <div>Loading...</div>
             ) : (
               <ComponentsList
                 hasSelectedComponents={hasSelectedComponents}
