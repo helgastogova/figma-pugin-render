@@ -1,4 +1,5 @@
 import { GlobalContext } from '@src/plugin/context'
+import { ColorStylesType } from '@src/plugin/helpers/palette'
 type Paint = SolidPaint | GradientPaint | ImagePaint | VideoPaint
 
 export function hexToRgbA(hex: string): { r: number; g: number; b: number; a?: number } {
@@ -43,7 +44,7 @@ export function rgbToHex(value: RGB | RGBA): string | undefined {
   return `#${toHex(value.r)}${toHex(value.g)}${toHex(value.b)}`
 }
 
-export async function createColorStyles(styles: PaintStyle[], existingStyles?: PaintStyle[]) {
+export async function createColorStyles(styles: ColorStylesType[], existingStyles?: PaintStyle[]) {
   styles.forEach(({ name, value, description }) => {
     const existingStyle = existingStyles?.find((style) => style.name === name)
 

@@ -7,7 +7,7 @@ import { GlobalContext } from './context'
 // 1. titles with library colors
 // 2. group blocks ??
 
-figma.showUI(__html__, { width: 768, height: 500, title: 'Components documentation', themeColors: false })
+figma.showUI(__html__, { width: 768, height: 500, title: 'UI Stories', themeColors: false })
 
 figma.ui.onmessage = async (msg: CreateUIMessageType) => {
   try {

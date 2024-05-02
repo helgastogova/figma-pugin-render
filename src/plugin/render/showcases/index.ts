@@ -56,8 +56,8 @@ export const renderShowcases = async ({
         {
           name:
             components.length < 2
-              ? `${components[0]?.name ?? ''} documentation`
-              : `documentation for ${components.length} components`,
+              ? `${components[0]?.name ?? ''} Story`
+              : `Stories for ${components.length} components`,
           direction: 'HORIZONTAL',
           horizontalAlign: 'CENTER',
           verticalAlign: 'MIN',
@@ -93,7 +93,7 @@ export const renderShowcases = async ({
   } else {
     const frame = createFrame(
       {
-        name: 'Documentation',
+        name: 'Story',
         direction: 'VERTICAL',
         horizontalAlign: 'CENTER',
         verticalAlign: 'MIN',
