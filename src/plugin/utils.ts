@@ -8,46 +8,45 @@ export async function loadFonts(fontNames: FontName[]) {
 }
 
 export const hasActiveSelection = (): boolean => figma.currentPage.selection.length > 0
-
-async function addChildrenComponents(node: SceneNode, selectedComponents: Set<ComponentNode | ComponentSetNode>) {
+async function addChildrenComponents(node: SceneNode, set: Set<ComponentNode | ComponentSetNode>) {
   if (node.type === 'INSTANCE') {
     const instanceNode = node as InstanceNode
-    let mainComponent
     try {
-      mainComponent = await instanceNode.getMainComponentAsync()
+      const mainComponent = await instanceNode.getMainComponentAsync()
+      if (mainComponent) {
+        await addComponentOrParentSet(mainComponent, set)
+      }
     } catch (error) {
       console.error('Error getting main component:', error)
-    } finally {
-      if (mainComponent) {
-        addComponentOrParentSet(mainComponent, selectedComponents)
-      }
     }
   } else if (node.type === 'COMPONENT' || node.type === 'COMPONENT_SET') {
-    addComponentOrParentSet(node, selectedComponents)
+    await addComponentOrParentSet(node, set)
   } else if ('children' in node) {
-    node.children.forEach((child) => {
-      addChildrenComponents(child, selectedComponents)
-    })
+    for (const child of node.children) {
+      await addChildrenComponents(child, set)
+    }
   }
 }
 
-function addComponentOrParentSet(node: SceneNode, set: Set<ComponentNode | ComponentSetNode>) {
-  let parent = node.parent
+async function addComponentOrParentSet(
+  node: SceneNode | PageNode | (BaseNode & ChildrenMixin),
+  set: Set<ComponentNode | ComponentSetNode>,
+) {
+  let current = node
+
   let added = false
 
-  while (parent && parent.type !== 'PAGE') {
-    if (parent.type === 'COMPONENT_SET') {
-      set.add(parent as ComponentSetNode)
+  while (current?.type !== 'PAGE') {
+    if (current?.type === 'COMPONENT_SET') {
+      set.add(current as ComponentSetNode)
       added = true
       break
     }
-    parent = parent.parent
+    current = current.parent
   }
 
-  if (!added) {
-    if (node.type === 'COMPONENT' || node.type === 'COMPONENT_SET') {
-      set.add(node as ComponentNode | ComponentSetNode)
-    }
+  if (!added && (['COMPONENT', 'COMPONENT_SET'].includes(node.type) as boolean)) {
+    set.add(node as ComponentNode | ComponentSetNode)
   }
 }
 
@@ -66,9 +65,8 @@ export const findAllComponentsAndSets = async (): Promise<{
   if (hasActiveSelection()) {
     const selectedComponents: Set<ComponentNode | ComponentSetNode> = new Set()
 
-    figma.currentPage.selection.forEach((node) => {
-      addChildrenComponents(node, selectedComponents)
-    })
+    const tasks = figma.currentPage.selection.map((node) => addChildrenComponents(node, selectedComponents))
+    await Promise.all(tasks)
 
     return {
       componentsList: [],
