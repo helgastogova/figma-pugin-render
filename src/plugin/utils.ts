@@ -8,24 +8,44 @@ export async function loadFonts(fontNames: FontName[]) {
 }
 
 export const hasActiveSelection = (): boolean => figma.currentPage.selection.length > 0
-async function addChildrenComponents(node: SceneNode, set: Set<ComponentNode | ComponentSetNode>) {
+async function addChildrenComponents(
+  node: SceneNode,
+  set: Set<ComponentNode | ComponentSetNode>,
+  foundInChildren = false,
+) {
   if (node.type === 'INSTANCE') {
     const instanceNode = node as InstanceNode
     try {
       const mainComponent = await instanceNode.getMainComponentAsync()
       if (mainComponent) {
         await addComponentOrParentSet(mainComponent, set)
+        foundInChildren = true
       }
     } catch (error) {
       console.error('Error getting main component:', error)
     }
   } else if (node.type === 'COMPONENT' || node.type === 'COMPONENT_SET') {
     await addComponentOrParentSet(node, set)
-  } else if ('children' in node) {
+    foundInChildren = true
+  } else if ('children' in node && node.children.length > 0) {
     for (const child of node.children) {
-      await addChildrenComponents(child, set)
+      foundInChildren = (await addChildrenComponents(child, set, foundInChildren)) || foundInChildren
     }
   }
+
+  if (!foundInChildren) {
+    let parent = node.parent
+    while (parent && parent.type !== 'PAGE') {
+      if (parent.type === 'COMPONENT' || parent.type === 'COMPONENT_SET') {
+        await addComponentOrParentSet(parent, set)
+        foundInChildren = true
+        break
+      }
+      parent = parent.parent
+    }
+  }
+
+  return foundInChildren
 }
 
 async function addComponentOrParentSet(
