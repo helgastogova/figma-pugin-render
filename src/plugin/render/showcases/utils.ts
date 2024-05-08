@@ -588,7 +588,7 @@ export const renderDemo = async ({
 
   rootFrame.appendChild(
     createText({
-      characters: `Last updated on ${getCurrentDateTime('short')}`,
+      characters: `Last generated on ${getCurrentDateTime('short')}`,
       fontSize: 14,
       fontColor: '#6B7280',
       fontName: { family: 'Roboto', style: 'Regular' },
