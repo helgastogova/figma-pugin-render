@@ -1,22 +1,27 @@
 import React from 'react'
 import cx from 'classnames'
+import Loader from '../loader'
 
 import s from './button.module.css'
 
 interface ComponentProps {
-  onClick: React.MouseEventHandler<HTMLButtonElement>
-  children?: JSX.Element | string
-  type?: 'secondary' | 'primary'
+  onClick?: () => void
+  type?: 'primary' | 'secondary'
+  children: React.ReactNode
+  disabled?: boolean
+  loading?: boolean
   className?: string
-  desibled?: boolean
 }
 
-const Button = ({ onClick, children, type = 'primary', className, desibled }: ComponentProps) => {
+const Button = ({ onClick, children, type = 'primary', disabled, loading, className }: ComponentProps) => {
   if (!children) return null
 
   return (
-    <button onClick={onClick} className={cx(s.base, s[type], className, desibled && s.desibled)}>
-      {children}
+    <button
+      onClick={disabled ? undefined : onClick}
+      className={cx(s.base, s[type], disabled && s.disabled, loading && s.loading, className)}
+    >
+      {loading ? <Loader type="dots" /> : children}
     </button>
   )
 }

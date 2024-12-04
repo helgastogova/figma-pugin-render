@@ -1,11 +1,20 @@
 {
-  "name": "UI Stories",
-  "id": "1367131076759979208",
+  "name": "Background Remover",
+  "id": "background-remover",
   "api": "1.0.0",
   "main": "dist/code.js",
   "ui": "dist/index.html",
   "editorType": ["figma"],
   "permissions": ["currentuser"],
   "documentAccess": "dynamic-page",
-  "networkAccess": { "allowedDomains": ["https://fonts.googleapis.com", "https://fonts.gstatic.com"] }
+
+  "networkAccess": {
+    "allowedDomains": [
+      "https://fonts.googleapis.com",
+      "https://fonts.gstatic.com",
+      "https://huggingface.co",
+      "https://cdn-lfs-us-1.hf.co",
+      "https://cdn.jsdelivr.net"
+    ]
+  }
 }

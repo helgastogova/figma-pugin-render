@@ -1,7 +1,7 @@
 .base {
   border-radius: 6px;
   padding: 12px 20px;
-  font-size: 16px;
+  font-size: 15px;
   outline: none;
   cursor: pointer;
 }
@@ -13,12 +13,17 @@
   &:hover {
     background-color: var(--color-primary8);
   }
+
+  &:active {
+    background-color: var(--color-primary11);
+  }
 }
 
 .desibled {
   background-color: var(--color-primary2);
   color: white;
   cursor: not-allowed;
+  pointer-events: none;
 
   &:hover {
     background-color: var(--color-primary2);

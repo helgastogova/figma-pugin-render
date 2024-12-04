@@ -8,7 +8,7 @@ import html from 'rollup-plugin-bundle-html-plus'
 import typescript from '@rollup/plugin-typescript'
 import svgr from '@svgr/rollup'
 import alias from '@rollup/plugin-alias'
-import babel from '@rollup/plugin-babel' 
+import babel from '@rollup/plugin-babel'
 
 import path from 'path'
 
@@ -19,9 +19,10 @@ function serve() {
   let server
 
   return {
-    writeBundle() {
+    async writeBundle() {
       if (server) return
-      server = require('child_process').spawn('npm', ['run', 'start', '--', '--dev'], {
+      const { spawn } = await import('child_process')
+      server = spawn('npm', ['run', 'start', '--', '--dev'], {
         stdio: ['ignore', 'inherit', 'inherit'],
         shell: true,
       })
@@ -50,6 +51,7 @@ export default [
         extensions: ['.jsx', '.js', '.json', '.ts', '.tsx'],
         browser: true,
         dedupe: ['react', 'react-dom'],
+        preferBuiltins: true,
       }),
       replace({
         'process.env.NODE_ENV': JSON.stringify(production ? 'production' : 'development'),
@@ -66,7 +68,10 @@ export default [
         presets: ['@babel/preset-react', '@babel/preset-env', '@babel/preset-typescript'],
         plugins: ['@babel/plugin-transform-runtime'],
       }),
-      commonjs(),
+      commonjs({
+        ignoreDynamicRequires: true,
+        transformMixedEsModules: true,
+      }),
       svgr(),
       postcss({
         modules: true,
@@ -97,13 +102,17 @@ export default [
       sourcemap: !production,
     },
     plugins: [
-      resolve(),
+      resolve({
+        browser: true,
+        preferBuiltins: true,
+      }),
       typescript({
         sourceMap: !production,
         tsconfig: './tsconfig.plugin.json',
       }),
       commonjs({
         transformMixedEsModules: true,
+        ignoreDynamicRequires: true,
       }),
       babel({
         babelHelpers: 'bundled',

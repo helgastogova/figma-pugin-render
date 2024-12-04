@@ -1,8 +1,8 @@
 {
   "type": "module",
-  "name": "figma-plugin-ui-stories",
+  "name": "figma-plugin-kive-remove-background",
   "version": "1.0.0",
-  "description": "This Figma plugin allows you to generate Stories for components in Figma, making it easier to understand and use them in your projects",
+  "description": "This Figma plugin allows you to remove background from images in Figma",
   "license": "ISC",
   "scripts": {
     "dev": "PORT=5000 rollup -c -w",
@@ -16,6 +16,7 @@
     "watch": "npm run build -- --watch"
   },
   "dependencies": {
+    "@xenova/transformers": "^2.17.2",
     "classnames": "^2.5.1",
     "npm-check-updates": "^16.14.15",
     "react": "^18.2.0",
@@ -28,7 +29,7 @@
     "@babel/preset-env": "^7.23.9",
     "@babel/preset-react": "^7.23.3",
     "@babel/runtime": "^7.23.9",
-    "@figma/plugin-typings": "^1.87.0",
+    "@figma/plugin-typings": "^1.103.0",
     "@rollup/plugin-alias": "^5.1.0",
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^25.0.7",
